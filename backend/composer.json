@@ -1,0 +1,22 @@
+{
+	"name": "nova/web_sys",
+	"description": "INF1005 WebSys Project",
+	"type": "project",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "ZadeNova",
+			"email": "muhderfannnn@gmail.com"
+		}
+	],
+	"require": {
+		"slim/slim": "4.*",
+		"slim/psr7": "^1.8",
+		"php-di/php-di": "^7.1"
+	},
+	"autoload": {
+		"psr-4": {
+			"App\\": "src/"
+		}
+	}
+}
