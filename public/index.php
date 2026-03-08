@@ -4,7 +4,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../backend/vendor/autoload.php';
 
 $app = AppFactory::create();
 
@@ -20,5 +20,11 @@ $app->get('/api/hello', function (Request $request, Response $response) {
     $response->getBody()->write(json_encode($data));
     return $response->withHeader('Content-Type', 'application/json');
 });
+
+
+(require __DIR__ . '/../backend/src/Routes/web.php')($app);
+(require __DIR__ . '/../backend/src/Routes/api.php')($app);
+
+
 
 $app->run();

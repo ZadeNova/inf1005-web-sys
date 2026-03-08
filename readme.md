@@ -19,15 +19,17 @@ cd web-sys
 **2. Start the app**
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 **3. Open in browser**
 
-| Service     | URL                            |
-| ----------- | ------------------------------ |
-| Frontend    | http://localhost:3000          |
-| Backend API | http://localhost:8000/api/test |
+| Service     | URL                   |
+| ----------- | --------------------- |
+| Frontend    | http://localhost:3000 |
+| Backend API | http://localhost:8000 |
+
+Go to http://localhost:8000
 
 ## Stopping the app
 

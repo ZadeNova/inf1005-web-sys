@@ -1,0 +1,57 @@
+# =========================
+# General / OS Files
+# =========================
+.DS_Store
+Thumbs.db
+*.log
+
+# =========================
+# IDEs and Editors
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Backend (PHP / Composer)
+# =========================
+# Ignore the dependencies folder (Composer handles these)
+/backend/vendor/
+
+# Ignore local environment variables
+/backend/.env
+/backend/.env.*.local
+
+# Ignore potential cache and log directories (standard for PHP apps)
+/backend/cache/
+/backend/logs/
+
+# =========================
+# Frontend (React / Vite / Node)
+# =========================
+# Ignore Node modules (even if not installed yet, this is crucial)
+/frontend/node_modules/
+
+# Ignore Vite build output directories
+/frontend/dist/
+/frontend/build/
+
+# Ignore local environment variables
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.*.local
+
+# Ignore NPM/Yarn error logs and cache
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+/frontend/.eslintcache
+
+# =========================
+# Docker & Database
+# =========================
+# If you eventually mount a local database volume, ignore its data
+/docker/mysql/data/
+/docker/postgres/data/
+/database/*.sqlite
