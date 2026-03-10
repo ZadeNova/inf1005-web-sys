@@ -1,13 +1,18 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
-import App from "./App.jsx";
-import Home from "./pages/home/Home.jsx";
 
-// createRoot(document.getElementById("root")).render(
-// 	<StrictMode>
-// 		<App />
-// 	</StrictMode>,
-//);
+// eslint-disable-next-line no-unused-vars
+function mountIsland(id, Component) {
+	const root = document.getElementById(id);
+	if (root) {
+		createRoot(root).render(
+			<StrictMode>
+				<Component {...JSON.parse(root.dataset.props || "{}")} />
+			</StrictMode>,
+		);
+	}
+}
 
-createRoot(document.getElementById("root")).render(<Home />);
+// Register your islands here as you build them
+// import PriceChart from './islands/PriceChart'
+// mountIsland('price-chart-root', PriceChart)

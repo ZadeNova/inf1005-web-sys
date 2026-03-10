@@ -25,6 +25,7 @@ $app->get('/api/hello', function (Request $request, Response $response) {
 (require __DIR__ . '/../backend/src/Routes/web.php')($app);
 (require __DIR__ . '/../backend/src/Routes/api.php')($app);
 
+session_start();
 
 
 $app->run();
