@@ -9,6 +9,7 @@ services:
     volumes:
       - ./backend:/var/www/backend
       - ./public:/var/www/public
+    command: sh -c "cd /var/www/backend && composer install && php-fpm"
     networks:
       - web_sys_network
 
