@@ -29,10 +29,14 @@ function viteAsset(string $entry): string
     <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 
     <title><?= htmlspecialchars($title ?? 'Vapour FT') ?></title>
-
+    <!-- TEMPORARY: Remove once Vite dev server CSS is fixed -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Compiled CSS from Vite (active once you run npm run build) -->
     <?php if (file_exists(__DIR__ . '/../../../public/assets/.vite/manifest.json')): ?>
         <link rel="stylesheet" href="<?= viteAsset('src/main.css') ?>">
+    <?php else: ?>
+        <script type="module" src="http://localhost:3000/@vite/client"></script>
+        <script type="module" src="http://localhost:3000/src/main.jsx"></script>
     <?php endif; ?>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen">
