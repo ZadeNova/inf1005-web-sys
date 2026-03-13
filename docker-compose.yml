@@ -6,10 +6,10 @@ services:
     container_name: web_sys_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: vapourft
-      MYSQL_USER: vapourft_user
-      MYSQL_PASSWORD: vapourft_pass
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
@@ -27,7 +27,7 @@ services:
           "localhost",
           "-u",
           "root",
-          "-prootpass",
+          "-p${MYSQL_ROOT_PASSWORD}",
         ]
       interval: 10s
       timeout: 5s
@@ -38,10 +38,15 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     container_name: web_sys_php
+    command: php-fpm
+    environment:
+      DB_HOST: mysql
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: ${MYSQL_USER}
+      DB_PASS: ${MYSQL_PASSWORD}
     volumes:
       - ./backend:/var/www/backend:z
       - ./public:/var/www/public:z
-    command: sh -c "cd /var/www/backend && composer install && php-fpm"
     depends_on:
       mysql:
         condition: service_healthy
@@ -68,11 +73,57 @@ services:
     working_dir: /app
     volumes:
       - ./frontend:/app:z
+      - /app/node_modules
     ports:
       - "3000:3000"
     command: sh -c "npm install && npm run dev -- --host"
     depends_on:
       - nginx
+    networks:
+      - web_sys_network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: web_sys_phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: ${MYSQL_USER}
+      PMA_PASSWORD: ${MYSQL_PASSWORD}
+      PMA_ARBITRARY: 1
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - web_sys_network
+
+  welcome:
+    image: alpine
+    container_name: web_sys_welcome
+    depends_on:
+      mysql:
+        condition: service_healthy
+      php:
+        condition: service_started
+      nginx:
+        condition: service_started
+      frontend:
+        condition: service_started
+    command: >
+      sh -c "
+        echo '' &&
+        echo '========================================' &&
+        echo '        VAPOUR FT -- DEV SERVERS        ' &&
+        echo '========================================' &&
+        echo '' &&
+        echo '  Frontend (Vite)  ->  http://localhost:3000' &&
+        echo '  Backend (Nginx)  ->  http://localhost:8000' &&
+        echo '  phpMyAdmin (DB)  ->  http://localhost:8080' &&
+        echo '  MySQL (raw)      ->  localhost:3306' &&
+        echo '' &&
+        echo '========================================'
+      "
     networks:
       - web_sys_network
 
