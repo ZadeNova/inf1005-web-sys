@@ -30,9 +30,6 @@ function viteAsset(string $entry): string
 
     <title><?= htmlspecialchars($title ?? 'Vapour FT') ?></title>
 
-    <!-- Tailwind via CDN for now, replace with Vite build in production -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
     <!-- Compiled CSS from Vite (active once you run npm run build) -->
     <?php if (file_exists(__DIR__ . '/../../../public/assets/.vite/manifest.json')): ?>
         <link rel="stylesheet" href="<?= viteAsset('src/main.css') ?>">

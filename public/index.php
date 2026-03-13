@@ -1,31 +1,22 @@
 <?php
 
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+session_start();
+
 use Slim\Factory\AppFactory;
+use DI\Container;
 
 require __DIR__ . '/../backend/vendor/autoload.php';
 
+$container = new Container();
+AppFactory::setContainer($container);
+
 $app = AppFactory::create();
 
-// Add routing middleware
 $app->addRoutingMiddleware();
-
-// Add error middleware
+$app->addBodyParsingMiddleware();
 $app->addErrorMiddleware(true, true, true);
-
-// Test route
-$app->get('/api/hello', function (Request $request, Response $response) {
-    $data = ['message' => 'Slim Framework is working!'];
-    $response->getBody()->write(json_encode($data));
-    return $response->withHeader('Content-Type', 'application/json');
-});
-
 
 (require __DIR__ . '/../backend/src/Routes/web.php')($app);
 (require __DIR__ . '/../backend/src/Routes/api.php')($app);
-
-session_start();
-
 
 $app->run();
