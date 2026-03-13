@@ -121,7 +121,7 @@ export default function Button({
       aria-busy={loading}
       className={`
         inline-flex items-center justify-center
-        font-semibold rounded-(--radius-md)]
+        font-semibold rounded-md]
         transition-all duration-(--transition-base)]
         focus-visible:outline-2 focus-visible:outline-(--color-accent)] focus-visible:outline-offset-2
         select-none

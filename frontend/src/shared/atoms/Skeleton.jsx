@@ -14,9 +14,9 @@
 /* Base shimmer block */
 function SkeletonBlock({ width = '100%', height = 16, rounded = 'md', className = '' }) {
   const radiusMap = {
-    sm:   'rounded-(--radius-sm)]',
-    md:   'rounded-(--radius-md)]',
-    lg:   'rounded-(--radius-lg)]',
+    sm:   'rounded-sm]',
+    md:   'rounded-md]',
+    lg:   'rounded-lg]',
     full: 'rounded-full',
   };
 
@@ -35,7 +35,7 @@ function SkeletonBlock({ width = '100%', height = 16, rounded = 'md', className 
 /* Pre-built: AssetCard skeleton */
 function AssetCardSkeleton() {
   return (
-    <div className="bg-(--color-surface)der border-(--color-border)] rounded-(--radius-lg)] p-4 space-y-3">
+    <div className="bg-(--color-surface)der border-(--color-border)] rounded-lg] p-4 space-y-3">
       {/* Image placeholder */}
       <SkeletonBlock width="100%" height={160} rounded="md" />
       {/* Title */}
@@ -71,7 +71,7 @@ function TextSkeleton({ lines = 3 }) {
 /* Pre-built: stat card */
 function StatSkeleton() {
   return (
-    <div className="bg-(--color-surface)] border border-(--color-border)] rounded-(--radius-lg)] p-4 space-y-2">
+    <div className="bg-(--color-surface)] border border-(--color-border)] rounded-lg] p-4 space-y-2">
       <SkeletonBlock width={24} height={24} rounded="sm" />
       <SkeletonBlock width="60%" height={28} />
       <SkeletonBlock width="40%" height={12} />

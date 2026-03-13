@@ -23,7 +23,7 @@ document.documentElement.setAttribute('data-theme',
 
 function CommunityPage() {
   return (
-    <div className="min-h-screen bg-(--color-bg)x flex-col">
+    <div className="min-h-screen bg-(--color-bg) flex-col">
       <LocalNav />
       <main className="max-w-7xl mx-auto px-6 py-12 w-full flex-1">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

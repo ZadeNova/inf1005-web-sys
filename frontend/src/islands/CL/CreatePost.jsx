@@ -73,7 +73,7 @@ export default function CreatePost({ onPostCreated }) {
           aria-describedby="char-count"
           className="
             flex-1 px-3 py-2.5 text-sm
-            rounded-(--radius-md)]
+            rounded-md]
             bg-(--color-input-bg)]
             border border-(--color-input-border)]
             text-(--color-text-primary)]

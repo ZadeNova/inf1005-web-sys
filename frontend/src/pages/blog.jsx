@@ -19,10 +19,10 @@ document.documentElement.setAttribute('data-theme',
 
 function BlogPage() {
   return (
-    <div className="min-h-screen bg-(--color-bg)] flex flex-col">
+    <div className="min-h-screen bg-(--color-bg) flex flex-col">
       <LocalNav />
       <main className="max-w-7xl mx-auto px-6 py-12 w-full flex-1">
-        <h1 className="text-3xl font-bold text-(--color-text-primary)] mb-8">News & Updates</h1>
+        <h1 className="text-3xl font-bold text-(--color-text-primary) mb-8">News & Updates</h1>
         <BlogFeed />
       </main>
     </div>

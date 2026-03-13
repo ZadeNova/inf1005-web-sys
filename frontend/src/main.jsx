@@ -9,7 +9,7 @@
  *
  * FOR DEVELOPERS (Dev 1 / Dev 2):
  *   - You dont edit this file.
- *   - Build your island in src/islands/dev1/ or src/islands/dev2/.
+ *   - Build your island in src/islands/Minal/ or src/islands/WH/.
  *   - Test locally using the TestBed (see src/TestBed.jsx).
  *   - When your island is ready, tell me (CL). I will register it here.
  *
@@ -50,19 +50,19 @@ function mountIsland(id, Component) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   LEAD ISLANDS
+   CL ISLANDS
    ═══════════════════════════════════════════════════════════════ */
-import ThemeToggle from './islands/lead/ThemeToggle.jsx';
+import ThemeToggle from './islands/CL/ThemeToggle.jsx';
 mountIsland('theme-toggle-root', ThemeToggle);
 
-// Uncomment as each Lead island is completed:
-// import PriceChart     from './islands/lead/PriceChart.jsx';
-// import PostFeed       from './islands/lead/PostFeed.jsx';
-// import CreatePost     from './islands/lead/CreatePost.jsx';
-// import LikeComment    from './islands/lead/LikeComment.jsx';
-// import FriendsList    from './islands/lead/FriendsList.jsx';
-// import FriendRequests from './islands/lead/FriendRequests.jsx';
-// import SearchUsers    from './islands/lead/SearchUsers.jsx';
+// Uncomment as each CL island is completed:
+// import PriceChart     from './islands/CL/PriceChart.jsx';
+// import PostFeed       from './islands/CL/PostFeed.jsx';
+// import CreatePost     from './islands/CL/CreatePost.jsx';
+// import LikeComment    from './islands/CL/LikeComment.jsx';
+// import FriendsList    from './islands/CL/FriendsList.jsx';
+// import FriendRequests from './islands/CL/FriendRequests.jsx';
+// import SearchUsers    from './islands/CL/SearchUsers.jsx';
 // mountIsland('price-chart-root',      PriceChart);
 // mountIsland('post-feed-root',        PostFeed);
 // mountIsland('create-post-root',      CreatePost);
@@ -73,23 +73,23 @@ mountIsland('theme-toggle-root', ThemeToggle);
 
 /* ═══════════════════════════════════════════════════════════════
    DEV 1 ISLANDS — Login · Register · Blog
-   Register here once island is reviewed and approved by Lead.
+   Register here once island is reviewed and approved by CL.
    ═══════════════════════════════════════════════════════════════ */
-// import LoginForm    from './islands/dev1/LoginForm.jsx';
-// import RegisterForm from './islands/dev1/RegisterForm.jsx';
-// import BlogFeed     from './islands/dev1/BlogFeed.jsx';
+// import LoginForm    from './islands/Minal/LoginForm.jsx';
+// import RegisterForm from './islands/Minal/RegisterForm.jsx';
+// import BlogFeed     from './islands/Minal/BlogFeed.jsx';
 // mountIsland('login-form-root',    LoginForm);
 // mountIsland('register-form-root', RegisterForm);
 // mountIsland('blog-feed-root',     BlogFeed);
 
 /* ═══════════════════════════════════════════════════════════════
    DEV 2 ISLANDS — Dashboard · Profile · Listings
-   Register here once island is reviewed and approved by Lead.
+   Register here once island is reviewed and approved by CL.
    ═══════════════════════════════════════════════════════════════ */
-// import ListingsGrid   from './islands/dev2/ListingsGrid.jsx';
-// import ProfileCard    from './islands/dev2/ProfileCard.jsx';
-// import PortfolioChart from './islands/dev2/PortfolioChart.jsx';
-// import ActivityFeed   from './islands/dev2/ActivityFeed.jsx';
+// import ListingsGrid   from './islands/WH/ListingsGrid.jsx';
+// import ProfileCard    from './islands/WH/ProfileCard.jsx';
+// import PortfolioChart from './islands/WH/PortfolioChart.jsx';
+// import ActivityFeed   from './islands/WH/ActivityFeed.jsx';
 // mountIsland('listings-grid-root',   ListingsGrid);
 // mountIsland('profile-card-root',    ProfileCard);
 // mountIsland('portfolio-chart-root', PortfolioChart);

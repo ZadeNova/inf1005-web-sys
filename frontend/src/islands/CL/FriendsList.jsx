@@ -25,7 +25,7 @@ function FriendRow({ friend }) {
   return (
     <a
       href={`/profile?id=${friend.id}`}
-      className="flex items-center gap-3 px-2 py-2 rounded-(--radius-md)] hover:bg-(--color-surface-2)] transition-colors group"
+      className="flex items-center gap-3 px-2 py-2 rounded-md] hover:bg-(--color-surface-2)] transition-colors group"
     >
       {/* Avatar + online dot */}
       <div className="relative shrink-0">

@@ -153,7 +153,7 @@ function PostCard({ post }) {
               onKeyDown={e => e.key === 'Enter' && handleComment()}
               aria-label="Write a comment"
               className="
-                flex-1 px-3 py-2 text-xs rounded-(--radius-md)]
+                flex-1 px-3 py-2 text-xs rounded-md]
                 bg-(--color-input-bg)]
                 border border-(--color-input-border)]
                 text-(--color-text-primary)]

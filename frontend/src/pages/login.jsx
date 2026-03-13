@@ -19,7 +19,7 @@ document.documentElement.setAttribute('data-theme',
 
 function LoginPage() {
   return (
-    <div className="min-h-screen bg-(--color-bg)x flex-col">
+    <div className="min-h-screen bg-(--color-bg) flex-col">
       <LocalNav />
       <main className="flex-1 flex items-center justify-center px-6 py-16">
         <LoginForm />

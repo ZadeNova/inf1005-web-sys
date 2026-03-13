@@ -29,10 +29,10 @@ function AssetImagePlaceholder() {
     <div
       className="
         w-full aspect-square
-        bg-(--color-surface-2)]
-        rounded-(--radius-md)]
+        bg-(--color-surface-2)
+        rounded-md
         flex items-center justify-center
-        border border-(--color-border)]
+        border border-(--color-border)
       "
       aria-hidden="true"
     >
@@ -84,7 +84,7 @@ export default function AssetCard({ asset, onAddToCart, compact = false, showSel
 
       {/* Details */}
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-bold text-(--color-text-primary)] leading-snug line-clamp-2">
+        <h3 className="text-sm font-bold text-(--color-text-primary) leading-snug line-clamp-2">
           {name}
         </h3>
 
@@ -95,7 +95,7 @@ export default function AssetCard({ asset, onAddToCart, compact = false, showSel
         </div>
 
         {/* Collection + optional seller */}
-        <p className="text-xs text-(--color-text-muted)] leading-tight">
+        <p className="text-xs text-(--color-text-muted) leading-tight">
           {collection}
           {showSeller && seller && (
             <span className="ml-1 text-(--color-text-muted)">· {seller.username}</span>
@@ -106,7 +106,7 @@ export default function AssetCard({ asset, onAddToCart, compact = false, showSel
       {/* Price + CTA */}
       <div className="flex items-center justify-between mt-auto pt-1">
         <div>
-          <p className="text-[10px] text-(--color-text-muted)] uppercase tracking-wide">Price</p>
+          <p className="text-[10px] text-(--color-text-muted) uppercase tracking-wide">Price</p>
           <p className="text-base font-bold text-(--color-text-primary)">{formattedPrice}</p>
         </div>
         <Button
