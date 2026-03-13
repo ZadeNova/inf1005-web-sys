@@ -56,17 +56,17 @@ export default function Input({
           px-3 py-2.5
           rounded-md]
           text-sm
-          text-(--color-text-primary)]
-          bg-(--color-input-bg)]
+          text-(--color-text-primary)
+          bg-(--color-input-bg)
           border
-          placeholder:text-(--color-input-placeholder)]
-          transition-colors duration-(--transition-base)]
+          placeholder:text-(--color-input-placeholder)
+          transition-colors duration-(--transition-base)
           outline-none
-          focus:ring-2 focus:ring-(--color-input-focus)] focus:ring-offset-0
+          focus:ring-2 focus:ring-(--color-input-focus) focus:ring-offset-0
           disabled:cursor-not-allowed disabled:opacity-50
           ${hasError
-            ? 'border-(--color-input-error)] focus:ring-(--color-input-error)]'
-            : 'border-(--color-input-border)] focus:border-(--color-input-focus)]'
+            ? 'border-(--color-input-error) focus:ring-(--color-input-error)'
+            : 'border-(--color-input-border) focus:border-(--color-input-focus)'
           }
           ${inputClassName}
         `.replace(/\s+/g, ' ').trim()}
@@ -83,7 +83,7 @@ export default function Input({
         <p
           id={`${id}-error`}
           role="alert"
-          className="text-xs text-(--color-danger)] flex items-center gap-1"
+          className="text-xs text-(--color-danger) flex items-center gap-1"
         >
           {/* Warning icon — non-colour indicator for errors */}
           <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

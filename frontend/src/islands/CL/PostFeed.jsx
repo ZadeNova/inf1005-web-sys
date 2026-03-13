@@ -71,28 +71,28 @@ function PostCard({ post }) {
     <Card variant="default" padding="md" className="flex flex-col gap-4">
       {/* Author row */}
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-(--color-accent-subtle)] border border-(--color-accent)] flex items-center justify-center shrink-0">
-          <span className="text-xs font-bold text-(--color-accent)]">
+        <div className="w-9 h-9 rounded-full bg-(--color-accent-subtle) border border-(--color-accent) flex items-center justify-center shrink-0">
+          <span className="text-xs font-bold text-(--color-accent)">
             {post.author.username[0].toUpperCase()}
           </span>
         </div>
         <div>
-          <p className="text-sm font-semibold text-(--color-text-primary)]">
+          <p className="text-sm font-semibold text-(--color-text-primary)">
             {post.author.username}
           </p>
-          <p className="text-[10px] text-(--color-text-muted)]">
+          <p className="text-[10px] text-(--color-text-muted)">
             <TimeAgo isoString={post.createdAt} />
           </p>
         </div>
       </div>
 
       {/* Content */}
-      <p className="text-sm text-(--color-text-secondary)] leading-relaxed">
+      <p className="text-sm text-(--color-text-secondary) leading-relaxed">
         {post.content}
       </p>
 
       {/* Actions row */}
-      <div className="flex items-center gap-4 pt-1 border-t border-(--color-border)]">
+      <div className="flex items-center gap-4 pt-1 border-t border-(--color-border)">
         <button
           type="button"
           onClick={handleLike}
@@ -102,8 +102,8 @@ function PostCard({ post }) {
             flex items-center gap-1.5 text-xs font-medium
             transition-colors duration-150
             ${liked
-              ? 'text-(--color-danger)]'
-              : 'text-(--color-text-muted)] hover:text-(--color-danger)]'
+              ? 'text-(--color-danger)'
+              : 'text-(--color-text-muted) hover:text-(--color-danger)'
             }
           `}
         >
@@ -115,7 +115,7 @@ function PostCard({ post }) {
           type="button"
           onClick={() => setShowComments(prev => !prev)}
           aria-expanded={showComments}
-          className="flex items-center gap-1.5 text-xs font-medium text-(--color-text-muted)] hover:text-(--color-text-primary)] transition-colors"
+          className="flex items-center gap-1.5 text-xs font-medium text-(--color-text-muted) hover:text-(--color-text-primary) transition-colors"
         >
           <CommentIcon />
           {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
@@ -126,18 +126,18 @@ function PostCard({ post }) {
       {showComments && (
         <div className="flex flex-col gap-3">
           {comments.length > 0 && (
-            <div className="flex flex-col gap-2 pl-3 border-l-2 border-(--color-border)]">
+            <div className="flex flex-col gap-2 pl-3 border-l-2 border-(--color-border)">
               {comments.map(c => (
                 <div key={c.id} className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-(--color-text-primary)]">
+                    <span className="text-xs font-semibold text-(--color-text-primary)">
                       {c.author.username}
                     </span>
-                    <span className="text-[10px] text-(--color-text-muted)]">
+                    <span className="text-[10px] text-(--color-text-muted)">
                       <TimeAgo isoString={c.createdAt} />
                     </span>
                   </div>
-                  <p className="text-xs text-(--color-text-secondary)]">{c.content}</p>
+                  <p className="text-xs text-(--color-text-secondary)">{c.content}</p>
                 </div>
               ))}
             </div>
@@ -154,11 +154,11 @@ function PostCard({ post }) {
               aria-label="Write a comment"
               className="
                 flex-1 px-3 py-2 text-xs rounded-md]
-                bg-(--color-input-bg)]
-                border border-(--color-input-border)]
-                text-(--color-text-primary)]
-                placeholder:text-(--color-input-placeholder)]
-                focus:outline-none focus:border-(--color-input-focus)]
+                bg-(--color-input-bg)
+                border border-(--color-input-border)
+                text-(--color-text-primary)
+                placeholder:text-(--color-input-placeholder)
+                focus:outline-none focus:border-(--color-input-focus)
                 transition-colors
               "
             />
@@ -192,7 +192,7 @@ export default function PostFeed() {
 
   if (error) {
     return (
-      <p role="alert" className="text-sm text-(--color-danger)]">
+      <p role="alert" className="text-sm text-(--color-danger)">
         Failed to load posts: {error}
       </p>
     );
@@ -201,7 +201,7 @@ export default function PostFeed() {
   if (posts.length === 0) {
     return (
       <Card variant="inset" padding="lg" className="text-center">
-        <p className="text-sm text-(--color-text-muted)]">
+        <p className="text-sm text-(--color-text-muted)">
           No posts yet. Be the first to post!
         </p>
       </Card>

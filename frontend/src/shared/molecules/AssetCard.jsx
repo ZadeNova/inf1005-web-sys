@@ -74,7 +74,7 @@ export default function AssetCard({ asset, onAddToCart, compact = false, showSel
             <img
               src={imageUrl}
               alt={name}
-              className="w-full aspect-square object-cover transition-transform duration-(--transition-slow)] hover:scale-105"
+              className="w-full aspect-square object-cover transition-transform duration-(--transition-slow) hover:scale-105"
               loading="lazy"
             />
           )

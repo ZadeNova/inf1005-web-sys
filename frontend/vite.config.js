@@ -4,31 +4,74 @@
  *
  * Multi-page setup for local prototype development.
  * Each page has its own HTML entry so devs can work independently.
-
- *   /              → index.html     (Lead — Home)
- *   /community     → community.html (Lead — Community)
- *   /login         → login.html     (Dev 1)
- *   /register      → register.html  (Dev 1)
- *   /blog          → blog.html      (Dev 1)
- *   /dashboard     → dashboard.html (Dev 2)
- *   /profile       → profile.html   (Dev 2)
- *   /listings      → listings.html  (Dev 2)
+ *
+ * Local dev:  npm run dev → localhost:3000
+ *   /              → index.html     (CL — Home)
+ *   /community     → community.html (CL — Community)
+ *   /login         → login.html     (Minal — Dev 1)
+ *   /register      → register.html  (Minal — Dev 1)
+ *   /blog          → blog.html      (Minal — Dev 1)
+ *   /dashboard     → dashboard.html (WH — Dev 2)
+ *   /profile       → profile.html   (WH — Dev 2)
+ *   /listings      → listings.html  (WH — Dev 2)
  *
  * Integration: swap build input to { main: src/main.jsx } only.
  */
 
-import { defineConfig }       from 'vite';
-import react                  from '@vitejs/plugin-react';
-import tailwindcss            from '@tailwindcss/vite';
-import { resolve }            from 'path';
-import { fileURLToPath }      from 'url';
+import { defineConfig }  from 'vite';
+import react             from '@vitejs/plugin-react';
+import tailwindcss       from '@tailwindcss/vite';
+import { resolve }       from 'path';
+import { fileURLToPath } from 'url';
 
 const __dirname = resolve(fileURLToPath(import.meta.url), '..');
+
+/**
+ * MPA URL Rewrite Plugin
+ *
+ * Vite serves files, not routes. Without this, navigating to
+ * localhost:3000/login returns a 404 because there is no /login file.
+ *
+ * This plugin maps each clean URL to its HTML file so Vite serves
+ * the right entry point — exactly mimicking what Slim does in
+ * production via its router.
+ *
+ * Add a new entry to routes{} whenever a new page HTML file is created.
+ */
+function mpaRewritePlugin() {
+  return {
+    name: 'mpa-rewrite',
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        const routes = {
+          '/':          '/index.html',
+          '/community': '/community.html',
+          '/login':     '/login.html',
+          '/register':  '/register.html',
+          '/blog':      '/blog.html',
+          '/dashboard': '/dashboard.html',
+          '/profile':   '/profile.html',
+          '/listings':  '/listings.html',
+        };
+
+        // Strip trailing slash (except root) and query string for matching
+        const pathname = req.url.split('?')[0].replace(/\/$/, '') || '/';
+
+        if (routes[pathname]) {
+          req.url = routes[pathname];
+        }
+
+        next();
+      });
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    mpaRewritePlugin(),
   ],
 
   build: {
@@ -56,48 +99,11 @@ export default defineConfig({
 
   server: {
     port: 3000,
-
     proxy: {
       '/api': {
         target:       'http://nginx:80',
         changeOrigin: true,
       },
     },
-
-    /**
-     * URL rewriting for MPA local dev.
-     *
-     * Vite serves files, not routes. Without this, navigating to
-     * localhost:3000/login returns a 404 because there is no /login file.
-     *
-     * This middleware maps each clean URL to its HTML file so Vite
-     * serves the right entry point — exactly mimicking what Slim does
-     * in production via its router.
-     *
-     * Add a new entry here whenever a new page HTML file is created.
-     */
-    middlewares: [
-      (req, _res, next) => {
-        const routes = {
-          '/':          '/index.html',
-          '/community': '/community.html',
-          '/login':     '/login.html',
-          '/register':  '/register.html',
-          '/blog':      '/blog.html',
-          '/dashboard': '/dashboard.html',
-          '/profile':   '/profile.html',
-          '/listings':  '/listings.html',
-        };
-
-        // Strip trailing slash (except root) and query string for matching
-        const pathname = req.url.split('?')[0].replace(/\/$/, '') || '/';
-
-        if (routes[pathname]) {
-          req.url = routes[pathname];
-        }
-
-        next();
-      },
-    ],
   },
 });

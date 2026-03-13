@@ -43,17 +43,17 @@ function RequestRow({ request, onAccept, onDecline }) {
   return (
     <div className="flex items-center gap-3 py-2">
       {/* Avatar */}
-      <div className="w-9 h-9 rounded-full bg-(--color-accent-subtle)] border border-(--color-border)] flex items-center justify-center shrink-0">
-        <span className="text-xs font-bold text-(--color-accent)]">
+      <div className="w-9 h-9 rounded-full bg-(--color-accent-subtle) border border-(--color-border) flex items-center justify-center shrink-0">
+        <span className="text-xs font-bold text-(--color-accent)">
           {request.from.username[0].toUpperCase()}
         </span>
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-(--color-text-primary)] truncate">
+        <p className="text-xs font-semibold text-(--color-text-primary) truncate">
           {request.from.username}
         </p>
-        <p className="text-[10px] text-(--color-text-muted)]">wants to be friends</p>
+        <p className="text-[10px] text-(--color-text-muted)">wants to be friends</p>
       </div>
 
       {/* Actions */}
@@ -119,7 +119,7 @@ export default function FriendRequests() {
 
   if (error) {
     return (
-      <p role="alert" className="text-xs text-(--color-danger)]">
+      <p role="alert" className="text-xs text-(--color-danger)">
         Failed to load requests: {error}
       </p>
     );
@@ -129,7 +129,7 @@ export default function FriendRequests() {
 
   return (
     <Card variant="default" padding="md" className="flex flex-col gap-2">
-      <h3 className="text-xs font-bold text-(--color-text-muted)] uppercase tracking-wide">
+      <h3 className="text-xs font-bold text-(--color-text-muted) uppercase tracking-wide">
         Friend Requests ({requests.length})
       </h3>
       <div className="flex flex-col divide-y divide-(--color-border)">

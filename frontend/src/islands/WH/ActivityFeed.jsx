@@ -62,17 +62,17 @@ function ActivityRow({ activity }) {
   }).format(activity.amount);
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-(--color-border)] last:border-0">
+    <div className="flex items-center gap-3 py-3 border-b border-(--color-border) last:border-0">
       {/* Type badge */}
       <Badge label={config.label} colour={config.colour} size="sm" />
 
       {/* Asset info */}
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-(--color-text-primary)] truncate">
+        <p className="text-xs font-semibold text-(--color-text-primary) truncate">
           {activity.assetName}
         </p>
         {activity.counterparty && (
-          <p className="text-[10px] text-(--color-text-muted)]">
+          <p className="text-[10px] text-(--color-text-muted)">
             with {activity.counterparty}
           </p>
         )}
@@ -80,8 +80,8 @@ function ActivityRow({ activity }) {
 
       {/* Amount + time */}
       <div className="text-right shrink-0">
-        <p className="text-xs font-bold text-(--color-text-primary)]">{formattedAmount}</p>
-        <p className="text-[10px] text-(--color-text-muted)]">
+        <p className="text-xs font-bold text-(--color-text-primary)">{formattedAmount}</p>
+        <p className="text-[10px] text-(--color-text-muted)">
           <TimeAgo isoString={activity.createdAt} />
         </p>
       </div>
@@ -115,7 +115,7 @@ export default function ActivityFeed() {
 
   if (error) {
     return (
-      <p role="alert" className="text-sm text-(--color-danger)]">
+      <p role="alert" className="text-sm text-(--color-danger)">
         Failed to load activity: {error}
       </p>
     );
@@ -124,14 +124,14 @@ export default function ActivityFeed() {
   if (activities.length === 0) {
     return (
       <Card variant="inset" padding="lg" className="text-center">
-        <p className="text-sm text-(--color-text-muted)]">No recent activity.</p>
+        <p className="text-sm text-(--color-text-muted)">No recent activity.</p>
       </Card>
     );
   }
 
   return (
     <Card variant="default" padding="md" className="flex flex-col">
-      <h3 className="text-sm font-bold text-(--color-text-primary)] mb-2">
+      <h3 className="text-sm font-bold text-(--color-text-primary) mb-2">
         Recent Activity
       </h3>
       {activities.map(activity => (

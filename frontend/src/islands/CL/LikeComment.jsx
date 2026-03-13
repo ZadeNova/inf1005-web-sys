@@ -81,8 +81,8 @@ export default function LikeComment({
           flex items-center gap-1.5 text-xs font-medium
           transition-colors duration-150 disabled:opacity-50
           ${liked
-            ? 'text-(--color-danger)]'
-            : 'text-(--color-text-muted)] hover:text-(--color-danger)]'
+            ? 'text-(--color-danger)'
+            : 'text-(--color-text-muted) hover:text-(--color-danger)'
           }
         `}
       >
@@ -94,7 +94,7 @@ export default function LikeComment({
         type="button"
         onClick={onCommentClick}
         aria-label={`${initialCommentCount} comments`}
-        className="flex items-center gap-1.5 text-xs font-medium text-(--color-text-muted)] hover:text-(--color-text-primary)] transition-colors"
+        className="flex items-center gap-1.5 text-xs font-medium text-(--color-text-muted) hover:text-(--color-text-primary) transition-colors"
       >
         <CommentIcon />
         <span>{initialCommentCount}</span>

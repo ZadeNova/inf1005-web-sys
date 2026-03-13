@@ -16,18 +16,18 @@
 const VARIANT_STYLES = {
   primary: {
     base: `
-      bg-(--color-accent)]
+      bg-(--color-accent)
       text-white
       border border-transparent
-      hover:bg-(--color-accent-hover)]
+      hover:bg-(--color-accent-hover)
       active:scale-[0.98]
-      shadow-[0_0_0_0_var(--color-accent-glow)]
-      hover:shadow-[0_0_16px_var(--color-accent-glow)]
+      shadow-[0_0_0_0_var(--color-accent-glow)
+      hover:shadow-[0_0_16px_var(--color-accent-glow)
     `,
     disabled: `
-      bg-(--color-surface-3)]
-      text-(--color-text-muted)]
-      border border-(--color-border)]
+      bg-(--color-surface-3)
+      text-(--color-text-muted)
+      border border-(--color-border)
       cursor-not-allowed
       shadow-none
     `,
@@ -35,48 +35,48 @@ const VARIANT_STYLES = {
   secondary: {
     base: `
       bg-transparent
-      text-(--color-text-primary)]
-      border border-(--color-border)]
-      hover:border-(--color-accent)]
-      hover:text-(--color-accent)]
-      hover:bg-(--color-accent-subtle)]
+      text-(--color-text-primary)
+      border border-(--color-border)
+      hover:border-(--color-accent)
+      hover:text-(--color-accent)
+      hover:bg-(--color-accent-subtle)
       active:scale-[0.98]
     `,
     disabled: `
       bg-transparent
-      text-(--color-text-muted)]
-      border border-(--color-border)]
+      text-(--color-text-muted)
+      border border-(--color-border)
       cursor-not-allowed
     `,
   },
   danger: {
     base: `
-      bg-(--color-danger)]
+      bg-(--color-danger)
       text-white
       border border-transparent
-      hover:bg-(--color-danger-hover)]
-      hover:shadow-[0_0_16px_var(--color-danger-subtle)]
+      hover:bg-(--color-danger-hover)
+      hover:shadow-[0_0_16px_var(--color-danger-subtle)
       active:scale-[0.98]
     `,
     disabled: `
-      bg-(--color-surface-3)]
-      text-(--color-text-muted)]
-      border border-(--color-border)]
+      bg-(--color-surface-3)
+      text-(--color-text-muted)
+      border border-(--color-border)
       cursor-not-allowed
     `,
   },
   ghost: {
     base: `
       bg-transparent
-      text-(--color-text-secondary)]
+      text-(--color-text-secondary)
       border border-transparent
-      hover:bg-(--color-surface-2)]
-      hover:text-(--color-text-primary)]
+      hover:bg-(--color-surface-2)
+      hover:text-(--color-text-primary)
       active:scale-[0.98]
     `,
     disabled: `
       bg-transparent
-      text-(--color-text-muted)]
+      text-(--color-text-muted)
       cursor-not-allowed
     `,
   },
@@ -122,8 +122,8 @@ export default function Button({
       className={`
         inline-flex items-center justify-center
         font-semibold rounded-md]
-        transition-all duration-(--transition-base)]
-        focus-visible:outline-2 focus-visible:outline-(--color-accent)] focus-visible:outline-offset-2
+        transition-all duration-(--transition-base)
+        focus-visible:outline-2 focus-visible:outline-(--color-accent) focus-visible:outline-offset-2
         select-none
         ${SIZE_STYLES[size] ?? SIZE_STYLES.md}
         ${variantClass}

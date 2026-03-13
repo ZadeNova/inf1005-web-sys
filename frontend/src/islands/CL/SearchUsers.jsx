@@ -40,13 +40,13 @@ function UserResult({ user, onSendRequest }) {
   return (
     <div className="flex items-center gap-3 py-2">
       <div className="w-8 h-8 rounded-full bg-(--color-accent-subtle) border border-(--color-border) flex items-center justify-center shrink-0">
-        <span className="text-xs font-bold text-(--color-accent)]">
+        <span className="text-xs font-bold text-(--color-accent)">
           {user.username[0].toUpperCase()}
         </span>
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-(--color-text-primary)] truncate">
+        <p className="text-xs font-semibold text-(--color-text-primary) truncate">
           {user.username}
         </p>
         {user.isVerified && (
@@ -55,7 +55,7 @@ function UserResult({ user, onSendRequest }) {
       </div>
 
       {sent ? (
-        <span className="text-[10px] text-(--color-success)] font-medium">Sent!</span>
+        <span className="text-[10px] text-(--color-success) font-medium">Sent!</span>
       ) : (
         <Button
           variant="secondary"
@@ -133,7 +133,7 @@ export default function SearchUsers() {
 
       {/* Search input */}
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-(--color-text-muted)]">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-(--color-text-muted)">
           <SearchIcon />
         </span>
         <input
@@ -145,11 +145,11 @@ export default function SearchUsers() {
           className="
             w-full pl-9 pr-3 py-2 text-xs
             rounded-md
-            bg-(--color-input-bg)]
-            border border-(--color-input-border)]
-            text-(--color-text-primary)]
-            placeholder:text-(--color-input-placeholder)]
-            focus:outline-none focus:border-(--color-input-focus)]
+            bg-(--color-input-bg)
+            border border-(--color-input-border)
+            text-(--color-text-primary)
+            placeholder:text-(--color-input-placeholder)
+            focus:outline-none focus:border-(--color-input-focus)
             transition-colors
           "
         />
@@ -168,7 +168,7 @@ export default function SearchUsers() {
       )}
 
       {!loading && searched && results.length === 0 && (
-        <p className="text-xs text-(--color-text-muted)] text-center py-2">
+        <p className="text-xs text-(--color-text-muted) text-center py-2">
           No users found for "{query}"
         </p>
       )}

@@ -59,8 +59,8 @@ export default function CreatePost({ onPostCreated }) {
     <Card variant="default" padding="md" className="flex flex-col gap-3">
       <div className="flex gap-3">
         {/* Avatar */}
-        <div className="w-9 h-9 rounded-full bg-(--color-accent-subtle)] border border-(--color-accent)] flex items-center justify-center shrink-0 mt-0.5">
-          <span className="text-xs font-bold text-(--color-accent)]">{userInitial}</span>
+        <div className="w-9 h-9 rounded-full bg-(--color-accent-subtle) border border-(--color-accent) flex items-center justify-center shrink-0 mt-0.5">
+          <span className="text-xs font-bold text-(--color-accent)">{userInitial}</span>
         </div>
 
         {/* Textarea */}
@@ -74,11 +74,11 @@ export default function CreatePost({ onPostCreated }) {
           className="
             flex-1 px-3 py-2.5 text-sm
             rounded-md]
-            bg-(--color-input-bg)]
-            border border-(--color-input-border)]
-            text-(--color-text-primary)]
-            placeholder:text-(--color-input-placeholder)]
-            focus:outline-none focus:border-(--color-input-focus)]
+            bg-(--color-input-bg)
+            border border-(--color-input-border)
+            text-(--color-text-primary)
+            placeholder:text-(--color-input-placeholder)
+            focus:outline-none focus:border-(--color-input-focus)
             transition-colors resize-none
           "
         />
@@ -90,10 +90,10 @@ export default function CreatePost({ onPostCreated }) {
           id="char-count"
           className={`text-[10px] font-mono ${
             isOverLimit
-              ? 'text-(--color-danger)]'
+              ? 'text-(--color-danger)'
               : remaining < 50
-              ? 'text-(--color-warning)]'
-              : 'text-(--color-text-muted)]'
+              ? 'text-(--color-warning)'
+              : 'text-(--color-text-muted)'
           }`}
         >
           {remaining} characters remaining
@@ -101,7 +101,7 @@ export default function CreatePost({ onPostCreated }) {
 
         <div className="flex items-center gap-2">
           {submitted && (
-            <span className="text-xs text-(--color-success)]">Posted!</span>
+            <span className="text-xs text-(--color-success)">Posted!</span>
           )}
           <Button
             variant="primary"

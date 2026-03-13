@@ -11,17 +11,17 @@
 
 const VARIANT_STYLES = {
   default: `
-    bg-(--color-surface)]
-    border border-(--color-border)]
+    bg-(--color-surface)
+    border border-(--color-border)
   `,
   elevated: `
-    bg-(--color-surface)]
-    border border-(--color-border)]
+    bg-(--color-surface)
+    border border-(--color-border)
     shadow-[0_4px_24px_rgba(0,0,0,0.3)]
   `,
   inset: `
-    bg-(--color-surface-2)]
-    border border-(--color-border-subtle)]
+    bg-(--color-surface-2)
+    border border-(--color-border-subtle)
   `,
 };
 
@@ -52,11 +52,11 @@ export default function Card({
   ...rest
 }) {
   const glowClass = glow
-    ? 'transition-shadow duration-(--transition-slow)] hover:shadow-[0_0_0_1px_var(--color-accent),_0_0_24px_var(--color-accent-glow)]'
+    ? 'transition-shadow duration-(--transition-slow) hover:shadow-[0_0_0_1px_var(--color-accent),_0_0_24px_var(--color-accent-glow)'
     : '';
 
   const interactiveClass = interactive
-    ? 'cursor-pointer active:scale-[0.99] transition-transform duration-(--transition-fast)]'
+    ? 'cursor-pointer active:scale-[0.99] transition-transform duration-(--transition-fast)'
     : '';
 
   return (

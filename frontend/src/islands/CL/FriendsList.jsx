@@ -25,12 +25,12 @@ function FriendRow({ friend }) {
   return (
     <a
       href={`/profile?id=${friend.id}`}
-      className="flex items-center gap-3 px-2 py-2 rounded-md] hover:bg-(--color-surface-2)] transition-colors group"
+      className="flex items-center gap-3 px-2 py-2 rounded-md] hover:bg-(--color-surface-2) transition-colors group"
     >
       {/* Avatar + online dot */}
       <div className="relative shrink-0">
-        <div className="w-8 h-8 rounded-full bg-(--color-accent-subtle)] border border-(--color-border)] flex items-center justify-center">
-          <span className="text-xs font-bold text-(--color-accent)]">
+        <div className="w-8 h-8 rounded-full bg-(--color-accent-subtle) border border-(--color-border) flex items-center justify-center">
+          <span className="text-xs font-bold text-(--color-accent)">
             {friend.username[0].toUpperCase()}
           </span>
         </div>
@@ -39,20 +39,20 @@ function FriendRow({ friend }) {
           aria-label={friend.isOnline ? 'Online' : 'Offline'}
           className={`
             absolute -bottom-0.5 -right-0.5
-            w-2.5 h-2.5 rounded-full border-2 border-(--color-surface)]
+            w-2.5 h-2.5 rounded-full border-2 border-(--color-surface)
             ${friend.isOnline
-              ? 'bg-(--color-success)]'
-              : 'bg-(--color-text-muted)]'
+              ? 'bg-(--color-success)'
+              : 'bg-(--color-text-muted)'
             }
           `}
         />
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-(--color-text-primary)] truncate group-hover:text-(--color-accent)] transition-colors">
+        <p className="text-xs font-medium text-(--color-text-primary) truncate group-hover:text-(--color-accent) transition-colors">
           {friend.username}
         </p>
-        <p className="text-[10px] text-(--color-text-muted)]">
+        <p className="text-[10px] text-(--color-text-muted)">
           {friend.isOnline ? '● Online' : '○ Offline'}
         </p>
       </div>
@@ -70,7 +70,7 @@ export default function FriendsList() {
 
   return (
     <Card variant="default" padding="md" className="flex flex-col gap-3">
-      <h3 className="text-xs font-bold text-(--color-text-muted)] uppercase tracking-wide">
+      <h3 className="text-xs font-bold text-(--color-text-muted) uppercase tracking-wide">
         Friends ({friends.length})
       </h3>
 
@@ -86,13 +86,13 @@ export default function FriendsList() {
       )}
 
       {error && (
-        <p role="alert" className="text-xs text-(--color-danger)]">
+        <p role="alert" className="text-xs text-(--color-danger)">
           Failed to load friends: {error}
         </p>
       )}
 
       {!loading && !error && friends.length === 0 && (
-        <p className="text-xs text-(--color-text-muted)] text-center py-4">
+        <p className="text-xs text-(--color-text-muted) text-center py-4">
           No friends yet. Search for users to connect!
         </p>
       )}
