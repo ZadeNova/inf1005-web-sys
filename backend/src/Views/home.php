@@ -1,59 +1,61 @@
-<?php
-// Start output buffering to capture this page's content
-// layout.php will inject it via $content
-ob_start();
-?>
+<?php ob_start(); ?>
 
-<section class="max-w-7xl mx-auto px-6 py-16">
+<section class="max-w-7xl mx-auto px-6 py-20 flex flex-col items-center text-center gap-6">
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-(--color-success-subtle) text-(--color-success)">
+        🔥 Trending Now
+    </span>
+    <h1 class="text-5xl font-extrabold text-(--color-text-primary) leading-tight max-w-2xl">
+        Trade Digital Collectibles on
+        <span class="text-(--color-accent)">Vapour FT</span>
+    </h1>
+    <p class="text-lg text-(--color-text-secondary) max-w-xl">
+        Buy, sell, and trade rare digital assets. Atomic P2P transactions. No middlemen.
+    </p>
+    <div class="flex gap-3">
+        <a href="/listings" class="px-6 py-3 rounded-md bg-(--color-accent) text-white font-semibold text-sm hover:bg-(--color-accent-hover) transition-colors">
+            Browse Market
+        </a>
+        <a href="/register" class="px-6 py-3 rounded-md border border-(--color-border) text-(--color-text-primary) font-semibold text-sm hover:border-(--color-accent) hover:text-(--color-accent) transition-colors">
+            Create Account
+        </a>
+    </div>
+</section>
 
-    <!-- Hero -->
-    <div class="text-center mb-16">
-        <h1 class="text-5xl font-bold text-white mb-4">
-            The Digital Asset Exchange
-        </h1>
-        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
-            Trade rare in-game collectibles with banking-grade security. 
-            Real-time pricing. Atomic transactions. Zero compromise.
-        </p>
-        <div class="mt-8 flex gap-4 justify-center">
-            <a href="/register" 
-               class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg font-medium">
-                Get Started
-            </a>
-            <a href="/listings" 
-               class="border border-gray-700 hover:border-indigo-400 text-gray-300 px-6 py-3 rounded-lg font-medium">
-                Browse Market
-            </a>
+<!-- Stats Bar — values hardcoded for now, will be PHP-injected later -->
+<section class="border-y border-(--color-border) bg-(--color-surface)">
+    <div class="max-w-7xl mx-auto px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="flex flex-col gap-1">
+            <p class="text-xl font-bold text-(--color-text-primary)">$248,391</p>
+            <p class="text-xs text-(--color-text-muted) uppercase tracking-wide">Total Volume</p>
+        </div>
+        <div class="flex flex-col gap-1">
+            <p class="text-xl font-bold text-(--color-text-primary)">1,847</p>
+            <p class="text-xs text-(--color-text-muted) uppercase tracking-wide">Active Listings</p>
+        </div>
+        <div class="flex flex-col gap-1">
+            <p class="text-xl font-bold text-(--color-text-primary)">12,340</p>
+            <p class="text-xs text-(--color-text-muted) uppercase tracking-wide">Registered Users</p>
+        </div>
+        <div class="flex flex-col gap-1">
+            <p class="text-xl font-bold text-(--color-text-primary)">$2.50</p>
+            <p class="text-xs text-(--color-text-muted) uppercase tracking-wide">Floor Price</p>
         </div>
     </div>
+</section>
 
-    <!-- Market Stats Bar -->
-    <div class="grid grid-cols-3 gap-6 mb-16">
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 text-center">
-            <p class="text-gray-400 text-sm mb-1">24h Volume</p>
-            <p class="text-2xl font-bold text-white">$248,391</p>
-        </div>
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 text-center">
-            <p class="text-gray-400 text-sm mb-1">Active Listings</p>
-            <p class="text-2xl font-bold text-white">1,847</p>
-        </div>
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 text-center">
-            <p class="text-gray-400 text-sm mb-1">Registered Traders</p>
-            <p class="text-2xl font-bold text-white">12,340</p>
-        </div>
+<!-- PriceChart island -->
+<section class="max-w-7xl mx-auto px-6 py-12 w-full">
+    <h2 class="text-xl font-bold text-(--color-text-primary) mb-6">Market Overview</h2>
+    <div id="price-chart-root" data-props="{}"></div>
+</section>
+
+<!-- FeaturedListings island -->
+<section class="max-w-7xl mx-auto px-6 pb-16 w-full">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-(--color-text-primary)">Featured Listings</h2>
+        <a href="/listings" class="text-sm text-(--color-accent) hover:text-(--color-accent-hover)">View all →</a>
     </div>
-
-    <!-- React Island placeholder: Price Chart -->
-    <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-16">
-        <h2 class="text-lg font-semibold text-white mb-4">Market Trends</h2>
-        <!-- PriceChart React island mounts here -->
-        <div id="price-chart-root" 
-             aria-label="Market price chart"
-             class="h-64 flex items-center justify-center text-gray-500">
-            Loading chart...
-        </div>
-    </div>
-
+    <div id="featured-listings-root" data-props="{}"></div>
 </section>
 
 <?php

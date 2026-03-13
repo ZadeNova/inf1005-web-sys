@@ -29,51 +29,43 @@ function viteAsset(string $entry): string
     <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 
     <title><?= htmlspecialchars($title ?? 'Vapour FT') ?></title>
-    <!-- TEMPORARY: Remove once Vite dev server CSS is fixed -->
-    <script src="https://cdn.tailwindcss.com"></script>
+
     <!-- Compiled CSS from Vite (active once you run npm run build) -->
     <?php if (file_exists(__DIR__ . '/../../../public/assets/.vite/manifest.json')): ?>
         <link rel="stylesheet" href="<?= viteAsset('src/main.css') ?>">
     <?php else: ?>
         <script type="module" src="http://localhost:3000/@vite/client"></script>
+        <link rel="stylesheet" href="http://localhost:3000/src/index.css">
         <script type="module" src="http://localhost:3000/src/main.jsx"></script>
     <?php endif; ?>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen">
+<body class="vft-bg vft-text min-h-screen">
 
-    <!-- Navigation -->
-    <nav class="bg-gray-900 border-b border-gray-800 px-6 py-4">
+    <nav class="vft-surface border-b border-(--color-border) px-6 py-4">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <a href="/" class="text-xl font-bold text-indigo-400">
+            <a href="/" class="text-xl font-bold text-(--color-accent)">
                 Vapour FT
             </a>
             <ul class="flex gap-6 text-sm">
-                <li><a href="/" class="hover:text-indigo-400">Home</a></li>
-                <li><a href="/listings" class="hover:text-indigo-400">Market</a></li>
-                <li><a href="/blog" class="hover:text-indigo-400">News</a></li>
-                <li><a href="/about" class="hover:text-indigo-400">About</a></li>
+                <li><a href="/" class="text-(--color-text-secondary) hover:text-(--color-accent) transition-colors">Home</a></li>
+                <li><a href="/listings" class="text-(--color-text-secondary) hover:text-(--color-accent) transition-colors">Market</a></li>
+                <li><a href="/blog" class="text-(--color-text-secondary) hover:text-(--color-accent) transition-colors">News</a></li>
+                <li><a href="/about" class="text-(--color-text-secondary) hover:text-(--color-accent) transition-colors">About</a></li>
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <li><a href="/dashboard" class="hover:text-indigo-400">Dashboard</a></li>
-                    <li><a href="/profile" class="hover:text-indigo-400">Profile</a></li>
+                    <li><a href="/dashboard" class="text-(--color-text-secondary) hover:text-(--color-accent) transition-colors">Dashboard</a></li>
                 <?php else: ?>
-                    <li><a href="/login" class="hover:text-indigo-400">Login</a></li>
-                    <li><a href="/register" class="hover:text-indigo-400">Register</a></li>
+                    <li><a href="/login" class="text-(--color-text-secondary) hover:text-(--color-accent) transition-colors">Login</a></li>
+                    <li><a href="/register" class="text-(--color-text-secondary) hover:text-(--color-accent) transition-colors">Register</a></li>
                 <?php endif; ?>
             </ul>
         </div>
     </nav>
 
-    <!-- Page Content injected here -->
     <main>
         <?= $content ?? '' ?>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-900 border-t border-gray-800 px-6 py-8 mt-16">
-        <div class="max-w-7xl mx-auto text-center text-gray-500 text-sm">
-            © <?= date('Y') ?> Vapour FT. All rights reserved.
-        </div>
+    <footer class="border-t border-(--color-border) px-6 py-8 mt-16 text-center text-(--color-text-muted) text-sm">
+        &copy; 2026 Vapour FT. All rights reserved.
     </footer>
-
-</body>
 </html>

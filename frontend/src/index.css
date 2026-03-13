@@ -3,6 +3,7 @@
    This file IS the Tailwind v4 config (replaces tailwind.config.js)
    ============================================================= */
 
+@source "../../../backend/src/Views/**/*.php";
 @import "tailwindcss";
 
 /* =============================================================
@@ -10,21 +11,21 @@
    text-surface, border-border, etc.
    ============================================================= */
 @theme {
-  /* Fonts */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+	/* Fonts */
+	--font-sans: "Inter", system-ui, -apple-system, sans-serif;
+	--font-mono: "JetBrains Mono", "Fira Code", monospace;
 
-  /* Border radius */
-  --radius-sm:   0.375rem;
-  --radius-md:   0.5rem;
-  --radius-lg:   0.75rem;
-  --radius-xl:   1rem;
-  --radius-full: 9999px;
+	/* Border radius */
+	--radius-sm: 0.375rem;
+	--radius-md: 0.5rem;
+	--radius-lg: 0.75rem;
+	--radius-xl: 1rem;
+	--radius-full: 9999px;
 
-  /* Transitions */
-  --transition-fast:   150ms ease;
-  --transition-base:   200ms ease;
-  --transition-slow:   300ms ease;
+	/* Transitions */
+	--transition-fast: 150ms ease;
+	--transition-base: 200ms ease;
+	--transition-slow: 300ms ease;
 }
 
 /* =============================================================
@@ -33,76 +34,76 @@
    ============================================================= */
 :root,
 :root[data-theme="dark"] {
-  color-scheme: dark;
+	color-scheme: dark;
 
-  /* Backgrounds */
-  --color-bg:          #0a0a0f;
-  --color-surface:     #111118;
-  --color-surface-2:   #1a1a24;
-  --color-surface-3:   #22222e;
+	/* Backgrounds */
+	--color-bg: #0a0a0f;
+	--color-surface: #111118;
+	--color-surface-2: #1a1a24;
+	--color-surface-3: #22222e;
 
-  /* Borders */
-  --color-border:      #1e1e2e;
-  --color-border-subtle: #2a2a3a;
+	/* Borders */
+	--color-border: #1e1e2e;
+	--color-border-subtle: #2a2a3a;
 
-  /* Text */
-  --color-text-primary:  #f1f5f9;
-  --color-text-secondary:#94a3b8;
-  --color-text-muted:    #475569;
-  --color-text-inverse:  #0f172a;
+	/* Text */
+	--color-text-primary: #f1f5f9;
+	--color-text-secondary: #94a3b8;
+	--color-text-muted: #475569;
+	--color-text-inverse: #0f172a;
 
-  /* Accent — Electric Indigo */
-  --color-accent:        #6366f1;
-  --color-accent-hover:  #818cf8;
-  --color-accent-subtle: rgba(99, 102, 241, 0.15);
-  --color-accent-glow:   rgba(99, 102, 241, 0.35);
+	/* Accent — Electric Indigo */
+	--color-accent: #6366f1;
+	--color-accent-hover: #818cf8;
+	--color-accent-subtle: rgba(99, 102, 241, 0.15);
+	--color-accent-glow: rgba(99, 102, 241, 0.35);
 
-  /* Semantic */
-  --color-success:       #22c55e;
-  --color-success-subtle:rgba(34, 197, 94, 0.15);
-  --color-danger:        #ef4444;
-  --color-danger-hover:  #dc2626;
-  --color-danger-subtle: rgba(239, 68, 68, 0.15);
-  --color-warning:       #f59e0b;
-  --color-warning-subtle:rgba(245, 158, 11, 0.15);
+	/* Semantic */
+	--color-success: #22c55e;
+	--color-success-subtle: rgba(34, 197, 94, 0.15);
+	--color-danger: #ef4444;
+	--color-danger-hover: #dc2626;
+	--color-danger-subtle: rgba(239, 68, 68, 0.15);
+	--color-warning: #f59e0b;
+	--color-warning-subtle: rgba(245, 158, 11, 0.15);
 
-  /* Rarity — Dark mode palette */
-  --color-rarity-common:      #6b7280;
-  --color-rarity-common-bg:   rgba(107, 114, 128, 0.15);
-  --color-rarity-common-text: #9ca3af;
+	/* Rarity — Dark mode palette */
+	--color-rarity-common: #6b7280;
+	--color-rarity-common-bg: rgba(107, 114, 128, 0.15);
+	--color-rarity-common-text: #9ca3af;
 
-  --color-rarity-uncommon:      #22c55e;
-  --color-rarity-uncommon-bg:   rgba(34, 197, 94, 0.15);
-  --color-rarity-uncommon-text: #4ade80;
+	--color-rarity-uncommon: #22c55e;
+	--color-rarity-uncommon-bg: rgba(34, 197, 94, 0.15);
+	--color-rarity-uncommon-text: #4ade80;
 
-  --color-rarity-rare:      #6366f1;
-  --color-rarity-rare-bg:   rgba(99, 102, 241, 0.20);
-  --color-rarity-rare-text: #818cf8;
+	--color-rarity-rare: #6366f1;
+	--color-rarity-rare-bg: rgba(99, 102, 241, 0.2);
+	--color-rarity-rare-text: #818cf8;
 
-  --color-rarity-ultrarare:      #a855f7;
-  --color-rarity-ultrarare-bg:   rgba(168, 85, 247, 0.20);
-  --color-rarity-ultrarare-text: #c084fc;
+	--color-rarity-ultrarare: #a855f7;
+	--color-rarity-ultrarare-bg: rgba(168, 85, 247, 0.2);
+	--color-rarity-ultrarare-text: #c084fc;
 
-  --color-rarity-secretrare:      #f59e0b;
-  --color-rarity-secretrare-bg:   rgba(245, 158, 11, 0.20);
-  --color-rarity-secretrare-text: #fbbf24;
+	--color-rarity-secretrare: #f59e0b;
+	--color-rarity-secretrare-bg: rgba(245, 158, 11, 0.2);
+	--color-rarity-secretrare-text: #fbbf24;
 
-  /* Condition */
-  --color-condition-mint:             #22c55e;
-  --color-condition-nearmint:         #84cc16;
-  --color-condition-lightlyplayed:    #f59e0b;
-  --color-condition-moderatelyplayed: #f97316;
-  --color-condition-heavilyplayed:    #ef4444;
+	/* Condition */
+	--color-condition-mint: #22c55e;
+	--color-condition-nearmint: #84cc16;
+	--color-condition-lightlyplayed: #f59e0b;
+	--color-condition-moderatelyplayed: #f97316;
+	--color-condition-heavilyplayed: #ef4444;
 
-  /* Input */
-  --color-input-bg:     #1a1a24;
-  --color-input-border: #2a2a3a;
-  --color-input-focus:  #6366f1;
-  --color-input-error:  #ef4444;
-  --color-input-placeholder: #475569;
+	/* Input */
+	--color-input-bg: #1a1a24;
+	--color-input-border: #2a2a3a;
+	--color-input-focus: #6366f1;
+	--color-input-error: #ef4444;
+	--color-input-placeholder: #475569;
 
-  /* Scrollbar */
-  scrollbar-color: #2a2a3a #0a0a0f;
+	/* Scrollbar */
+	scrollbar-color: #2a2a3a #0a0a0f;
 }
 
 /* =============================================================
@@ -110,68 +111,68 @@
    Background #f9fafb · Surface #ffffff · Accent deep indigo #4f46e5
    ============================================================= */
 :root[data-theme="light"] {
-  color-scheme: light;
+	color-scheme: light;
 
-  --color-bg:          #f9fafb;
-  --color-surface:     #ffffff;
-  --color-surface-2:   #f3f4f6;
-  --color-surface-3:   #e5e7eb;
+	--color-bg: #f9fafb;
+	--color-surface: #ffffff;
+	--color-surface-2: #f3f4f6;
+	--color-surface-3: #e5e7eb;
 
-  --color-border:        #e5e7eb;
-  --color-border-subtle: #d1d5db;
+	--color-border: #e5e7eb;
+	--color-border-subtle: #d1d5db;
 
-  --color-text-primary:  #0f172a;
-  --color-text-secondary:#475569;
-  --color-text-muted:    #94a3b8;
-  --color-text-inverse:  #f1f5f9;
+	--color-text-primary: #0f172a;
+	--color-text-secondary: #475569;
+	--color-text-muted: #94a3b8;
+	--color-text-inverse: #f1f5f9;
 
-  --color-accent:        #4f46e5;
-  --color-accent-hover:  #4338ca;
-  --color-accent-subtle: rgba(79, 70, 229, 0.10);
-  --color-accent-glow:   rgba(79, 70, 229, 0.25);
+	--color-accent: #4f46e5;
+	--color-accent-hover: #4338ca;
+	--color-accent-subtle: rgba(79, 70, 229, 0.1);
+	--color-accent-glow: rgba(79, 70, 229, 0.25);
 
-  --color-success:       #16a34a;
-  --color-success-subtle:rgba(22, 163, 74, 0.10);
-  --color-danger:        #dc2626;
-  --color-danger-hover:  #b91c1c;
-  --color-danger-subtle: rgba(220, 38, 38, 0.10);
-  --color-warning:       #d97706;
-  --color-warning-subtle:rgba(217, 119, 6, 0.10);
+	--color-success: #16a34a;
+	--color-success-subtle: rgba(22, 163, 74, 0.1);
+	--color-danger: #dc2626;
+	--color-danger-hover: #b91c1c;
+	--color-danger-subtle: rgba(220, 38, 38, 0.1);
+	--color-warning: #d97706;
+	--color-warning-subtle: rgba(217, 119, 6, 0.1);
 
-  /* Rarity — Light mode (same hue, adjusted for white bg) */
-  --color-rarity-common:      #6b7280;
-  --color-rarity-common-bg:   rgba(107, 114, 128, 0.12);
-  --color-rarity-common-text: #374151;
+	/* Rarity — Light mode (same hue, adjusted for white bg) */
+	--color-rarity-common: #6b7280;
+	--color-rarity-common-bg: rgba(107, 114, 128, 0.12);
+	--color-rarity-common-text: #374151;
 
-  --color-rarity-uncommon:      #15803d;
-  --color-rarity-uncommon-bg:   rgba(21, 128, 61, 0.12);
-  --color-rarity-uncommon-text: #166534;
+	--color-rarity-uncommon: #15803d;
+	--color-rarity-uncommon-bg: rgba(21, 128, 61, 0.12);
+	--color-rarity-uncommon-text: #166534;
 
-  --color-rarity-rare:      #4338ca;
-  --color-rarity-rare-bg:   rgba(67, 56, 202, 0.12);
-  --color-rarity-rare-text: #3730a3;
+	--color-rarity-rare: #4338ca;
+	--color-rarity-rare-bg: rgba(67, 56, 202, 0.12);
+	--color-rarity-rare-text: #3730a3;
 
-  --color-rarity-ultrarare:      #9333ea;
-  --color-rarity-ultrarare-bg:   rgba(147, 51, 234, 0.12);
-  --color-rarity-ultrarare-text: #7e22ce;
+	--color-rarity-ultrarare: #9333ea;
+	--color-rarity-ultrarare-bg: rgba(147, 51, 234, 0.12);
+	--color-rarity-ultrarare-text: #7e22ce;
 
-  --color-rarity-secretrare:      #d97706;
-  --color-rarity-secretrare-bg:   rgba(217, 119, 6, 0.12);
-  --color-rarity-secretrare-text: #92400e;
+	--color-rarity-secretrare: #d97706;
+	--color-rarity-secretrare-bg: rgba(217, 119, 6, 0.12);
+	--color-rarity-secretrare-text: #92400e;
 
-  --color-condition-mint:             #15803d;
-  --color-condition-nearmint:         #4d7c0f;
-  --color-condition-lightlyplayed:    #b45309;
-  --color-condition-moderatelyplayed: #c2410c;
-  --color-condition-heavilyplayed:    #b91c1c;
+	--color-condition-mint: #15803d;
+	--color-condition-nearmint: #4d7c0f;
+	--color-condition-lightlyplayed: #b45309;
+	--color-condition-moderatelyplayed: #c2410c;
+	--color-condition-heavilyplayed: #b91c1c;
 
-  --color-input-bg:          #ffffff;
-  --color-input-border:      #d1d5db;
-  --color-input-focus:       #4f46e5;
-  --color-input-error:       #dc2626;
-  --color-input-placeholder: #9ca3af;
+	--color-input-bg: #ffffff;
+	--color-input-border: #d1d5db;
+	--color-input-focus: #4f46e5;
+	--color-input-error: #dc2626;
+	--color-input-placeholder: #9ca3af;
 
-  scrollbar-color: #d1d5db #f9fafb;
+	scrollbar-color: #d1d5db #f9fafb;
 }
 
 /* =============================================================
@@ -180,147 +181,184 @@
    Every rarity also has a unique symbol (enforced in Badge.jsx)
    ============================================================= */
 :root[data-theme="colorblind"] {
-  color-scheme: dark;
+	color-scheme: dark;
 
-  --color-bg:          #0a0a0f;
-  --color-surface:     #111118;
-  --color-surface-2:   #1a1a24;
-  --color-surface-3:   #22222e;
+	--color-bg: #0a0a0f;
+	--color-surface: #111118;
+	--color-surface-2: #1a1a24;
+	--color-surface-3: #22222e;
 
-  --color-border:        #1e1e2e;
-  --color-border-subtle: #2a2a3a;
+	--color-border: #1e1e2e;
+	--color-border-subtle: #2a2a3a;
 
-  --color-text-primary:  #ffffff;
-  --color-text-secondary:#cccccc;
-  --color-text-muted:    #999999;
-  --color-text-inverse:  #000000;
+	--color-text-primary: #ffffff;
+	--color-text-secondary: #cccccc;
+	--color-text-muted: #999999;
+	--color-text-inverse: #000000;
 
-  /* Tol Blue as primary accent */
-  --color-accent:        #88ccee;
-  --color-accent-hover:  #aaddff;
-  --color-accent-subtle: rgba(136, 204, 238, 0.15);
-  --color-accent-glow:   rgba(136, 204, 238, 0.30);
+	/* Tol Blue as primary accent */
+	--color-accent: #88ccee;
+	--color-accent-hover: #aaddff;
+	--color-accent-subtle: rgba(136, 204, 238, 0.15);
+	--color-accent-glow: rgba(136, 204, 238, 0.3);
 
-  --color-success:       #44bb99;   /* Tol teal */
-  --color-success-subtle:rgba(68, 187, 153, 0.15);
-  --color-danger:        #ee3377;   /* Tol rose */
-  --color-danger-hover:  #ff5599;
-  --color-danger-subtle: rgba(238, 51, 119, 0.15);
-  --color-warning:       #ee7733;   /* Tol orange */
-  --color-warning-subtle:rgba(238, 119, 51, 0.15);
+	--color-success: #44bb99; /* Tol teal */
+	--color-success-subtle: rgba(68, 187, 153, 0.15);
+	--color-danger: #ee3377; /* Tol rose */
+	--color-danger-hover: #ff5599;
+	--color-danger-subtle: rgba(238, 51, 119, 0.15);
+	--color-warning: #ee7733; /* Tol orange */
+	--color-warning-subtle: rgba(238, 119, 51, 0.15);
 
-  /* Rarity — Paul Tol palette, symbol REQUIRED in Badge */
-  /* Common     ○  grey   */
-  --color-rarity-common:      #999999;
-  --color-rarity-common-bg:   rgba(153, 153, 153, 0.15);
-  --color-rarity-common-text: #cccccc;
+	/* Rarity — Paul Tol palette, symbol REQUIRED in Badge */
+	/* Common     ○  grey   */
+	--color-rarity-common: #999999;
+	--color-rarity-common-bg: rgba(153, 153, 153, 0.15);
+	--color-rarity-common-text: #cccccc;
 
-  /* Uncommon   ◆  orange */
-  --color-rarity-uncommon:      #ee7733;
-  --color-rarity-uncommon-bg:   rgba(238, 119, 51, 0.18);
-  --color-rarity-uncommon-text: #ffaa66;
+	/* Uncommon   ◆  orange */
+	--color-rarity-uncommon: #ee7733;
+	--color-rarity-uncommon-bg: rgba(238, 119, 51, 0.18);
+	--color-rarity-uncommon-text: #ffaa66;
 
-  /* Rare       ★  blue   */
-  --color-rarity-rare:      #88ccee;
-  --color-rarity-rare-bg:   rgba(136, 204, 238, 0.18);
-  --color-rarity-rare-text: #aaddff;
+	/* Rare       ★  blue   */
+	--color-rarity-rare: #88ccee;
+	--color-rarity-rare-bg: rgba(136, 204, 238, 0.18);
+	--color-rarity-rare-text: #aaddff;
 
-  /* Ultra Rare ✦  rose   */
-  --color-rarity-ultrarare:      #ee3377;
-  --color-rarity-ultrarare-bg:   rgba(238, 51, 119, 0.18);
-  --color-rarity-ultrarare-text: #ff77aa;
+	/* Ultra Rare ✦  rose   */
+	--color-rarity-ultrarare: #ee3377;
+	--color-rarity-ultrarare-bg: rgba(238, 51, 119, 0.18);
+	--color-rarity-ultrarare-text: #ff77aa;
 
-  /* Secret Rare ♛  teal  */
-  --color-rarity-secretrare:      #44bb99;
-  --color-rarity-secretrare-bg:   rgba(68, 187, 153, 0.18);
-  --color-rarity-secretrare-text: #77ddbb;
+	/* Secret Rare ♛  teal  */
+	--color-rarity-secretrare: #44bb99;
+	--color-rarity-secretrare-bg: rgba(68, 187, 153, 0.18);
+	--color-rarity-secretrare-text: #77ddbb;
 
-  --color-condition-mint:             #44bb99;
-  --color-condition-nearmint:         #88ccee;
-  --color-condition-lightlyplayed:    #ee7733;
-  --color-condition-moderatelyplayed: #ee3377;
-  --color-condition-heavilyplayed:    #999999;
+	--color-condition-mint: #44bb99;
+	--color-condition-nearmint: #88ccee;
+	--color-condition-lightlyplayed: #ee7733;
+	--color-condition-moderatelyplayed: #ee3377;
+	--color-condition-heavilyplayed: #999999;
 
-  --color-input-bg:          #1a1a24;
-  --color-input-border:      #2a2a3a;
-  --color-input-focus:       #88ccee;
-  --color-input-error:       #ee3377;
-  --color-input-placeholder: #666666;
+	--color-input-bg: #1a1a24;
+	--color-input-border: #2a2a3a;
+	--color-input-focus: #88ccee;
+	--color-input-error: #ee3377;
+	--color-input-placeholder: #666666;
 
-  scrollbar-color: #2a2a3a #0a0a0f;
+	scrollbar-color: #2a2a3a #0a0a0f;
 }
 
 /* =============================================================
    BASE STYLES — Applied globally from CSS variables above
    ============================================================= */
-*, *::before, *::after {
-  box-sizing: border-box;
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
 }
 
 html {
-  font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+	font-family: var(--font-sans);
+	font-size: 16px;
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
 }
 
 body {
-  margin: 0;
-  background-color: var(--color-bg);
-  color: var(--color-text-primary);
-  min-height: 100vh;
-  transition: background-color var(--transition-slow), color var(--transition-slow);
+	margin: 0;
+	background-color: var(--color-bg);
+	color: var(--color-text-primary);
+	min-height: 100vh;
+	transition:
+		background-color var(--transition-slow),
+		color var(--transition-slow);
 }
 
 /* Scrollbar styling */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--color-bg); }
-::-webkit-scrollbar-thumb { background: var(--color-border-subtle); border-radius: 3px; }
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+::-webkit-scrollbar-track {
+	background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+	background: var(--color-border-subtle);
+	border-radius: 3px;
+}
 
 /* Focus-visible outline — WCAG 2.4.11 */
 :focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+	outline: 2px solid var(--color-accent);
+	outline-offset: 2px;
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0.01ms !important;
+		animation-duration: 0.01ms !important;
+	}
 }
 
 /* =============================================================
    UTILITY CLASSES — Vapour FT semantic helpers
    Use these in PHP views (layout.php, page templates)
    ============================================================= */
-.vft-bg         { background-color: var(--color-bg); }
-.vft-surface    { background-color: var(--color-surface); }
-.vft-surface-2  { background-color: var(--color-surface-2); }
-.vft-border     { border-color: var(--color-border); }
-.vft-text       { color: var(--color-text-primary); }
-.vft-text-muted { color: var(--color-text-muted); }
-.vft-accent     { color: var(--color-accent); }
+.vft-bg {
+	background-color: var(--color-bg);
+}
+.vft-surface {
+	background-color: var(--color-surface);
+}
+.vft-surface-2 {
+	background-color: var(--color-surface-2);
+}
+.vft-border {
+	border-color: var(--color-border);
+}
+.vft-text {
+	color: var(--color-text-primary);
+}
+.vft-text-muted {
+	color: var(--color-text-muted);
+}
+.vft-accent {
+	color: var(--color-accent);
+}
 
 /* Card glow on hover — used by AssetCard */
 .vft-card-glow:hover {
-  box-shadow: 0 0 0 1px var(--color-accent), 0 0 20px var(--color-accent-glow);
+	box-shadow:
+		0 0 0 1px var(--color-accent),
+		0 0 20px var(--color-accent-glow);
 }
 
 /* Skeleton shimmer animation */
 @keyframes vft-shimmer {
-  0%   { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
+	0% {
+		background-position: -400px 0;
+	}
+	100% {
+		background-position: 400px 0;
+	}
 }
 
 .vft-skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--color-surface-2) 25%,
-    var(--color-surface-3) 50%,
-    var(--color-surface-2) 75%
-  );
-  background-size: 800px 100%;
-  animation: vft-shimmer 1.4s ease-in-out infinite;
-  border-radius: var(--radius-md);
+	background: linear-gradient(
+		90deg,
+		var(--color-surface-2) 25%,
+		var(--color-surface-3) 50%,
+		var(--color-surface-2) 75%
+	);
+	background-size: 800px 100%;
+	animation: vft-shimmer 1.4s ease-in-out infinite;
+	border-radius: var(--radius-md);
 }
