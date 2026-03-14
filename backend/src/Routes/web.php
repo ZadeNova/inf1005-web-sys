@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 use Slim\App;
 use App\Controllers\PageController;
-
+use App\Middleware\AuthMiddleware;
+use App\Middleware\AdminMiddleware;
 
 return function (App $app) {
 
@@ -17,9 +18,12 @@ return function (App $app) {
     $app->get('/blog', [PageController::class, 'blog']);
 
     // Protected Routes (AuthMiddleware added later)
-    $app->get('/dashboard', [PageController::class, 'dashboard']);
-    $app->get('/profile', [PageController::class, 'profile']);
-
+    $app->get('/dashboard', [PageController::class, 'dashboard'])
+        ->add(AuthMiddleware::class);
+    $app->get('/profile', [PageController::class, 'profile'])
+        ->add(AuthMiddleware::class);
+    
     // Admin Routes (AdminMiddleware added later)
-    $app->get('/admin', [PageController::class, 'admin']);
+    $app->get('/admin', [PageController::class, 'admin'])
+        ->add(AdminMiddleware::class);
 };

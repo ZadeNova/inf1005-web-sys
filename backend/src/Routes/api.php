@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Slim\App;
 use App\Controllers\Api\AuthController;
-
+use App\Middleware\CsrfMiddleware;
 return function (App $app) {
 
     $app->group('/api/v1', function ($group) {
@@ -13,7 +13,7 @@ return function (App $app) {
         $group->post('/auth/register', [AuthController::class, 'register']);
         $group->post('/auth/login',    [AuthController::class, 'login']);
         $group->post('/auth/logout',   [AuthController::class, 'logout']);
-
+        $group->get('/auth/me',        [AuthController::class, 'me']); 
         // Market Endpoints
         // $group->get('/market/listings',                    [MarketController::class, 'index']);
         // $group->post('/market/buy',                        [MarketController::class, 'buy']);
@@ -34,5 +34,5 @@ return function (App $app) {
         // $group->get('/admin/transactions',  [AdminController::class, 'transactions']);
         // $group->post('/admin/assets',       [AdminController::class, 'createAsset']);
 
-    });
+    })->add(CsrfMiddleware::class); //Uncomment for Postman Testing as Postman doesn't handle CSRF tokens. Remember to re-enable CsrfMiddleware.
 };

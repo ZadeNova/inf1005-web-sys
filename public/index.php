@@ -2,9 +2,15 @@
 
 session_start();
 
+// Generate CSRF token if one doesn't exist
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 use Slim\Factory\AppFactory;
 use DI\ContainerBuilder;
-use Delight\Auth\Auth;
+
+
 
 require __DIR__ . '/../backend/vendor/autoload.php';
 
@@ -30,8 +36,22 @@ $builder->addDefinitions([
         );
     },
 
-    Auth::class => function (\Psr\Container\ContainerInterface $c) {
-        return new Auth($c->get(PDO::class));
+    App\Services\AuthService::class => function ($c) {
+        return new App\Services\AuthService(
+            $c->get(PDO::class)
+        );
+    },
+
+    App\Middleware\AuthMiddleware::class => function($c){
+        return new App\Middleware\AuthMiddleware(
+            $c->get(App\Services\AuthService::class)
+        );
+    },
+
+    App\Middleware\AdminMiddleware::class => function ($c){
+        return new App\Middleware\AdminMiddleware(
+            $c->get(App\Services\AuthService::class)
+        );
     },
 
 ]);
