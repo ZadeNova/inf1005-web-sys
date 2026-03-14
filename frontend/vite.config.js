@@ -83,7 +83,7 @@ export default defineConfig({
 		port: 3000,
 		proxy: {
 			"/api": {
-				target: "http://nginx:80",
+				target: "http://apache:80",
 				changeOrigin: true,
 			},
 		},

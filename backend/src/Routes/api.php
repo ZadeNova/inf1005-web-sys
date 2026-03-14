@@ -14,6 +14,7 @@ return function (App $app) {
         $group->post('/auth/login',    [AuthController::class, 'login']);
         $group->post('/auth/logout',   [AuthController::class, 'logout']);
         $group->get('/auth/me',        [AuthController::class, 'me']); 
+        
         // Market Endpoints
         // $group->get('/market/listings',                    [MarketController::class, 'index']);
         // $group->post('/market/buy',                        [MarketController::class, 'buy']);

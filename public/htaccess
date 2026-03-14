@@ -1,0 +1,25 @@
+# ============================================================
+# Vapour FT — Apache .htaccess (replaces nginx/default.conf)
+#
+# This file lives in public/ (the DocumentRoot).
+# It replicates the exact routing logic from the old Nginx config:
+#
+#   1. If the request matches a real file (CSS, JS, images in /assets/),
+#      Apache serves it directly — no PHP involved.
+#   2. Everything else is routed to index.php (Slim front controller).
+#
+# This is the standard "front controller" pattern used by every
+# modern PHP framework (Slim, Laravel, Symfony).
+# ============================================================
+
+RewriteEngine On
+
+# ── Serve static files directly ──────────────────────────────
+# If the requested URL maps to a real file or directory on disk,
+# serve it as-is. This handles /assets/main-abc123.js, images, etc.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# ── Route everything else to Slim ────────────────────────────
+# Equivalent to nginx: try_files $uri $uri/ /index.php?$query_string;
+RewriteRule ^ index.php [QSA,L]
