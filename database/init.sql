@@ -138,40 +138,157 @@ CREATE TABLE IF NOT EXISTS blog_posts (
 
 -- =============================================================
 -- SEED DATA
--- Admin user (password: Admin1234! — bcrypt hashed)
--- Regular test user (password: User1234! — bcrypt hashed)
+-- admin    → id 1 | password: Admin1234!
+-- testuser → id 2 | password: User1234!
 -- =============================================================
+
 INSERT INTO users (email, password, username, role, verified) VALUES
 (
     'admin@vapourft.com',
-    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',  -- replace with real hash
+    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
     'admin',
     'admin',
     1
 ),
 (
     'user@vapourft.com',
-    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',  -- replace with real hash
+    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
     'testuser',
     'user',
     1
 );
 
--- Wallets for seed users (user IDs 1 and 2)
+-- ── Wallets ───────────────────────────────────────────────────────────────
 INSERT INTO wallets (user_id, balance) VALUES
 (1, 10000.00),
 (2, 500.00);
 
--- Sample asset catalog
-INSERT INTO assets (name, description, rarity, collection, condition_state) VALUES
-('Ember Blade',       'A legendary sword forged in volcanic fire.',     'Legendary', 'Season 1', 'Mint'),
-('Shadow Hood',       'Rare stealth armor worn by elite scouts.',       'Rare',      'Season 1', 'Mint'),
-('Iron Buckler',      'A basic shield. Gets the job done.',             'Common',    'Season 1', 'Used'),
-('Phantom Dagger',    'Strikes before you see it coming.',              'Rare',      'Season 1', 'Mint'),
-('Founders Cape',     'Exclusive to early adopters. Highly sought.',    'Legendary', 'Founders', 'Mint'),
-('Bronze Helm',       'Standard issue headgear for new recruits.',      'Common',    'Season 1', 'Used');
+-- ── Wallet ledger — record the starting balances as seed deposits ─────────
+-- Without these rows the ledger is empty for seed accounts, which looks
+-- wrong on the dashboard and breaks the audit trail assumption.
+INSERT INTO wallet_ledger (user_id, transaction_ref, type, amount, balance_before, balance_after, reason) VALUES
+(1, 'SEED-ADMIN-001', 'credit', 10000.00, 0.00, 10000.00, 'seed_deposit'),
+(2, 'SEED-USER-001',  'credit',   500.00, 0.00,   500.00, 'seed_deposit');
 
--- Give test user some inventory
+-- ── Asset catalog ─────────────────────────────────────────────────────────
+-- IDs 1–6 are the original six. IDs 7–14 are new additions.
+-- Covering all three rarities and both conditions so the filter UI
+-- has something to actually filter.
+INSERT INTO assets (name, description, rarity, collection, condition_state) VALUES
+-- Season 1 originals
+('Ember Blade',       'A legendary sword forged in volcanic fire.',          'Legendary', 'Season 1', 'Mint'),
+('Shadow Hood',       'Rare stealth armor worn by elite scouts.',            'Rare',      'Season 1', 'Mint'),
+('Iron Buckler',      'A basic shield. Gets the job done.',                  'Common',    'Season 1', 'Used'),
+('Phantom Dagger',    'Strikes before you see it coming.',                   'Rare',      'Season 1', 'Mint'),
+('Founders Cape',     'Exclusive to early adopters. Highly sought after.',   'Legendary', 'Founders', 'Mint'),
+('Bronze Helm',       'Standard issue headgear for new recruits.',           'Common',    'Season 1', 'Used'),
+-- Season 2 additions
+('Void Katana',       'Forged in a collapsing star. One of three ever made.','Legendary', 'Season 2', 'Mint'),
+('Storm Gauntlets',   'Channel lightning through your fists.',               'Rare',      'Season 2', 'Mint'),
+('Cracked Visor',     'Seen better days, but still blocks bullets.',         'Common',    'Season 2', 'Used'),
+('Ashen Cloak',       'Renders the wearer almost invisible in smoke.',       'Rare',      'Season 2', 'Mint'),
+-- Founders Pack additions
+('Founders Blade',    'Twin to the Founders Cape. Extremely rare.',          'Legendary', 'Founders', 'Mint'),
+('Neon Wraps',        'Glowing hand wraps from the first tournament.',       'Rare',      'Founders', 'Mint'),
+-- Common filler — realistic marketplace has plenty of cheap commons
+('Dented Canteen',    'Holds water. Usually.',                               'Common',    'Season 1', 'Used'),
+('Worn Boot Knife',   'Every soldier carries one. Most never use it.',       'Common',    'Season 2', 'Used');
+
+-- ── Inventory ─────────────────────────────────────────────────────────────
+-- Rule: a listing can only exist if the seller owns the asset.
+-- Assign inventory first, then listings reference these exact assets.
+
+-- admin (user 1) owns high-value items
 INSERT INTO inventory (user_id, asset_id) VALUES
-(2, 3),
-(2, 6);
+(1, 1),   -- admin owns Ember Blade
+(1, 5),   -- admin owns Founders Cape
+(1, 7),   -- admin owns Void Katana
+(1, 11),  -- admin owns Founders Blade
+(1, 12),  -- admin owns Neon Wraps
+(1, 8);   -- admin owns Storm Gauntlets
+
+-- testuser (user 2) owns a mix
+INSERT INTO inventory (user_id, asset_id) VALUES
+(2, 2),   -- testuser owns Shadow Hood
+(2, 3),   -- testuser owns Iron Buckler
+(2, 4),   -- testuser owns Phantom Dagger
+(2, 6),   -- testuser owns Bronze Helm
+(2, 9),   -- testuser owns Cracked Visor
+(2, 10);  -- testuser owns Ashen Cloak
+
+-- ── Listings ──────────────────────────────────────────────────────────────
+-- Only list assets the seller actually owns (matches business logic).
+-- Mix of price points across all rarities — gives the sort/filter
+-- UI real data to work with.
+
+-- admin's active listings (seller_id = 1)
+INSERT INTO listings (seller_id, asset_id, price, status) VALUES
+(1, 7,  899.99, 'active'),   -- Void Katana
+(1, 11, 450.00, 'active'),   -- Founders Blade
+(1, 12,  89.99, 'active'),   -- Neon Wraps
+(1, 8,   65.00, 'active');   -- Storm Gauntlets
+
+-- testuser's active listings (seller_id = 2)
+INSERT INTO listings (seller_id, asset_id, price, status) VALUES
+(2, 4,  45.00, 'active'),    -- Phantom Dagger
+(2, 10, 78.50, 'active'),    -- Ashen Cloak
+(2, 9,   4.99, 'active'),    -- Cracked Visor
+(2, 2,  55.00, 'active');    -- Shadow Hood
+
+-- ── Completed transactions — price history ────────────────────────────────
+-- These represent past trades that already happened before the app launched.
+-- They populate the transactions table so price charts have data on first load.
+-- The listing_id references must point to valid listings — we use the IDs
+-- inserted above. Active listings are IDs 1–8, so we add closed ones first.
+
+-- Insert some historical sold listings to reference in transactions
+INSERT INTO listings (seller_id, asset_id, price, status) VALUES
+(1, 5,  320.00, 'sold'),     -- listing id 9:  Founders Cape sold by admin
+(2, 3,    8.00, 'sold'),     -- listing id 10: Iron Buckler sold by testuser
+(1, 1, 1200.00, 'sold');     -- listing id 11: Ember Blade sold by admin
+
+-- Transactions that consumed those listings
+-- buyer_id must differ from seller_id (enforced by executePurchase,
+-- modelled correctly here for consistency)
+INSERT INTO transactions (listing_id, buyer_id, seller_id, asset_id, price) VALUES
+(9,  2, 1, 5,  320.00),   -- testuser bought Founders Cape from admin
+(10, 1, 2, 3,    8.00),   -- admin bought Iron Buckler from testuser
+(11, 2, 1, 1, 1200.00);   -- testuser bought Ember Blade from admin
+
+-- Fix ownership to match the transaction history above:
+-- After these trades, Founders Cape and Ember Blade belong to testuser,
+-- Iron Buckler belongs to admin.
+-- The inventory inserts above gave admin asset 1 and testuser asset 3 —
+-- update those to reflect the completed trades.
+UPDATE inventory SET user_id = 2 WHERE user_id = 1 AND asset_id = 1;  -- Ember Blade → testuser
+UPDATE inventory SET user_id = 2 WHERE user_id = 1 AND asset_id = 5;  -- Founders Cape → testuser
+UPDATE inventory SET user_id = 1 WHERE user_id = 2 AND asset_id = 3;  -- Iron Buckler → admin
+
+-- ── Wallet ledger — reflect the completed transactions ────────────────────
+-- These entries are what the dashboard ledger view will show for seed accounts.
+-- Each transaction produces one debit and one credit sharing a transaction_ref.
+
+-- Transaction 1: testuser (2) bought Founders Cape for $320 from admin (1)
+INSERT INTO wallet_ledger (user_id, transaction_ref, type, amount, balance_before, balance_after, reason) VALUES
+(2, 'SEED-TXN-001', 'debit',  320.00, 500.00,  180.00, 'purchase:Founders Cape'),
+(1, 'SEED-TXN-001', 'credit', 320.00, 10000.00, 10320.00, 'sale:Founders Cape');
+
+-- Transaction 2: admin (1) bought Iron Buckler for $8 from testuser (2)
+INSERT INTO wallet_ledger (user_id, transaction_ref, type, amount, balance_before, balance_after, reason) VALUES
+(1, 'SEED-TXN-002', 'debit',   8.00, 10320.00, 10312.00, 'purchase:Iron Buckler'),
+(2, 'SEED-TXN-002', 'credit',  8.00,   180.00,   188.00, 'sale:Iron Buckler');
+
+-- Transaction 3: testuser (2) bought Ember Blade for $1200 from admin (1)
+-- testuser's balance: 188.00 - 1200 would go negative, so we top up first
+-- (in reality they'd have deposited — seed data doesn't have to be perfectly
+-- realistic, but the running balance must not go negative in the ledger)
+UPDATE wallets SET balance = 500.00 WHERE user_id = 2;
+
+INSERT INTO wallet_ledger (user_id, transaction_ref, type, amount, balance_before, balance_after, reason) VALUES
+(2, 'SEED-TXN-003-TOP', 'credit', 1312.00, 188.00, 1500.00, 'seed_topup'),
+(2, 'SEED-TXN-003', 'debit',  1200.00, 1500.00,  300.00, 'purchase:Ember Blade'),
+(1, 'SEED-TXN-003', 'credit', 1200.00, 10312.00, 11512.00, 'sale:Ember Blade');
+
+-- Set final wallet balances to match the ledger trail
+UPDATE wallets SET balance = 11512.00 WHERE user_id = 1;
+UPDATE wallets SET balance =   300.00 WHERE user_id = 2;

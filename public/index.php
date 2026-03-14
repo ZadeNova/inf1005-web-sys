@@ -10,8 +10,6 @@ if (empty($_SESSION['csrf_token'])) {
 use Slim\Factory\AppFactory;
 use DI\ContainerBuilder;
 
-
-
 require __DIR__ . '/../backend/vendor/autoload.php';
 
 // ─── DI Container ───────────────────────────────────────────────────────────
@@ -19,6 +17,7 @@ $builder = new ContainerBuilder();
 
 $builder->addDefinitions([
 
+    // ── Database connection (singleton — one PDO for the whole request) ──
     PDO::class => function () {
         $dsn = sprintf('mysql:host=%s;dbname=%s;charset=utf8mb4',
             $_ENV['DB_HOST'] ?? getenv('DB_HOST'),
@@ -36,21 +35,61 @@ $builder->addDefinitions([
         );
     },
 
+    // ── Auth ─────────────────────────────────────────────────────────────
     App\Services\AuthService::class => function ($c) {
         return new App\Services\AuthService(
             $c->get(PDO::class)
         );
     },
 
-    App\Middleware\AuthMiddleware::class => function($c){
+    // ── Middleware ────────────────────────────────────────────────────────
+    App\Middleware\AuthMiddleware::class => function ($c) {
         return new App\Middleware\AuthMiddleware(
             $c->get(App\Services\AuthService::class)
         );
     },
 
-    App\Middleware\AdminMiddleware::class => function ($c){
+    App\Middleware\AdminMiddleware::class => function ($c) {
         return new App\Middleware\AdminMiddleware(
             $c->get(App\Services\AuthService::class)
+        );
+    },
+
+    // ── Repositories ─────────────────────────────────────────────────────
+    App\Repositories\ListingRepository::class => function ($c) {
+        return new App\Repositories\ListingRepository(
+            $c->get(PDO::class)
+        );
+    },
+
+    // ── Services ─────────────────────────────────────────────────────────
+    App\Services\WalletService::class => function ($c) {
+        return new App\Services\WalletService(
+            $c->get(PDO::class)
+        );
+    },
+
+    App\Services\MarketService::class => function ($c) {
+        return new App\Services\MarketService(
+            $c->get(PDO::class),
+            $c->get(App\Repositories\ListingRepository::class),
+            $c->get(App\Services\WalletService::class)
+        );
+    },
+
+    // ── Controllers ──────────────────────────────────────────────────────
+    App\Controllers\Api\MarketController::class => function ($c) {
+        return new App\Controllers\Api\MarketController(
+            $c->get(App\Services\MarketService::class),
+            $c->get(App\Services\AuthService::class)
+        );
+    },
+
+    App\Controllers\Api\PortfolioController::class => function ($c) {
+        return new App\Controllers\Api\PortfolioController(
+            $c->get(PDO::class),
+            $c->get(App\Services\AuthService::class),
+            $c->get(App\Services\WalletService::class)
         );
     },
 
@@ -58,7 +97,7 @@ $builder->addDefinitions([
 
 $container = $builder->build();
 AppFactory::setContainer($container);
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 
 $app = AppFactory::create();
 
