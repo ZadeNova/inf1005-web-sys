@@ -3,6 +3,17 @@
  * Owner: Minal (Dev 1)
  * Route: /login (login.html)
  * At integration: moves to backend/src/Views/login.php
+ * AVAILABLE ISLANDS (yours to mount):
+ *   <LoginForm /> ← mounts as  <div id="login-form-root">  in login.php
+ *
+ * AVAILABLE ATOMS (import from shared):
+ *   Card, Button, Badge, Skeleton  ← from '../shared/atoms/...'
+ *
+ *     the login page will likely need:
+ *   - A centred card layout (the form is already inside LoginForm)
+ *   - Maybe a brand logo / title above the form
+ *   - A link to /register for new users
+ *   - Keep it simple and clean — this is an auth page, not a landing page
  */
 
 import { StrictMode } from 'react';
@@ -18,14 +29,7 @@ document.documentElement.setAttribute('data-theme',
 );
 
 function LoginPage() {
-  return (
-    <div className="min-h-screen bg-(--color-bg) flex-col">
-      <LocalNav />
-      <main className="flex-1 flex items-center justify-center px-6 py-16">
-        <LoginForm />
-      </main>
-    </div>
-  );
+  // build UI here
 }
 
 createRoot(document.getElementById('root')).render(

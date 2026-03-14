@@ -3,6 +3,21 @@
  * Owner: WH (Dev 2)
  * Route: /profile (profile.html)
  * At integration: moves to backend/src/Views/profile.php
+ * 
+ * AVAILABLE ISLANDS (yours to mount):
+ *   <ProfileCard userId="user-001" /> ← mounts as  <div id="profile-card-root">
+ *
+ * AVAILABLE MOLECULES + ATOMS (import from shared):
+ *   AssetCard  ← from '../shared/molecules/AssetCard.jsx'  (for owned assets grid)
+ *   Card, Button, Badge, Skeleton  ← from '../shared/atoms/...'
+ *
+ * MOCK DATA (already available):
+ *   mockAssets  ← use this to render a mock "Owned Assets" grid below the ProfileCard
+ *
+ *     the profile page will likely need:
+ *   - ProfileCard island at the top (user avatar, bio, stats)
+ *   - A section below for "Owned Assets" — use mockAssets + <AssetCard compact />
+ *   - Optional: tabs for "Owned", "Listed", "Transaction History"
  */
 
 import { StrictMode } from 'react';
@@ -18,17 +33,7 @@ document.documentElement.setAttribute('data-theme',
 );
 
 function ProfilePage() {
-  return (
-    <div className="min-h-screen bg-(--color-bg) flex-col">
-      <LocalNav />
-      <main className="max-w-7xl mx-auto px-6 py-12 w-full flex-1">
-        <div className="max-w-sm">
-          <ProfileCard userId="user-001" />
-        </div>
-        {/* TODO WH: add owned assets grid below ProfileCard */}
-      </main>
-    </div>
-  );
+  // build UI here
 }
 
 createRoot(document.getElementById('root')).render(

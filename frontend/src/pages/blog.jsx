@@ -3,6 +3,13 @@
  * Owner: Minal (Dev 1)
  * Route: /blog (blog.html)
  * At integration: moves to backend/src/Views/blog.php
+ * 
+ * AVAILABLE ISLANDS (yours to mount):
+ *   <BlogFeed />   ← mounts as  <div id="blog-feed-root">  in blog.php
+ *
+ * AVAILABLE ATOMS (import from shared):
+ *   Card, Button, Badge, Skeleton  ← from '../../shared/atoms/...'
+ *
  */
 
 import { StrictMode } from 'react';
@@ -18,15 +25,9 @@ document.documentElement.setAttribute('data-theme',
 );
 
 function BlogPage() {
-  return (
-    <div className="min-h-screen bg-(--color-bg) flex flex-col">
-      <LocalNav />
-      <main className="max-w-7xl mx-auto px-6 py-12 w-full flex-1">
-        <h1 className="text-3xl font-bold text-(--color-text-primary) mb-8">News & Updates</h1>
-        <BlogFeed />
-      </main>
-    </div>
-  );
+  // TODO Minal: build your Market News page UI here.
+  // Mount <BlogFeed /> somewhere inside your layout.
+  // This is your creative space — design the full page around the island.
 }
 
 createRoot(document.getElementById('root')).render(

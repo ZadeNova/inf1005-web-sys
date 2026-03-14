@@ -3,6 +3,17 @@
  * Owner: WH (Dev 2)
  * Route: /listings (listings.html)
  * At integration: moves to backend/src/Views/listing.php
+ * AVAILABLE ISLANDS (yours to mount):
+ *   <ListingsGrid /> ← mounts as  <div id="listings-grid-root">
+ *
+ * AVAILABLE ATOMS (import from shared):
+ *   Card, Button, Badge, Skeleton  ← from '../shared/atoms/...'
+ *
+ *   the listings page will likely need:
+ *   - A page heading (e.g. "Market" or "Browse Listings")
+ *   - Optional: a hero/banner strip at the top (collection name, drop info)
+ *   - ListingsGrid island — this already includes the asset cards
+ *   - FilterBar and Pagination are YOUR TODO inside ListingsGrid.jsx
  */
 
 import { StrictMode }  from 'react';
@@ -18,15 +29,9 @@ document.documentElement.setAttribute('data-theme',
 );
 
 function ListingsPage() {
-  return (
-    <div className="min-h-screen bg-(--color-bg) flex flex-col">
-      <LocalNav />
-      <main className="max-w-7xl mx-auto px-6 py-12 w-full flex-1">
-        <h1 className="text-3xl font-bold text-(--color-text-primary) mb-8">Market</h1>
-        <ListingsGrid />
-      </main>
-    </div>
-  );
+  // TODO WH: build your Market Listings page UI here.
+  // Mount <ListingsGrid /> somewhere inside your layout.
+  // This is your creative space — design the full page around the island.
 }
 
 createRoot(document.getElementById('root')).render(

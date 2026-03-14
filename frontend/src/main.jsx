@@ -10,7 +10,6 @@
  * FOR DEVELOPERS (Dev 1 / Dev 2):
  *   - You dont edit this file.
  *   - Build your island in src/islands/Minal/ or src/islands/WH/.
- *   - Test locally using the TestBed (see src/TestBed.jsx).
  *   - When your island is ready, tell me (CL). I will register it here.
  *
  * REGISTERING A NEW ISLAND (CL only):
