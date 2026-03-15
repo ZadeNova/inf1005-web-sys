@@ -26,6 +26,11 @@ import '../index.css';
 
 import LocalNav   from '../shared/molecules/LocalNav.jsx';
 import ProfileCard from '../islands/WH/ProfileCard.jsx';
+import AssetCard        from '../shared/molecules/AssetCard.jsx';
+import Card             from '../shared/atoms/Card.jsx';
+import Button           from '../shared/atoms/Button.jsx';
+import Badge            from '../shared/atoms/Badge.jsx';
+import { mockAssets }   from '../shared/mockAssets.js';
 
 const saved = localStorage.getItem('vft-theme');
 document.documentElement.setAttribute('data-theme',
@@ -33,7 +38,33 @@ document.documentElement.setAttribute('data-theme',
 );
 
 function ProfilePage() {
-  // build UI here
+  return (
+    <div className="min-h-screen bg-(--color-bg)">
+
+      {/* Navigation bar */}
+      <LocalNav />
+
+      {/* Main content */}
+      <main className="max-w-4xl mx-auto px-4 py-8">
+
+        {/* Profile Card island */}
+        <ProfileCard userId="user-001" />
+
+        {/* Owned Assets section */}
+        <section className="mt-8">
+          <h2 className="text-lg font-bold text-(--color-text-primary) mb-4">
+            Owned Assets
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {mockAssets.map(asset => (
+              <AssetCard key={asset.id} asset={asset} compact />
+            ))}
+          </div>
+        </section>
+
+      </main>
+    </div>
+  );
 }
 
 createRoot(document.getElementById('root')).render(

@@ -29,9 +29,17 @@ document.documentElement.setAttribute('data-theme',
 );
 
 function ListingsPage() {
-  // TODO WH: build your Market Listings page UI here.
-  // Mount <ListingsGrid /> somewhere inside your layout.
-  // This is your creative space — design the full page around the island.
+  return (
+    <div className="min-h-screen bg-(--color-bg)">
+      <LocalNav />
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold text-(--color-text-primary) mb-6">
+          Market Listings
+        </h1>
+        <ListingsGrid />
+      </main>
+    </div>
+  );
 }
 
 createRoot(document.getElementById('root')).render(
