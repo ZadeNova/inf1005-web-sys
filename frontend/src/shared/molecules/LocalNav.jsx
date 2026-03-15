@@ -8,13 +8,15 @@
 import ThemeToggle  from '../../islands/CL/ThemeToggle.jsx';
 
 const NAV_LINKS = [
-  { href: '/',          label: 'Home' },
-  { href: '/listings',  label: 'Market' },
-  { href: '/community', label: 'Community' },
-  { href: '/blog',      label: 'News' },
+  { href: '/',        label: 'Home'      },
+  { href: '/listings', label: 'Market'   },
+  { href: '/blog',    label: 'News'      },
+  { href: '/about',   label: 'About'     },
   { href: '/dashboard', label: 'Dashboard' },
-  { href: '/profile',   label: 'Profile' },
+  { href: '/profile', label: 'Profile'   },
 ];
+
+
 
 export default function LocalNav() {
   const current = window.location.pathname;
@@ -57,10 +59,10 @@ export default function LocalNav() {
         {/* Right controls */}
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          <a
-            href="/login"
-            className="text-xs font-semibold px-3 py-1.5 rounded-md bg-(--color-accent) text-white hover:bg-(--color-accent-hover) transition-colors"
-          >
+          <a href="/admin" className="text-xs font-semibold px-3 py-1.5 rounded-md border border-(--color-border) text-(--color-text-secondary) hover:border-(--color-accent) hover:text-(--color-accent) transition-colors">
+            Admin
+          </a>
+          <a href="/login" className="text-xs font-semibold px-3 py-1.5 rounded-md bg-(--color-accent) text-white hover:bg-(--color-accent-hover) transition-colors">
             Sign In
           </a>
         </div>

@@ -164,33 +164,6 @@ export const mockStats = {
 };
 
 /* ---------------------------------------------------------- */
-/* MOCK POSTS — for Community page                            */
-/* ---------------------------------------------------------- */
-export const mockPosts = [
-  {
-    id:        'post-001',
-    author:    mockUsers[0],
-    content:   'Just pulled Shadowfall Genesis #001 from the secondary market. The glow effect on this piece is unreal. 🔥',
-    likes:     142,
-    liked:     false,
-    createdAt: '2025-03-13T07:30:00Z',
-    comments:  [
-      { id: 'comment-001', author: mockUsers[1], content: 'Congrats! That piece has been trending all week.', createdAt: '2025-03-13T07:45:00Z' },
-      { id: 'comment-002', author: mockUsers[2], content: 'What did you pay for it?', createdAt: '2025-03-13T08:00:00Z' },
-    ],
-  },
-  {
-    id:        'post-002',
-    author:    mockUsers[2],
-    content:   'The new Celestial Series drop is live. Ancient Phoenix is sitting at $1,299 already and climbing.',
-    likes:     89,
-    liked:     false,
-    createdAt: '2025-03-13T06:00:00Z',
-    comments:  [],
-  },
-];
-
-/* ---------------------------------------------------------- */
 /* MOCK PRICE CHART DATA — for PriceChart island              */
 /* ---------------------------------------------------------- */
 export const mockPriceChartData = {

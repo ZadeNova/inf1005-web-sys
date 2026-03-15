@@ -2,10 +2,18 @@
 ob_start();
 ?>
 
-<section class="max-w-7xl mx-auto px-6 py-16">
-    <h1 class="text-4xl font-bold text-white mb-8">Admin Panel</h1>
-    <!-- AdminPanel React island mounts here -->
-    <div id="admin-panel-root" data-props="{}"></div>
+<section aria-labelledby="news-heading" class="max-w-7xl mx-auto px-6 py-8 mb-12">
+    <h2 id="news-heading" class="text-lg font-semibold text-(--color-text-primary) mb-4">
+        Publish Market News
+    </h2>
+    <div id="create-news-post-root" data-props="{}"></div>
+</section>
+
+<section aria-labelledby="listings-heading" class="max-w-7xl mx-auto px-6 pb-16">
+    <h2 id="listings-heading" class="text-lg font-semibold text-(--color-text-primary) mb-4">
+        Manage Listings
+    </h2>
+    <div id="admin-listings-manager-root" data-props="{}"></div>
 </section>
 
 <?php

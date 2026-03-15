@@ -52,26 +52,16 @@ function mountIsland(id, Component) {
    CL ISLANDS
    ═══════════════════════════════════════════════════════════════ */
 import ThemeToggle from './islands/CL/ThemeToggle.jsx';
+import PriceChart from './islands/CL/PriceChart.jsx';
+import CreateNewsPost from './islands/CL/CreateNewsPost.jsx';
+import AdminListingsManager from './islands/CL/AdminListingsManager.jsx';
 mountIsland('theme-toggle-root', ThemeToggle);
-
-// Uncomment as each CL island is completed:
-// import PriceChart     from './islands/CL/PriceChart.jsx';
-// import PostFeed       from './islands/CL/PostFeed.jsx';
-// import CreatePost     from './islands/CL/CreatePost.jsx';
-// import LikeComment    from './islands/CL/LikeComment.jsx';
-// import FriendsList    from './islands/CL/FriendsList.jsx';
-// import FriendRequests from './islands/CL/FriendRequests.jsx';
-// import SearchUsers    from './islands/CL/SearchUsers.jsx';
-// mountIsland('price-chart-root',      PriceChart);
-// mountIsland('post-feed-root',        PostFeed);
-// mountIsland('create-post-root',      CreatePost);
-// mountIsland('like-comment-root',     LikeComment);
-// mountIsland('friends-list-root',     FriendsList);
-// mountIsland('friend-requests-root',  FriendRequests);
-// mountIsland('search-users-root',     SearchUsers);
+mountIsland('price-chart-root', PriceChart);
+mountIsland('create-news-post-root', CreateNewsPost);
+mountIsland('admin-listings-manager-root', AdminListingsManager);
 
 /* ═══════════════════════════════════════════════════════════════
-   DEV 1 ISLANDS — Login · Register · Blog
+   Minal ISLANDS — Login · Register · Blog
    Register here once island is reviewed and approved by CL.
    ═══════════════════════════════════════════════════════════════ */
 // import LoginForm    from './islands/Minal/LoginForm.jsx';
@@ -82,7 +72,7 @@ mountIsland('theme-toggle-root', ThemeToggle);
 // mountIsland('blog-feed-root',     BlogFeed);
 
 /* ═══════════════════════════════════════════════════════════════
-   DEV 2 ISLANDS — Dashboard · Profile · Listings
+   WH ISLANDS — Dashboard · Profile · Listings
    Register here once island is reviewed and approved by CL.
    ═══════════════════════════════════════════════════════════════ */
 // import ListingsGrid   from './islands/WH/ListingsGrid.jsx';

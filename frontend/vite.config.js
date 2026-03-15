@@ -45,7 +45,7 @@ function mpaRewritePlugin() {
 			server.middlewares.use((req, _res, next) => {
 				const routes = {
 					"/": "/index.html",
-					"/community": "/community.html",
+					"/admin": "/admin.html",
 					"/login": "/login.html",
 					"/register": "/register.html",
 					"/blog": "/blog.html",
