@@ -25,9 +25,28 @@ document.documentElement.setAttribute('data-theme',
 );
 
 function BlogPage() {
-  // TODO Minal: build your Market News page UI here.
-  // Mount <BlogFeed /> somewhere inside your layout.
-  // This is your creative space — design the full page around the island.
+  return (
+    <div className="min-h-screen bg-(--color-bg)">
+
+      {/* Top navigation bar */}
+      <LocalNav />
+
+      {/* Main page content */}
+      <main id="main-content" tabIndex="-1" className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+
+        <h1 className="text-3xl font-bold text-(--color-text-primary) mb-2">
+          Market News
+        </h1>
+        <p className="text-sm text-(--color-text-secondary) mb-8">
+          Collection drops, trading guides, and marketplace updates.
+        </p>
+
+        {/* BlogFeed island — the card grid lives inside here */}
+        <BlogFeed />
+
+      </main>
+    </div>
+  );
 }
 
 createRoot(document.getElementById('root')).render(
