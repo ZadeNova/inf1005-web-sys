@@ -9,23 +9,39 @@
  *   Returns: { listings: [...], pagination: { page, total, perPage } }
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import AssetCard from '../../shared/molecules/AssetCard.jsx';
 import Skeleton  from '../../shared/atoms/Skeleton.jsx';
 import Button    from '../../shared/atoms/Button.jsx';
 import { useApi }          from '../../shared/hooks/useApi.js';
 import { mockAssets, RARITY, CONDITION, USE_MOCK } from '../../shared/mockAssets.js';
 
+function highlight(text, query) {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <strong className="text-(--color-accent)">{text.slice(idx, idx + query.length)}</strong>
+      {text.slice(idx + query.length)}
+    </>
+  );
+}
+
 export default function ListingsGrid() {
-  const [cart, setCart]           = useState([]);
-  const [search, setSearch]       = useState('');
-  const [rarity, setRarity]       = useState('');
-  const [condition, setCondition] = useState('');
-  const [sort, setSort]           = useState('');
-  const [view, setView]           = useState('grid');
-  const [page, setPage]           = useState(1);
-  const [maxPrice, setMaxPrice]   = useState(5000);
+  const [cart, setCart]             = useState([]);
+  const [query, setQuery]           = useState('');
+  const [search, setSearch]         = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [rarity, setRarity]         = useState('');
+  const [condition, setCondition]   = useState('');
+  const [sort, setSort]             = useState('low');
+  const [view, setView]             = useState('grid');
+  const [page, setPage]             = useState(1);
+  const [maxPrice, setMaxPrice]     = useState(5000);
   const PER_PAGE = 4;
+  const searchRef = useRef(null);
 
   const { data, loading, error } = useApi(
     USE_MOCK ? null : '/api/v1/listings',
@@ -38,6 +54,23 @@ export default function ListingsGrid() {
     Math.ceil(Math.max(...allAssets.map(a => a.price))),
     [allAssets]
   );
+
+  const suggestions = useMemo(() => {
+    if (!query.trim()) return [];
+    return allAssets
+      .filter(a => a.name.toLowerCase().includes(query.toLowerCase()))
+      .slice(0, 6);
+  }, [query, allAssets]);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const filtered = allAssets.filter(a => {
     if (search && !a.name.toLowerCase().includes(search.toLowerCase())) return false;
@@ -60,16 +93,31 @@ export default function ListingsGrid() {
     setCart(prev => [...new Set([...prev, assetId])]);
   }
 
+  function handleSelectSuggestion(name) {
+    setQuery(name);
+    setSearch(name);
+    setShowDropdown(false);
+    setPage(1);
+  }
+
+  function handleSearchSubmit(e) {
+    e.preventDefault();
+    setSearch(query);
+    setShowDropdown(false);
+    setPage(1);
+  }
+
   function handleClearFilters() {
+    setQuery('');
     setSearch('');
     setRarity('');
     setCondition('');
-    setSort('');
+    setSort('low');
     setMaxPrice(absoluteMax);
     setPage(1);
   }
 
-  const hasActiveFilters = search || rarity || condition || sort || maxPrice < absoluteMax;
+  const hasActiveFilters = search || rarity || condition || sort === 'high' || maxPrice < absoluteMax;
 
   if (loading) {
     return (
@@ -96,23 +144,79 @@ export default function ListingsGrid() {
 
   return (
     <div className="flex flex-col gap-6">
-
       <div className="flex flex-col gap-3">
 
-        {/* Row 1 — Search bar */}
-        <input
-          type="search"
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Search listings..."
-          className="bg-(--color-surface-2) border border-(--color-border)
-                     text-(--color-text-primary) text-sm rounded-md px-3 py-2 w-full"
-          aria-label="Search listings"
-        />
+        <form onSubmit={handleSearchSubmit} ref={searchRef} className="relative">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type="search"
+                value={query}
+                onChange={e => {
+                  setQuery(e.target.value);
+                  setShowDropdown(true);
+                  if (!e.target.value) {
+                    setSearch('');
+                    setPage(1);
+                  }
+                }}
+                onFocus={() => query && setShowDropdown(true)}
+                placeholder="Search listings..."
+                className="bg-(--color-surface-2) border border-(--color-border)
+                           text-(--color-text-primary) text-sm rounded-full
+                           px-4 py-2 w-full"
+                aria-label="Search listings"
+                aria-autocomplete="list"
+                aria-expanded={showDropdown && suggestions.length > 0}
+              />
 
-        {/* Row 2 — filters + view toggle */}
+              {showDropdown && suggestions.length > 0 && (
+                <ul
+                  role="listbox"
+                  className="absolute top-full left-0 right-0 z-50 mt-1
+                             bg-(--color-surface) border border-(--color-border)
+                             rounded-md shadow-lg overflow-hidden"
+                >
+                  {suggestions.map(asset => (
+                    <li
+                      key={asset.id}
+                      role="option"
+                      aria-selected="false"
+                      onMouseDown={() => handleSelectSuggestion(asset.name)}
+                      className="px-3 py-2 text-sm text-(--color-text-primary)
+                                 hover:bg-(--color-surface-2) cursor-pointer
+                                 flex items-center justify-between gap-2"
+                    >
+                      <span>{highlight(asset.name, query)}</span>
+                      <span className="text-xs text-(--color-text-muted) shrink-0">
+                        {asset.rarity}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <Button
+              variant="primary"
+              size="md"
+              type="submit"
+              aria-label="Submit search"
+              className="rounded-full"
+            >
+              Search
+            </Button>
+          </div>
+
+          {search && (
+            <p className="text-sm text-(--color-text-muted) mt-2">
+              {sorted.length} result{sorted.length !== 1 ? 's' : ''} for
+              <span className="font-semibold text-(--color-text-primary)"> "{search}"</span>
+            </p>
+          )}
+        </form>
+
         <div className="flex flex-wrap gap-3 items-center justify-between">
-
           <div className="flex flex-wrap gap-3 items-center">
 
             <select
@@ -148,26 +252,23 @@ export default function ListingsGrid() {
                          text-(--color-text-primary) text-sm rounded-md px-3 py-2"
               aria-label="Sort by price"
             >
-              <option value="">Default</option>
-              <option value="low">Price: Low to High</option>
+              <option value="low">Default</option>
               <option value="high">Price: High to Low</option>
             </select>
 
             {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearFilters}
-              >
+              <Button variant="ghost" size="sm" onClick={handleClearFilters}>
                 Clear filters
               </Button>
             )}
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-sm text-(--color-text-muted)">
-              {sorted.length} listing{sorted.length !== 1 ? 's' : ''}
-            </span>
+            {!search && (
+              <span className="text-sm text-(--color-text-muted)">
+                {sorted.length} listing{sorted.length !== 1 ? 's' : ''}
+              </span>
+            )}
             <div className="flex gap-1 border border-(--color-border) rounded-md p-0.5">
               <button
                 type="button"
@@ -197,12 +298,8 @@ export default function ListingsGrid() {
           </div>
         </div>
 
-        {/* Row 3 — Price range slider */}
         <div className="flex items-center gap-3">
-          <label
-            htmlFor="price-range"
-            className="text-sm text-(--color-text-muted) shrink-0"
-          >
+          <label htmlFor="price-range" className="text-sm text-(--color-text-muted) shrink-0">
             Max Price:
           </label>
           <input
@@ -255,10 +352,9 @@ export default function ListingsGrid() {
                               flex items-center justify-center">
                 <span className="text-xs text-(--color-text-muted)">IMG</span>
               </div>
-
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-(--color-text-primary) truncate">
-                  {asset.name}
+                  {highlight(asset.name, search)}
                 </p>
                 <p className="text-xs text-(--color-text-muted)">
                   {asset.collection} · {asset.rarity}
@@ -267,7 +363,6 @@ export default function ListingsGrid() {
                   {asset.condition}
                 </p>
               </div>
-
               <div className="flex items-center gap-3 shrink-0">
                 <p className="text-sm font-bold text-(--color-text-primary)">
                   ${asset.price.toLocaleString()}
@@ -277,6 +372,7 @@ export default function ListingsGrid() {
                   size="sm"
                   onClick={() => handleAddToCart(asset.id)}
                   aria-label={`Add ${asset.name} to cart`}
+                  className="rounded-full"
                 >
                   Add
                 </Button>
