@@ -66,11 +66,19 @@ class PageController
     }
 
     public function dashboard(Request $request, Response $response): Response
-    {
-        return $this->render($response, 'dashboard', [
-            'title' => 'Dashboard — Vapour FT'
-        ]);
-    }
+{
+    return $this->render($response, 'dashboard', [
+        'title'      => 'Dashboard — Vapour FT',
+        'dashStats'  => [
+            'username'        => $_SESSION['username'] ?? 'Trader',
+            'isVerified'      => false,
+            'portfolioValue'  => null,
+            'portfolioChange' => null,
+            'walletBalance'   => null,
+            'currency'        => 'VPR',
+        ],
+    ]);
+}
 
     public function profile(Request $request, Response $response): Response
     {

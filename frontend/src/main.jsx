@@ -62,24 +62,34 @@ mountIsland('admin-listings-manager-root', AdminListingsManager);
 
 /* ═══════════════════════════════════════════════════════════════
    Minal ISLANDS — Login · Register · Blog
-   Register here once island is reviewed and approved by CL.
    ═══════════════════════════════════════════════════════════════ */
-// import LoginForm    from './islands/Minal/LoginForm.jsx';
-// import RegisterForm from './islands/Minal/RegisterForm.jsx';
-// import BlogFeed     from './islands/Minal/BlogFeed.jsx';
-// mountIsland('login-form-root',    LoginForm);
-// mountIsland('register-form-root', RegisterForm);
-// mountIsland('blog-feed-root',     BlogFeed);
+import LoginForm    from './islands/Minal/LoginForm.jsx';
+import RegisterForm from './islands/Minal/RegisterForm.jsx';
+import BlogFeed     from './islands/Minal/BlogFeed.jsx';
+mountIsland('login-form-root',    LoginForm);
+mountIsland('register-form-root', RegisterForm);
+mountIsland('blog-feed-root',     BlogFeed);
 
 /* ═══════════════════════════════════════════════════════════════
    WH ISLANDS — Dashboard · Profile · Listings
-   Register here once island is reviewed and approved by CL.
    ═══════════════════════════════════════════════════════════════ */
-// import ListingsGrid   from './islands/WH/ListingsGrid.jsx';
-// import ProfileCard    from './islands/WH/ProfileCard.jsx';
-// import PortfolioChart from './islands/WH/PortfolioChart.jsx';
-// import ActivityFeed   from './islands/WH/ActivityFeed.jsx';
-// mountIsland('listings-grid-root',   ListingsGrid);
-// mountIsland('profile-card-root',    ProfileCard);
-// mountIsland('portfolio-chart-root', PortfolioChart);
-// mountIsland('activity-feed-root',   ActivityFeed);
+import ListingsGrid   from './islands/WH/ListingsGrid.jsx';
+import ProfileCard    from './islands/WH/ProfileCard.jsx';
+import PortfolioChart from './islands/WH/PortfolioChart.jsx';
+import ActivityFeed   from './islands/WH/ActivityFeed.jsx';
+import RarityDonutChart        from './islands/WH/RarityDonutChart.jsx';
+import ActiveListingsManager   from './islands/WH/ActiveListingsManager.jsx';
+import ProfileCollections      from './islands/WH/ProfileCollections.jsx';
+import WalletBalance      from './islands/WH/WalletBalance.jsx';
+import PortfolioTable     from './islands/WH/PortfolioTable.jsx';
+import TransactionHistory from './islands/WH/TransactionHistory.jsx';
+mountIsland('listings-grid-root',   ListingsGrid);
+mountIsland('profile-card-root',    ProfileCard);
+mountIsland('portfolio-chart-root', PortfolioChart);
+mountIsland('activity-feed-root',   ActivityFeed);
+mountIsland('rarity-donut-chart-root',        RarityDonutChart);
+mountIsland('active-listings-manager-root',   ActiveListingsManager);
+mountIsland('profile-collections-root',       ProfileCollections);
+mountIsland('wallet-balance-root',       WalletBalance);
+mountIsland('portfolio-table-root',      PortfolioTable);
+mountIsland('transaction-history-root',  TransactionHistory);
