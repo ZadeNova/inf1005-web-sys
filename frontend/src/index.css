@@ -3,7 +3,7 @@
    This file IS the Tailwind v4 config (replaces tailwind.config.js)
    ============================================================= */
 
-@source "../../../backend/src/Views/**/*.php";
+@source "../../backend/src/Views/**/*.php";
 @import "tailwindcss";
 
 /* =============================================================
