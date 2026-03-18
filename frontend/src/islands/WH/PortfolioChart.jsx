@@ -19,7 +19,7 @@
  *   Returns: { labels: string[], values: number[] }
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Card     from '../../shared/atoms/Card.jsx';
 import Skeleton from '../../shared/atoms/Skeleton.jsx';
 import { useApi }   from '../../shared/hooks/useApi.js';
@@ -38,27 +38,29 @@ import {
 
 Chart.register(LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip, Filler);
 
-/* Reads live CSS variable — works across all three theme modes */
 function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-/* Mock portfolio history */
+const TIME_RANGES = ['1W', '1M', '3M'];
+
 const MOCK_DATA = {
-  labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-  values: [1200, 1850, 1600, 2400, 2100, 2847],
+  '1W': { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], values: [2600, 2650, 2700, 2680, 2750, 2800, 2847] },
+  '1M': { labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],        values: [1200, 1850, 1600, 2400, 2100, 2847] },
+  '3M': { labels: ['Jan', 'Feb', 'Mar'],                              values: [2400, 2100, 2847] },
 };
 
 export default function PortfolioChart() {
-  const canvasRef = useRef(null);
-  const chartRef  = useRef(null);
+  const canvasRef         = useRef(null);
+  const chartRef          = useRef(null);
+  const [range, setRange] = useState('1M');
 
   const { data, loading, error } = useApi(
-    USE_MOCK ? null : '/api/v1/dashboard/portfolio-history',
+    USE_MOCK ? null : `/api/v1/dashboard/portfolio-history?range=${range}`,
     { auto: !USE_MOCK }
   );
 
-  const chartData = USE_MOCK ? MOCK_DATA : data;
+  const chartData = USE_MOCK ? MOCK_DATA[range] : data;
 
   useEffect(() => {
     if (!chartData || !canvasRef.current) return;
@@ -77,20 +79,22 @@ export default function PortfolioChart() {
       data: {
         labels:   chartData.labels,
         datasets: [{
-          label:           'Portfolio Value (USD)',
-          data:            chartData.values,
-          borderColor:     accent,
-          backgroundColor: `${accent}22`,
-          borderWidth:     2,
-          pointRadius:     4,
-          pointHoverRadius: 7,
-          tension:         0.4,
-          fill:            true,
+          label:            'Portfolio Value (USD)',
+          data:             chartData.values,
+          borderColor:      accent,
+          backgroundColor:  `${accent}22`,
+          borderWidth:      2,
+          pointRadius:      5,
+          pointHoverRadius: 8,
+          pointBackgroundColor: accent,
+          tension:          0.4,
+          fill:             true,
         }],
       },
       options: {
         responsive:          true,
         maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -99,6 +103,7 @@ export default function PortfolioChart() {
             borderWidth:     1,
             titleColor:      cssVar('--color-text-primary'),
             bodyColor:       textMuted,
+            padding:         10,
             callbacks: {
               label: ctx => ` $${ctx.parsed.y.toLocaleString()}`,
             },
@@ -122,9 +127,9 @@ export default function PortfolioChart() {
     });
 
     return () => { if (chartRef.current) chartRef.current.destroy(); };
-  }, [chartData]);
+  }, [chartData, range]);
 
-  if (loading) return <Skeleton variant="block" height={240} label="Loading portfolio chart" />;
+  if (loading) return <Skeleton variant="block" height={280} label="Loading portfolio chart" />;
 
   if (error) {
     return (
@@ -138,11 +143,26 @@ export default function PortfolioChart() {
     <Card variant="default" padding="md" className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-(--color-text-primary)">
-          Portfolio Value
+          Portfolio Value Over Time
         </h3>
-        {/* TODO Dev 2: add time range selector (1W / 1M / 3M) */}
+        <div className="flex gap-1">
+          {TIME_RANGES.map(r => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRange(r)}
+              className={`px-2.5 py-1 text-[10px] font-semibold rounded-sm transition-colors duration-150
+                ${range === r
+                  ? 'bg-(--color-accent) text-white'
+                  : 'text-(--color-text-muted) hover:text-(--color-text-primary) hover:bg-(--color-surface-2)'
+                }`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
       </div>
-      <div style={{ height: 220 }}>
+      <div style={{ height: 280 }}>
         <canvas ref={canvasRef} aria-label="Portfolio value over time" role="img" />
       </div>
     </Card>
