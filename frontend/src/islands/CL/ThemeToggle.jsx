@@ -5,7 +5,7 @@
  * Renders the three-mode toggle button group shown in the nav.
  * Uses useTheme() to read/write the data-theme attribute on <html>.
  */
-
+import React from 'react';
 import { useTheme } from '../../shared/hooks/useTheme.js';
 
 const THEME_OPTIONS = [

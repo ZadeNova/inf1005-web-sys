@@ -371,7 +371,7 @@ $stack = [
                 <?php foreach ($stack as $tech): ?>
                 <li class="flex flex-col items-center px-5 py-3
                             bg-(--color-surface) border border-(--color-border)
-                            rounded-lg min-w-[100px] hover:border-(--color-accent)
+                            rounded-lg min-w-25 hover:border-(--color-accent)
                             transition-colors">
                     <span class="text-sm font-bold text-(--color-text-primary)">
                         <?= htmlspecialchars($tech['label']) ?>
