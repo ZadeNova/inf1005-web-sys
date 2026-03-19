@@ -25,6 +25,7 @@ import '../index.css';
 import LocalNav      from '../shared/molecules/LocalNav.jsx';
 import RegisterForm  from '../islands/Minal/RegisterForm.jsx';
 
+const USE_AUTH_MOCK = false; // auth backend is live
 const saved = localStorage.getItem('vft-theme');
 document.documentElement.setAttribute('data-theme',
   ['dark','light','colorblind'].includes(saved) ? saved : 'dark'

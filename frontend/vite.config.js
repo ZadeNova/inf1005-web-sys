@@ -68,11 +68,12 @@ function mpaRewritePlugin() {
 }
 
 export default defineConfig({
-	plugins: [react(), tailwindcss(), mpaRewritePlugin()],
+	plugins: [react({ jsxRuntime: 'automatic' }), tailwindcss(), mpaRewritePlugin()],
 
 	build: {
 		outDir: "../public/assets",
 		emptyOutDir: true,
+		assetsDir: ".",
 		manifest: true,
 		rollupOptions: {
 			input: resolve(__dirname, "src/main.jsx"),

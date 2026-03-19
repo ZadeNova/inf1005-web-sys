@@ -3,8 +3,9 @@
    This file IS the Tailwind v4 config (replaces tailwind.config.js)
    ============================================================= */
 
-@source "../../backend/src/Views/**/*.php";
 @import "tailwindcss";
+@source "/backend/src/Views/**/*.php";
+
 
 /* =============================================================
    TAILWIND v4 THEME — generates utility classes like bg-accent,

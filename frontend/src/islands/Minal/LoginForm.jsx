@@ -28,6 +28,7 @@ import Input  from '../../shared/atoms/Input.jsx';
 import Card   from '../../shared/atoms/Card.jsx';
 import { usePost }    from '../../shared/hooks/useApi.js';
 import { USE_MOCK }   from '../../shared/mockAssets.js';
+const USE_AUTH_MOCK = false; // auth backend is live
 
 export default function LoginForm() {
   const [email,    setEmail]    = useState('');
@@ -47,8 +48,7 @@ export default function LoginForm() {
   async function handleSubmit() {
     if (!validate()) return;
 
-    if (USE_MOCK) {
-      // TODO: remove when backend is live
+    if (USE_AUTH_MOCK) {
       console.log('[LoginForm] MOCK submit', { email, password });
       window.location.href = '/dashboard';
       return;

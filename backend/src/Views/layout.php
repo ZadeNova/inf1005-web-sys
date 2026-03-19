@@ -14,6 +14,24 @@ function viteAsset(string $entry): string
         : '/assets/' . $entry;
 }
 
+function viteCss(string $entry): string
+{
+    static $manifest = null;
+    if ($manifest === null) {
+        $manifestPath = __DIR__ . '/../../../public/assets/.vite/manifest.json';
+        $manifest = file_exists($manifestPath)
+            ? json_decode(file_get_contents($manifestPath), true)
+            : [];
+    }
+    $tags = '';
+    if (isset($manifest[$entry]['css'])) {
+        foreach ($manifest[$entry]['css'] as $cssFile) {
+            $tags .= '<link rel="stylesheet" href="/assets/' . $cssFile . '">' . "\n";
+        }
+    }
+    return $tags;
+}
+
 // ── Theme resolution ──────────────────────────────────────────────────────
 $validThemes  = ['dark', 'light', 'colorblind'];
 $cookieTheme  = $_COOKIE['vft-theme'] ?? 'dark';
@@ -47,13 +65,13 @@ $navLinks = [
 
     <!-- Compiled CSS (production) or Vite dev server (local) -->
     <?php if (file_exists(__DIR__ . '/../../../public/assets/.vite/manifest.json')): ?>
-        <link rel="stylesheet" href="<?= viteAsset('src/index.css') ?>">
-        <script type="module" src="<?= viteAsset('src/main.jsx') ?>"></script>
-    <?php else: ?>
-        <script type="module" src="http://localhost:3000/@vite/client"></script>
-        <link  rel="stylesheet" href="http://localhost:3000/src/index.css">
-        <script type="module"   src="http://localhost:3000/src/main.jsx"></script>
-    <?php endif; ?>
+    <?= viteCss('src/main.jsx') ?>
+    <script type="module" src="<?= viteAsset('src/main.jsx') ?>"></script>
+<?php else: ?>
+    <script type="module" src="http://localhost:3000/@vite/client"></script>
+    <link  rel="stylesheet" href="http://localhost:3000/src/index.css">
+    <script type="module"   src="http://localhost:3000/src/main.jsx"></script>
+<?php endif; ?>
 </head>
 
 <body class="vft-bg vft-text min-h-screen flex flex-col">
@@ -166,18 +184,32 @@ $navLinks = [
                         </svg>
                         Profile
                     </a>
-                    <form method="POST" action="/api/v1/auth/logout" class="hidden sm:block">
-                        <input type="hidden" name="csrf_token"
-                               value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                        <button type="submit"
-                                class="px-3 py-1.5 rounded-md text-xs font-semibold
-                                       text-(--color-text-muted) hover:text-(--color-danger)
-                                       transition-colors focus-visible:outline-2
-                                       focus-visible:outline-(--color-accent)
-                                       focus-visible:outline-offset-2">
-                            Sign Out
-                        </button>
-                    </form>
+                    <button
+                        type="button"
+                        id="logout-btn"
+                        class="hidden sm:inline-flex px-3 py-1.5 rounded-md text-xs font-semibold
+                            text-(--color-text-muted) hover:text-(--color-danger)
+                            transition-colors focus-visible:outline-2
+                            focus-visible:outline-(--color-accent)
+                            focus-visible:outline-offset-2">
+                        Sign Out
+                    </button>
+
+                    <script>
+                    document.getElementById('logout-btn').addEventListener('click', async function() {
+                        const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+                        const res = await fetch('/api/v1/auth/logout', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': csrf,
+                            },
+                        });
+                        if (res.ok) {
+                            window.location.href = '/';
+                        }
+                    });
+                    </script>
                 <?php else: ?>
                     <a href="/login"
                        class="hidden sm:inline-flex px-3 py-1.5 rounded-md text-xs

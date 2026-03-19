@@ -17,6 +17,8 @@ import Input  from '../../shared/atoms/Input.jsx';
 import Card   from '../../shared/atoms/Card.jsx';
 import { usePost }  from '../../shared/hooks/useApi.js';
 import { USE_MOCK } from '../../shared/mockAssets.js';
+const USE_AUTH_MOCK = false;
+
 
 export default function RegisterForm() {
   const [form,   setForm]   = useState({ username: '', email: '', password: '', confirmPassword: '' });
@@ -42,7 +44,7 @@ export default function RegisterForm() {
   async function handleSubmit() {
     if (!validate()) return;
 
-    if (USE_MOCK) {
+    if (USE_AUTH_MOCK) {
       console.log('[RegisterForm] MOCK submit', form);
       window.location.href = '/login';
       return;

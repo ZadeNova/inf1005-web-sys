@@ -59,6 +59,8 @@ services:
     volumes:
       - ./frontend:/app:z
       - /app/node_modules
+      - ./public:/public:z
+      - ./backend:/backend:z
     ports:
       - "3000:3000"
     command: sh -c "npm install && npm run dev -- --host"
