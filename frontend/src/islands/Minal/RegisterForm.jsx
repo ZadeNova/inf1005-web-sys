@@ -6,7 +6,7 @@
  *
  * API endpoint (when USE_MOCK = false):
  *   POST /api/v1/auth/register
- *   Body: { username, email, password, confirmPassword }
+ *   Body: { username, email, password, confirm_password }
  *   Success: { redirect }
  *   Error:   { message, field? }
  */
@@ -21,7 +21,7 @@ const USE_AUTH_MOCK = false;
 
 
 export default function RegisterForm() {
-  const [form,   setForm]   = useState({ username: '', email: '', password: '', confirmPassword: '' });
+  const [form,   setForm]   = useState({ username: '', email: '', password: '', confirm_password: '' });
   const [errors, setErrors] = useState({});
 
   const { execute: register, loading } = usePost('/api/v1/auth/register');
