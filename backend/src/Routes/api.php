@@ -51,5 +51,5 @@ return function (App $app) {
         // $group->get('/admin/transactions',  [AdminController::class, 'transactions']);
         // $group->post('/admin/assets',       [AdminController::class, 'createAsset']);
 
-    });  //->add(CsrfMiddleware::class); //Uncomment for Postman Testing as Postman doesn't handle CSRF tokens. Remember to re-enable CsrfMiddleware.
+    })->add(CsrfMiddleware::class); //Uncomment for Postman Testing as Postman doesn't handle CSRF tokens. Remember to re-enable CsrfMiddleware.
 };
