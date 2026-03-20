@@ -7,21 +7,11 @@
  *   - CSRF token injection from meta tag
  *   - JSON parsing
  *   - AbortController cleanup on unmount
- *
- * Usage (GET):
- *   const { data, loading, error } = useApi('/api/v1/assets');
- *
- * Usage (manual trigger, POST):
- *   const { data, loading, error, execute } = useApi('/api/v1/offers', {
- *     method: 'POST',
- *     auto: false,
- *   });
- *   // then: execute({ assetId: 'asset-001', amount: 100 });
+ *   - Field-level error propagation from backend (err.errors)
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-/** Reads the CSRF token Slim injects into the <meta name="csrf-token"> tag */
 function getCsrfToken() {
   return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
 }
@@ -63,14 +53,16 @@ export function useApi(url, { method = 'GET', auto = method === 'GET', initialDa
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({ message: response.statusText }));
-        throw new Error(err.message ?? `HTTP ${response.status}`);
+        const error = new Error(err.message ?? `HTTP ${response.status}`);
+        error.errors = err.errors ?? null;
+        throw error;
       }
 
       const data = await response.json();
       setState({ data, loading: false, error: null });
       return data;
     } catch (err) {
-      if (err.name === 'AbortError') return; // unmounted — swallow silently
+      if (err.name === 'AbortError') return; 
       setState(prev => ({ ...prev, loading: false, error: err.message ?? 'Something went wrong' }));
       throw err;
     }

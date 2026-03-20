@@ -41,9 +41,15 @@ class AdminController
         }
 
         $stmt = $this->db->prepare("
-            INSERT INTO blog_posts (author_id, title, body) VALUES (:author, :title, :body)
-        ");
-        $stmt->execute([':author' => $_SESSION['user_id'], ':title' => $title, ':body' => $body]);
+            INSERT INTO blog_posts (author_id, title, body, category)
+            VALUES (:author, :title, :body, :category)
+");
+        $stmt->execute([
+            ':author'   => $_SESSION['user_id'],
+            ':title'    => $title,
+            ':body'     => $body,
+            ':category' => trim($data['category'] ?? 'Market Update'),
+]);
 
         return $this->json($response, ['success' => true], 201);
     }

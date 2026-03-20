@@ -1,19 +1,10 @@
 /**
  * ActiveListingsManager.jsx — Dev 2 Island
  * Owner: WH (Dev 2)
- * Extracted from: frontend/src/pages/dashboard.jsx
  * Mounts via: mountIsland('active-listings-manager-root', ActiveListingsManager)
  * PHP view: backend/src/Views/dashboard.php
  *
- * Displays the user's active listings with cancel and re-add controls.
- * Shows a stats strip (active / total sales / owned).
- * Includes a search dropdown to re-add previously cancelled listings.
- *
- * API endpoints (when USE_MOCK = false):
- *   GET    /api/v1/user/portfolio          → owned assets to search from
- *   GET    /api/v1/market/listings?mine=1  → user's active listings
- *   DELETE /api/v1/market/listings/:id     → cancel a listing
- *   POST   /api/v1/market/listings         → re-list a cancelled asset
+ * FIX: handleCancel now calls DELETE /api/v1/market/listings/:id
  */
 
 import { useState, useMemo, useRef, useEffect } from 'react';
@@ -24,7 +15,6 @@ import { RarityBadge } from '../../shared/atoms/Badge.jsx';
 import { useApi }               from '../../shared/hooks/useApi.js';
 import { mockAssets, USE_MOCK } from '../../shared/mockAssets.js';
 
-/* ── Mock data ───────────────────────────────────────────────────────── */
 const MOCK_LISTINGS = [
   { id: 'lst-001', asset: mockAssets[0], listedAt: '2025-03-01' },
   { id: 'lst-002', asset: mockAssets[2], listedAt: '2025-03-08' },
@@ -32,7 +22,6 @@ const MOCK_LISTINGS = [
 ];
 const MOCK_STATS = { totalSales: 142, itemsOwned: 37 };
 
-/* ── Sub-components ──────────────────────────────────────────────────── */
 const PlusIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
        strokeWidth={2} className="w-5 h-5" aria-hidden="true">
@@ -51,21 +40,21 @@ const XIcon = () => (
 
 export default function ActiveListingsManager() {
   const { data, loading, error } = useApi(
-    USE_MOCK ? null : '/api/v1/market/listings?mine=1',
+    USE_MOCK ? null : '/api/v1/market/listings/mine',
     { auto: !USE_MOCK }
   );
 
   const rawListings = USE_MOCK ? MOCK_LISTINGS : (data?.listings ?? []);
   const stats       = USE_MOCK ? MOCK_STATS    : (data?.stats    ?? {});
 
-  /* local cancel/re-add state — optimistic UI */
   const [cancelledIds,    setCancelledIds]    = useState([]);
+  const [cancellingId,    setCancellingId]    = useState(null); // tracks in-flight cancel
+  const [cancelError,     setCancelError]     = useState(null);
   const [addedIds,        setAddedIds]        = useState([]);
   const [showAddListing,  setShowAddListing]  = useState(false);
   const [listSearch,      setListSearch]      = useState('');
   const searchRef = useRef(null);
 
-  /* close dropdown on outside click */
   useEffect(() => {
     if (!showAddListing) return;
     function handler(e) {
@@ -91,9 +80,38 @@ export default function ActiveListingsManager() {
     ), [listSearch, cancelledIds, addedIds, rawListings]
   );
 
-  function handleCancel(id) {
-    setCancelledIds(prev => [...prev, id]);
-    setAddedIds(prev => prev.filter(i => i !== id));
+  // FIX: now calls DELETE /api/v1/market/listings/:id
+  async function handleCancel(id) {
+    setCancelError(null);
+
+    if (USE_MOCK) {
+      setCancelledIds(prev => [...prev, id]);
+      setAddedIds(prev => prev.filter(i => i !== id));
+      return;
+    }
+
+    setCancellingId(id);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+      const res  = await fetch(`/api/v1/market/listings/${id}`, {
+        method:  'DELETE',
+        headers: { 'X-CSRF-Token': csrf },
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Failed to cancel listing.' }));
+        setCancelError(err.message ?? 'Failed to cancel listing.');
+        return;
+      }
+
+      // Only update UI after confirmed server cancel
+      setCancelledIds(prev => [...prev, id]);
+      setAddedIds(prev => prev.filter(i => i !== id));
+    } catch (err) {
+      setCancelError('Network error. Please try again.');
+    } finally {
+      setCancellingId(null);
+    }
   }
 
   function handleAddListing(listing) {
@@ -103,7 +121,6 @@ export default function ActiveListingsManager() {
     setShowAddListing(false);
   }
 
-  /* ── Loading ─────────────────────────────────────────────────────── */
   if (loading) {
     return (
       <div className="flex flex-col gap-3" role="status" aria-label="Loading listings">
@@ -122,7 +139,6 @@ export default function ActiveListingsManager() {
     );
   }
 
-  /* ── Error ───────────────────────────────────────────────────────── */
   if (error) {
     return (
       <p role="alert" className="text-sm text-(--color-danger)">
@@ -131,18 +147,25 @@ export default function ActiveListingsManager() {
     );
   }
 
-  /* ── Render ──────────────────────────────────────────────────────── */
   return (
     <div className="flex flex-col gap-4">
 
-      {/* ── Section header ────────────────────────────────────────── */}
+      {/* Cancel error banner */}
+      {cancelError && (
+        <p role="alert" aria-live="assertive"
+           className="text-sm text-(--color-danger) bg-(--color-danger-subtle)
+                      border border-(--color-danger) rounded-md px-3 py-2">
+          {cancelError}
+        </p>
+      )}
+
+      {/* Section header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-base font-bold text-(--color-text-primary)">
           My Listings
         </h2>
 
         <div className="flex items-center gap-4 flex-wrap">
-          {/* Stats strip */}
           <div className="flex items-center gap-3 text-sm">
             <span>
               <span className="font-bold text-(--color-text-primary)">
@@ -164,7 +187,6 @@ export default function ActiveListingsManager() {
             </span>
           </div>
 
-          {/* Add listing toggle */}
           <Button
             variant="secondary"
             size="sm"
@@ -181,7 +203,7 @@ export default function ActiveListingsManager() {
         </div>
       </div>
 
-      {/* ── Add listing search panel ───────────────────────────────── */}
+      {/* Add listing search panel */}
       {showAddListing && (
         <div id="add-listing-panel"
              ref={searchRef}
@@ -244,7 +266,7 @@ export default function ActiveListingsManager() {
         </div>
       )}
 
-      {/* ── Empty state ───────────────────────────────────────────── */}
+      {/* Empty state */}
       {activeListings.length === 0 && (
         <button
           type="button"
@@ -269,13 +291,12 @@ export default function ActiveListingsManager() {
         </button>
       )}
 
-      {/* ── Listings list ─────────────────────────────────────────── */}
+      {/* Listings list */}
       {activeListings.length > 0 && (
         <div className="flex flex-col gap-3">
           {activeListings.map(listing => (
             <Card key={listing.id} variant="default" padding="md"
                   className="flex items-center gap-4">
-              {/* Thumbnail */}
               <div className="w-14 h-14 rounded-md bg-(--color-surface-2)
                               border border-(--color-border) shrink-0
                               flex items-center justify-center"
@@ -283,7 +304,6 @@ export default function ActiveListingsManager() {
                 <span className="text-xs text-(--color-text-muted)">IMG</span>
               </div>
 
-              {/* Info */}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-(--color-text-primary) truncate">
                   {listing.asset.name}
@@ -300,7 +320,6 @@ export default function ActiveListingsManager() {
                 </p>
               </div>
 
-              {/* Price + cancel */}
               <div className="flex flex-col items-end gap-2 shrink-0">
                 <p className="text-sm font-bold text-(--color-text-primary)">
                   ${listing.asset.price.toLocaleString()}
@@ -308,6 +327,7 @@ export default function ActiveListingsManager() {
                 <Button
                   variant="danger"
                   size="sm"
+                  loading={cancellingId === listing.id}
                   onClick={() => handleCancel(listing.id)}
                   className="rounded-full"
                   aria-label={`Cancel listing for ${listing.asset.name}`}

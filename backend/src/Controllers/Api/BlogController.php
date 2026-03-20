@@ -13,10 +13,14 @@ class BlogController
         $this->db = $db;
     }
 
+    /**
+     * GET /api/v1/blog/posts
+     * FIX: now reads category from DB instead of hardcoding 'Market Update'
+     */
     public function index(Request $request, Response $response): Response
     {
         $stmt = $this->db->query("
-            SELECT bp.id, bp.title, bp.body, bp.created_at, bp.updated_at,
+            SELECT bp.id, bp.title, bp.body, bp.category, bp.created_at, bp.updated_at,
                    u.username AS author
             FROM blog_posts bp
             JOIN users u ON u.id = bp.author_id
@@ -25,20 +29,23 @@ class BlogController
         ");
         $posts = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        // Shape to match what BlogFeed.jsx expects
         $shaped = array_map(fn($p) => [
             'id'          => (string) $p['id'],
             'title'       => $p['title'],
             'excerpt'     => mb_substr(strip_tags($p['body']), 0, 160) . '...',
             'author'      => $p['author'],
             'publishedAt' => $p['created_at'],
-            'category'    => 'Market Update', // blog_posts has no category col yet
+            'category'    => $p['category'] ?? 'Market Update', // FIX: reads from DB
             'imageUrl'    => null,
         ], $posts);
 
         return $this->json($response, ['posts' => $shaped]);
     }
 
+    /**
+     * POST /api/v1/blog/posts
+     * FIX: now saves category to DB
+     */
     public function store(Request $request, Response $response): Response
     {
         $user = $request->getAttribute('user') ?? ['id' => $_SESSION['user_id']];
@@ -52,10 +59,17 @@ class BlogController
             return $this->json($response, ['success' => false, 'message' => 'Title and body required.'], 422);
         }
 
+        // FIX: now persists category to the blog_posts table
         $stmt = $this->db->prepare("
-            INSERT INTO blog_posts (author_id, title, body) VALUES (:author, :title, :body)
+            INSERT INTO blog_posts (author_id, title, body, category)
+            VALUES (:author, :title, :body, :category)
         ");
-        $stmt->execute([':author' => $user['id'], ':title' => $title, ':body' => $body]);
+        $stmt->execute([
+            ':author'   => $user['id'],
+            ':title'    => $title,
+            ':body'     => $body,
+            ':category' => $category,
+        ]);
 
         return $this->json($response, ['success' => true, 'message' => 'Post published.'], 201);
     }

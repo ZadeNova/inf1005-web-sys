@@ -4,17 +4,6 @@
  * Mounts via: mountIsland('login-form-root', LoginForm)
  * PHP view: backend/src/Views/login.php → <div id="login-form-root" data-props="{}"></div>
  *
- * ─────────────────────────────────────────────────────────────
- * RULES (enforced on code review by Lead):
- *   ✅ Import atoms from '../../shared/atoms/...'
- *   ✅ Import useApi from '../../shared/hooks/useApi.js'
- *   ✅ Show <Skeleton /> while loading, error state with message
- *   ✅ Use USE_MOCK flag from mockAssets.js for local dev
- *   ❌ No raw <button> tags — use <Button />
- *   ❌ No hardcoded hex values — use CSS variables only
- *   ❌ No React Router — navigation via window.location.href
- * ─────────────────────────────────────────────────────────────
- *
  * API endpoint (when USE_MOCK = false):
  *   POST /api/v1/auth/login
  *   Body: { email, password }
@@ -28,7 +17,8 @@ import Input  from '../../shared/atoms/Input.jsx';
 import Card   from '../../shared/atoms/Card.jsx';
 import { usePost }    from '../../shared/hooks/useApi.js';
 import { USE_MOCK }   from '../../shared/mockAssets.js';
-const USE_AUTH_MOCK = false; // auth backend is live
+
+const USE_AUTH_MOCK = false;
 
 export default function LoginForm() {
   const [email,    setEmail]    = useState('');
@@ -39,8 +29,9 @@ export default function LoginForm() {
 
   function validate() {
     const e = {};
-    if (!email)    e.email    = 'Email is required';
-    if (!password) e.password = 'Password is required';
+    if (!email)                                    e.email    = 'Email is required';
+    if (email && !/.+@.+\..+/.test(email))         e.email    = 'Please enter a valid email address';
+    if (!password)                                 e.password = 'Password is required';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -58,7 +49,12 @@ export default function LoginForm() {
       const result = await login({ email, password });
       window.location.href = result.redirect ?? '/dashboard';
     } catch (err) {
-      setErrors({ form: err.message });
+      // FIX: surface field-level errors from backend if present
+      if (err.errors) {
+        setErrors(err.errors);
+      } else {
+        setErrors({ form: err.message ?? 'Invalid email or password.' });
+      }
     }
   }
 
