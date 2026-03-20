@@ -16,7 +16,6 @@ import Button from '../../shared/atoms/Button.jsx';
 import Input  from '../../shared/atoms/Input.jsx';
 import Card   from '../../shared/atoms/Card.jsx';
 import { usePost }    from '../../shared/hooks/useApi.js';
-import { USE_MOCK }   from '../../shared/mockAssets.js';
 
 const USE_AUTH_MOCK = false;
 

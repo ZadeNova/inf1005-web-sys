@@ -42,11 +42,11 @@ export default function RegisterForm() {
     e.username = 'Username must be at least 3 characters';
   if (!form.email)
     e.email = 'Email is required';
-  if (!form.password)
+  if (!form.password){
     e.password = 'Password is required';
-
-  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(form.password))
+  }else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(form.password)){
     e.password = 'Password must be at least 8 characters with uppercase, lowercase, and a number.';
+  }
 
   if (form.password !== form.confirmPassword)
     e.confirmPassword = 'Passwords do not match';

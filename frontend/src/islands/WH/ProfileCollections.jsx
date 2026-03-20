@@ -143,7 +143,7 @@ export default function ProfileCollections() {
 
   const filteredTx = useMemo(() => {
     const f = transactions.filter(tx => {
-      if (txType      && tx.type      !== txType)      return false;
+      if (txType      && tx.role      !== txType)      return false;
       if (txRarity    && tx.rarity    !== txRarity)    return false;
       if (txCondition && tx.condition !== txCondition) return false;
       return true;
@@ -560,8 +560,8 @@ export default function ProfileCollections() {
                 <div className="flex gap-1 border border-(--color-border) rounded-md p-0.5"
                      role="group" aria-label="Transaction type filter">
                   <button type="button"
-                          onClick={() => setTxType(t => t === 'BUY' ? '' : 'BUY')}
-                          aria-pressed={txType === 'BUY'}
+                          onClick={() => setTxType(t => t === 'buy' ? '' : 'buy')}
+                          aria-pressed={txType === 'buy'}
                           className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors
                             ${txType === 'BUY'
                               ? 'bg-(--color-success) text-white'
@@ -569,8 +569,8 @@ export default function ProfileCollections() {
                     Buy
                   </button>
                   <button type="button"
-                          onClick={() => setTxType(t => t === 'SELL' ? '' : 'SELL')}
-                          aria-pressed={txType === 'SELL'}
+                          onClick={() => setTxType(t => t === 'sell' ? '' : 'sell')}
+                          aria-pressed={txType === 'sell'}
                           className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors
                             ${txType === 'SELL'
                               ? 'bg-(--color-danger) text-white'
