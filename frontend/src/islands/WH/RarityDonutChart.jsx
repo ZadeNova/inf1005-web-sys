@@ -31,11 +31,16 @@ Chart.register(ArcElement, DoughnutController, Tooltip, Legend);
 
 /* Paul Tol palette — colourblind-safe, matches colorblind CSS var theme */
 const RARITY_COLORS = {
-  'COMMON':      '#94a3b8',
-  'UNCOMMON':    '#4ade80',
-  'RARE':        '#60a5fa',
-  'ULTRA_RARE':  '#c084fc',
-  'SECRET_RARE': '#f59e0b',
+    // DB Title Case values
+    'Common':    '#94a3b8',
+    'Rare':      '#60a5fa',
+    'Legendary': '#f59e0b',
+    // Uppercase for mock data
+    'COMMON':      '#94a3b8',
+    'UNCOMMON':    '#4ade80',
+    'RARE':        '#60a5fa',
+    'ULTRA_RARE':  '#c084fc',
+    'SECRET_RARE': '#f59e0b',
 };
 
 function cssVar(name) {
@@ -120,13 +125,28 @@ export default function RarityDonutChart() {
 
   if (error) {
     return (
-      <Card variant="default" padding="md">
-        <p role="alert" className="text-sm text-(--color-danger)">
-          Failed to load chart: {error}
-        </p>
-      </Card>
+        <Card variant="default" padding="md">
+            <p role="alert" className="text-sm text-(--color-danger)">
+                Failed to load chart: {error}
+            </p>
+        </Card>
     );
-  }
+}
+
+if (Object.keys(rarityCounts).length === 0) {
+    return (
+        <Card variant="default" padding="md" className="flex flex-col gap-3">
+            <h3 className="text-sm font-bold text-(--color-text-primary)">
+                Portfolio by Rarity
+            </h3>
+            <div className="flex items-center justify-center" style={{ height: 200 }}>
+                <p className="text-sm text-(--color-text-muted)">
+                    No assets in portfolio yet.
+                </p>
+            </div>
+        </Card>
+    );
+}
 
   return (
     <Card variant="default" padding="md" className="flex flex-col gap-3">

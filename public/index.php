@@ -106,6 +106,12 @@ App\Controllers\Api\AdminController::class => function ($c) {
     );
 },
 
+App\Controllers\PageController::class => function ($c) {
+    return new App\Controllers\PageController(
+        $c->get(App\Services\WalletService::class)
+    );
+},
+
 ]);
 
 $container = $builder->build();

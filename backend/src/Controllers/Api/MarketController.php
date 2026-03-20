@@ -248,14 +248,6 @@ class MarketController
 
         return $this->json($response, ['labels' => $labels, 'datasets' => $datasets]);
     }
-```
-
-Then the `json()` helper at line 149 stays exactly where it is. The final structure of the file will be:
-```
-cancel()    — lines 129–145
-              ← paste mine() and priceHistory() here
-json()      — line 149 (unchanged)
-}           — line 157 (class closing brace, unchanged)
 
     // Same helper as AuthController — every API controller has this
     private function json(Response $response, array $data, int $status = 200): Response

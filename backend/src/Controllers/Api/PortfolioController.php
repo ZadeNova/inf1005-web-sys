@@ -308,7 +308,58 @@ public function profile(Request $request, Response $response, array $args): Resp
         ],
     ]);
 }
+    /**
+ * PATCH /api/v1/users/{userId}/profile
+ * Protected — user can only update their own profile.
+ */
+public function updateProfile(Request $request, Response $response, array $args): Response
+{
+    $userId        = (int) ($args['userId'] ?? 0);
+    $currentUser   = $this->auth->getCurrentUser();
+    $currentUserId = (int) $currentUser['id'];
 
+    if ($userId !== $currentUserId) {
+        return $this->json($response, [
+            'success' => false,
+            'message' => 'You can only edit your own profile.',
+        ], 403);
+    }
+
+    $data        = $request->getParsedBody() ?? [];
+    $displayName = trim($data['displayName'] ?? '');
+    $bio         = trim($data['bio']         ?? '');
+
+    if (strlen($displayName) > 30) {
+        return $this->json($response, [
+            'success' => false,
+            'message' => 'Display name must be 30 characters or fewer.',
+        ], 422);
+    }
+
+    if (strlen($bio) > 150) {
+        return $this->json($response, [
+            'success' => false,
+            'message' => 'Bio must be 150 characters or fewer.',
+        ], 422);
+    }
+
+    $stmt = $this->db->prepare("
+        UPDATE users
+        SET username = :username,
+            bio      = :bio
+        WHERE id = :id
+    ");
+    $stmt->execute([
+        ':username' => $displayName ?: $currentUser['username'],
+        ':bio'      => $bio ?: null,
+        ':id'       => $userId,
+    ]);
+
+    return $this->json($response, [
+        'success' => true,
+        'message' => 'Profile updated successfully.',
+    ]);
+}
 
     private function json(Response $response, array $data, int $status = 200): Response
     {

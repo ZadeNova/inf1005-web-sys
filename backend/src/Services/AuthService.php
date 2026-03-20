@@ -181,6 +181,7 @@ class AuthService
         //store user data in session, only store necessary info to minimize session data
         $_SESSION['user_id'] = $user['id']; //used for all auth checks
         $_SESSION['user_role'] = $user['role'];//isAdmin() checks this for admin access control
+        $_SESSION['username']  = $user['username'];  // used by PageController for dashboard greeting
 
         //Regenerate CSRF token on login to prevent session fixation attacks
         //Invalidate old token and generate new one
@@ -292,6 +293,42 @@ class AuthService
 
         return $row && $row['role'] === 'admin';
     }
+
+    /**
+ * Change Password
+ * 1. Fetch current hashed password from DB
+ * 2. Verify current password with password_verify()
+ * 3. Hash new password with bcrypt
+ * 4. Update users table
+ */
+public function changePassword(int $userId, string $currentPassword, string $newPassword): array
+{
+    // Fetch current password hash
+    $stmt = $this->db->prepare(
+        "SELECT password FROM users WHERE id = :id LIMIT 1"
+    );
+    $stmt->execute([':id' => $userId]);
+    $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+    if (!$user) {
+        return ['success' => false, 'message' => 'User not found.'];
+    }
+
+    // Verify current password is correct
+    if (!password_verify($currentPassword, $user['password'])) {
+        return ['success' => false, 'message' => 'Current password is incorrect.'];
+    }
+
+    // Hash and save new password
+    $hashed = password_hash($newPassword, PASSWORD_BCRYPT);
+
+    $stmt = $this->db->prepare(
+        "UPDATE users SET password = :password WHERE id = :id"
+    );
+    $stmt->execute([':password' => $hashed, ':id' => $userId]);
+
+    return ['success' => true, 'message' => 'Password updated successfully.'];
+}
 }
 
 

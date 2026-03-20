@@ -6,9 +6,18 @@ namespace App\Controllers;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use App\Services\WalletService;
 
 class PageController
 {
+
+    private WalletService $wallet;
+
+    public function __construct(WalletService $wallet)
+    {
+        $this->wallet = $wallet;
+    }
+    
     // Helper: renders a view and writes it to the response
     private function render(Response $response, string $view, array $data = []): Response
     {
@@ -66,19 +75,22 @@ class PageController
     }
 
     public function dashboard(Request $request, Response $response): Response
-{
-    return $this->render($response, 'dashboard', [
-        'title'      => 'Dashboard — Vapour FT',
-        'dashStats'  => [
-            'username'        => $_SESSION['username'] ?? 'Trader',
-            'isVerified'      => false,
-            'portfolioValue'  => null,
-            'portfolioChange' => null,
-            'walletBalance'   => null,
-            'currency'        => 'VPR',
-        ],
-    ]);
-}
+    {
+        $userId  = $_SESSION['user_id'] ?? null;
+        $balance = $userId ? $this->wallet->getBalance((int) $userId) : 0.00;
+
+        return $this->render($response, 'dashboard', [
+            'title'      => 'Dashboard — Vapour FT',
+            'dashStats'  => [
+                'username'        => $_SESSION['username'] ?? 'Trader',
+                'isVerified'      => false,
+                'portfolioValue'  => 0,       
+                'portfolioChange' => null,
+                'walletBalance'   => $balance,
+                'currency'        => 'VPR',
+            ],
+        ]);
+    }
 
     public function profile(Request $request, Response $response): Response
     {

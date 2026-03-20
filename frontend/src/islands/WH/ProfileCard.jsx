@@ -133,23 +133,72 @@ export default function ProfileCard({ userId, currentUserId }) {
     setActiveSection('profile');
   }
 
-  function handleProfileSave() {
+  async function handleProfileSave() {
     if (displayName.length > NAME_MAX || bio.length > BIO_MAX) return;
-    setLiveDisplayName(displayName);
-    setLiveBio(bio);
-    setProfileSaved(true);
-    setTimeout(() => setProfileSaved(false), 3000);
-  }
 
-  function handlePasswordSave() {
+    try {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+        const res  = await fetch(`/api/v1/users/${userId}/profile`, {
+            method:  'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrf,
+            },
+            body: JSON.stringify({ displayName, bio }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            setPasswordMsg(data.message ?? 'Failed to update profile.');
+            return;
+        }
+
+        setLiveDisplayName(displayName);
+        setLiveBio(bio);
+        setProfileSaved(true);
+        setTimeout(() => setProfileSaved(false), 3000);
+
+    } catch (err) {
+        setPasswordMsg('Network error. Please try again.');
+    }
+}
+
+  async function handlePasswordSave() {
     if (!currentPassword)                { setPasswordMsg('Enter your current password.'); return; }
     if (newPassword.length < 8)          { setPasswordMsg('New password must be at least 8 characters.'); return; }
     if (newPassword !== confirmPassword) { setPasswordMsg('Passwords do not match.'); return; }
-    setPasswordMsg('✅ Password updated successfully!');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-  }
+
+    try {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+        const res  = await fetch('/api/v1/auth/change-password', {
+            method:  'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrf,
+            },
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password:     newPassword,
+            }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            setPasswordMsg(data.message ?? 'Failed to update password.');
+            return;
+        }
+
+        setPasswordMsg('✅ Password updated successfully!');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+
+    } catch (err) {
+        setPasswordMsg('Network error. Please try again.');
+    }
+}
 
   function handleBankStart() {
     setBankName(shownBank?.bankName ?? '');

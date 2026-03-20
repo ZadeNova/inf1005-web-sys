@@ -148,4 +148,34 @@ class AuthController
             ->withHeader('Content-Type', 'application/json')
             ->withStatus($status);
     }
+
+    // POST /api/v1/auth/change-password
+public function changePassword(Request $request, Response $response): Response
+{
+    $user = $this->authService->getCurrentUser();
+    if (!$user) {
+        return $this->json($response, ['success' => false, 'message' => 'Not logged in.'], 401);
+    }
+
+    $data            = $request->getParsedBody() ?? [];
+    $currentPassword = $data['current_password'] ?? '';
+    $newPassword     = $data['new_password']     ?? '';
+
+    if (empty($currentPassword) || empty($newPassword)) {
+        return $this->json($response, ['success' => false, 'message' => 'All fields are required.'], 422);
+    }
+
+    if (strlen($newPassword) < 8) {
+        return $this->json($response, ['success' => false, 'message' => 'New password must be at least 8 characters.'], 422);
+    }
+
+    $result = $this->authService->changePassword(
+        (int) $user['id'],
+        $currentPassword,
+        $newPassword
+    );
+
+    $status = $result['success'] ? 200 : 400;
+    return $this->json($response, $result, $status);
+}
 }
