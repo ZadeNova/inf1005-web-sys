@@ -125,6 +125,33 @@ ob_start();
         </div>
     </section>
 
+
+    <?php /* ── My Portfolio Table ─────────────────────────── */ ?>
+    <section aria-labelledby="portfolio-table-heading">
+        <h2 id="portfolio-table-heading"
+            class="text-base font-bold text-(--color-text-primary) mb-4">
+            My Assets
+        </h2>
+
+        <div id="portfolio-table-root"
+            data-props='<?= json_encode(['userId' => $userId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
+            <?php /* Skeleton while React hydrates */ ?>
+            <div class="flex flex-col gap-0 animate-pulse" aria-hidden="true">
+                <?php for ($i = 0; $i < 4; $i++): ?>
+                <div class="flex items-center gap-4 py-3
+                            <?= $i < 3 ? 'border-b border-(--color-border)' : '' ?>">
+                    <div class="w-12 h-12 rounded-md bg-(--color-surface-2) shrink-0"></div>
+                    <div class="flex-1 flex flex-col gap-2">
+                        <div class="h-4 w-40 rounded bg-(--color-surface-2)"></div>
+                        <div class="h-3 w-24 rounded bg-(--color-surface-2)"></div>
+                    </div>
+                    <div class="h-8 w-16 rounded bg-(--color-surface-2)"></div>
+                </div>
+                <?php endfor; ?>
+            </div>
+        </div>
+    </section>
+
     <?php /* ── My Listings section ─────────────────────────── */ ?>
     <section aria-labelledby="listings-heading">
         <h2 id="listings-heading" class="sr-only">My active listings</h2>

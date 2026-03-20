@@ -20,7 +20,8 @@ return function (App $app) {
         $group->post('/auth/register', [AuthController::class, 'register']);
         $group->post('/auth/login',    [AuthController::class, 'login']);
         $group->post('/auth/logout',   [AuthController::class, 'logout']);
-        $group->post('/auth/change-password', [AuthController::class, 'changePassword']) ->add(AuthMiddleware::class);
+        $group->post('/auth/change-password', [AuthController::class, 'changePassword'])
+            ->add(AuthMiddleware::class);
         $group->get('/auth/me',        [AuthController::class, 'me']);
 
         // ── Market (GET public, writes protected) ─────────────────────────
@@ -49,18 +50,17 @@ return function (App $app) {
         $group->get('/dashboard/portfolio-history', [PortfolioController::class, 'portfolioHistory'])
             ->add(AuthMiddleware::class);
 
-        // ── User profile (public GET, protected PATCH) ────────────────────────
+        // ── User profile (public GET, protected PATCH) ────────────────────
         $group->get('/users/{userId}/profile',   [PortfolioController::class, 'profile']);
         $group->patch('/users/{userId}/profile', [PortfolioController::class, 'updateProfile'])
             ->add(AuthMiddleware::class);
-        
 
         // ── Blog (GET public, POST protected) ─────────────────────────────
         $group->get('/blog/posts',  [BlogController::class, 'index']);
         $group->post('/blog/posts', [BlogController::class, 'store'])
             ->add(AuthMiddleware::class);
 
-        // ── Admin (all admin-only) ─────────────────────────────────────────
+        // ── Admin (all admin-only) ────────────────────────────────────────
         $group->get('/admin/listings',         [AdminController::class, 'listings'])
             ->add(AdminMiddleware::class);
         $group->post('/admin/news',            [AdminController::class, 'createNews'])
@@ -70,5 +70,8 @@ return function (App $app) {
         $group->delete('/admin/listings/{id}', [AdminController::class, 'deleteListing'])
             ->add(AdminMiddleware::class);
 
-    })->add(CsrfMiddleware::class);
+    }); // <-- important semicolon here
+
+    // $app->add(CsrfMiddleware::class); // optional global middleware
+
 };
