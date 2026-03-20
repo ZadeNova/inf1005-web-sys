@@ -80,6 +80,7 @@ $builder->addDefinitions([
     // ── Controllers ──────────────────────────────────────────────────────
     App\Controllers\Api\MarketController::class => function ($c) {
         return new App\Controllers\Api\MarketController(
+            $c->get(PDO::class),
             $c->get(App\Services\MarketService::class),
             $c->get(App\Services\AuthService::class)
         );
@@ -92,6 +93,18 @@ $builder->addDefinitions([
             $c->get(App\Services\WalletService::class)
         );
     },
+
+    App\Controllers\Api\BlogController::class => function ($c) {
+    return new App\Controllers\Api\BlogController(
+        $c->get(PDO::class)
+    );
+},
+
+App\Controllers\Api\AdminController::class => function ($c) {
+    return new App\Controllers\Api\AdminController(
+        $c->get(PDO::class)
+    );
+},
 
 ]);
 

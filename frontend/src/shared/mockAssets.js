@@ -9,7 +9,7 @@
  * Flip USE_MOCK to false once /api/v1/ endpoints are live.
  */
 
-export const USE_MOCK = true;
+export const USE_MOCK = false;
 
 /* ---------------------------------------------------------- */
 /* ENUMERATIONS — use these constants everywhere, never raw strings */

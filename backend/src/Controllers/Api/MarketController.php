@@ -21,11 +21,13 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class MarketController
 {
+    private \PDO          $db;
     private MarketService $market;
     private AuthService   $auth;
 
-    public function __construct(MarketService $market, AuthService $auth)
+    public function __construct(\PDO $db, MarketService $market, AuthService $auth)
     {
+        $this->db     = $db;
         $this->market = $market;
         $this->auth   = $auth;
     }
@@ -143,6 +145,117 @@ class MarketController
         $status = $result['success'] ? 200 : 400;
         return $this->json($response, $result, $status);
     }
+
+    /**
+     * GET /api/v1/market/listings/mine
+     * Protected — returns the logged-in user's active listings only.
+     * Shapes response to match ActiveListingsManager.jsx mock structure.
+     */
+    public function mine(Request $request, Response $response): Response
+    {
+        $user   = $this->auth->getCurrentUser();
+        $userId = (int) $user['id'];
+
+        $stmt = $this->db->prepare("
+            SELECT l.id, l.price, l.status, l.created_at,
+                   a.id AS asset_id, a.name AS asset_name, a.rarity, a.condition_state
+            FROM listings l
+            JOIN assets a ON a.id = l.asset_id
+            WHERE l.seller_id = :uid AND l.status = 'active'
+            ORDER BY l.created_at DESC
+        ");
+        $stmt->execute([':uid' => $userId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $shaped = array_map(fn($r) => [
+            'id'       => (string) $r['id'],
+            'listedAt' => $r['created_at'],
+            'asset'    => [
+                'id'     => (string) $r['asset_id'],
+                'name'   => $r['asset_name'],
+                'rarity' => $r['rarity'],
+                'price'  => (float)  $r['price'],
+            ],
+        ], $rows);
+
+        $salesStmt = $this->db->prepare(
+            "SELECT COUNT(*) FROM transactions WHERE seller_id = :uid"
+        );
+        $salesStmt->execute([':uid' => $userId]);
+
+        $ownedStmt = $this->db->prepare(
+            "SELECT COUNT(*) FROM inventory WHERE user_id = :uid"
+        );
+        $ownedStmt->execute([':uid' => $userId]);
+
+        return $this->json($response, [
+            'listings' => $shaped,
+            'stats'    => [
+                'totalSales' => (int) $salesStmt->fetchColumn(),
+                'itemsOwned' => (int) $ownedStmt->fetchColumn(),
+            ],
+        ]);
+    }
+
+    /**
+     * GET /api/v1/market/price-history?range=1W|1M|3M|6M|1Y
+     * Public — floor price per collection per day from transactions table.
+     * Returns Chart.js-ready { labels, datasets } for PriceChart.jsx
+     */
+    public function priceHistory(Request $request, Response $response): Response
+    {
+        $range    = $request->getQueryParams()['range'] ?? '1M';
+        $interval = match($range) {
+            '1W'    => '7 DAY',
+            '3M'    => '90 DAY',
+            '6M'    => '180 DAY',
+            '1Y'    => '365 DAY',
+            default => '30 DAY',
+        };
+
+        $stmt = $this->db->query("
+            SELECT
+                a.collection         AS col,
+                DATE(t.completed_at) AS label,
+                MIN(t.price)         AS floor
+            FROM transactions t
+            JOIN assets a ON a.id = t.asset_id
+            WHERE t.completed_at >= DATE_SUB(NOW(), INTERVAL {$interval})
+            GROUP BY a.collection, DATE(t.completed_at)
+            ORDER BY DATE(t.completed_at) ASC
+        ");
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $byCollection = [];
+        $allDates     = [];
+        foreach ($rows as $row) {
+            $byCollection[$row['col']][$row['label']] = (float) $row['floor'];
+            $allDates[$row['label']] = true;
+        }
+
+        $labels   = array_keys($allDates);
+        $datasets = [];
+        foreach ($byCollection as $collection => $dateMap) {
+            $datasets[] = [
+                'label' => $collection,
+                'data'  => array_map(fn($d) => $dateMap[$d] ?? null, $labels),
+            ];
+        }
+
+        if (empty($labels)) {
+            return $this->json($response, ['labels' => [], 'datasets' => []]);
+        }
+
+        return $this->json($response, ['labels' => $labels, 'datasets' => $datasets]);
+    }
+```
+
+Then the `json()` helper at line 149 stays exactly where it is. The final structure of the file will be:
+```
+cancel()    — lines 129–145
+              ← paste mine() and priceHistory() here
+json()      — line 149 (unchanged)
+}           — line 157 (class closing brace, unchanged)
 
     // Same helper as AuthController — every API controller has this
     private function json(Response $response, array $data, int $status = 200): Response

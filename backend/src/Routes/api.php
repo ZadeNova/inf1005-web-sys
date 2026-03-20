@@ -6,33 +6,35 @@ use Slim\App;
 use App\Controllers\Api\AuthController;
 use App\Controllers\Api\MarketController;
 use App\Controllers\Api\PortfolioController;
+use App\Controllers\Api\BlogController;
+use App\Controllers\Api\AdminController;
 use App\Middleware\AuthMiddleware;
+use App\Middleware\AdminMiddleware;
 use App\Middleware\CsrfMiddleware;
-
-
 
 return function (App $app) {
 
     $app->group('/api/v1', function ($group) {
 
-        // Auth Endpoints
+        // ── Auth ──────────────────────────────────────────────────────────
         $group->post('/auth/register', [AuthController::class, 'register']);
         $group->post('/auth/login',    [AuthController::class, 'login']);
         $group->post('/auth/logout',   [AuthController::class, 'logout']);
-        $group->get('/auth/me',        [AuthController::class, 'me']); 
+        $group->get('/auth/me',        [AuthController::class, 'me']);
 
+        // ── Market (GET public, writes protected) ─────────────────────────
+        $group->get('/market/listings',         [MarketController::class, 'index']);
+        $group->get('/market/listings/mine',    [MarketController::class, 'mine'])
+            ->add(AuthMiddleware::class);
+        $group->get('/market/price-history',    [MarketController::class, 'priceHistory']);
+        $group->post('/market/buy',             [MarketController::class, 'buy'])
+            ->add(AuthMiddleware::class);
+        $group->post('/market/listings',        [MarketController::class, 'store'])
+            ->add(AuthMiddleware::class);
+        $group->delete('/market/listings/{id}', [MarketController::class, 'cancel'])
+            ->add(AuthMiddleware::class);
 
-        // Market Controller (GET is public, write endpoints are protected)
-        $group->get('/market/listings',           [MarketController::class, 'index']);
-        $group->post('/market/buy',               [MarketController::class, 'buy'])
-            ->add(AuthMiddleware::class);
-        $group->post('/market/listings',          [MarketController::class, 'store'])
-            ->add(AuthMiddleware::class);
-        $group->delete('/market/listings/{id}',   [MarketController::class, 'cancel'])
-            ->add(AuthMiddleware::class);
-
-            
-        // ── Portfolio Controlelr ────────────────────────────────────
+        // ── Portfolio (all protected) ─────────────────────────────────────
         $group->get('/user/portfolio',    [PortfolioController::class, 'portfolio'])
             ->add(AuthMiddleware::class);
         $group->get('/user/transactions', [PortfolioController::class, 'transactions'])
@@ -40,16 +42,29 @@ return function (App $app) {
         $group->get('/user/wallet',       [PortfolioController::class, 'wallet'])
             ->add(AuthMiddleware::class);
 
-        // Blog Endpoints
-        // $group->get('/blog',          [BlogController::class, 'index']);
-        // $group->post('/blog',         [BlogController::class, 'store']);
-        // $group->put('/blog/{id}',     [BlogController::class, 'update']);
-        // $group->delete('/blog/{id}',  [BlogController::class, 'destroy']);
+        // ── Dashboard (protected) ─────────────────────────────────────────
+        $group->get('/dashboard/activity',          [PortfolioController::class, 'activity'])
+            ->add(AuthMiddleware::class);
+        $group->get('/dashboard/portfolio-history', [PortfolioController::class, 'portfolioHistory'])
+            ->add(AuthMiddleware::class);
 
-        // Admin Endpoints
-        // $group->get('/admin/users',         [AdminController::class, 'users']);
-        // $group->get('/admin/transactions',  [AdminController::class, 'transactions']);
-        // $group->post('/admin/assets',       [AdminController::class, 'createAsset']);
+        // ── User profile (public) ─────────────────────────────────────────
+        $group->get('/users/{userId}/profile', [PortfolioController::class, 'profile']);
 
-    })->add(CsrfMiddleware::class); //Uncomment for Postman Testing as Postman doesn't handle CSRF tokens. Remember to re-enable CsrfMiddleware.
+        // ── Blog (GET public, POST protected) ─────────────────────────────
+        $group->get('/blog/posts',  [BlogController::class, 'index']);
+        $group->post('/blog/posts', [BlogController::class, 'store'])
+            ->add(AuthMiddleware::class);
+
+        // ── Admin (all admin-only) ─────────────────────────────────────────
+        $group->get('/admin/listings',         [AdminController::class, 'listings'])
+            ->add(AdminMiddleware::class);
+        $group->post('/admin/news',            [AdminController::class, 'createNews'])
+            ->add(AdminMiddleware::class);
+        $group->patch('/admin/listings/{id}',  [AdminController::class, 'editListing'])
+            ->add(AdminMiddleware::class);
+        $group->delete('/admin/listings/{id}', [AdminController::class, 'deleteListing'])
+            ->add(AdminMiddleware::class);
+
+    })->add(CsrfMiddleware::class);
 };
