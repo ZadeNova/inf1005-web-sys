@@ -2,20 +2,12 @@
  * PortfolioChart.jsx — Dev 2 Island
  * Owner: Dev 2
  * Mounts via: mountIsland('portfolio-chart-root', PortfolioChart)
- * PHP view: backend/src/Views/dashboard.php
- * Page entry: src/pages/dashboard.jsx
  *
- * Line chart showing the current user's portfolio value over time.
- * Uses Chart.js — must be installed: npm install chart.js
- *
- * RULES:
- *   ✅ Import atoms from '../../shared/atoms/'
- *   ✅ USE_MOCK flag respected
- *   ✅ loading / error / success states required
- *   ❌ No hardcoded hex values — use cssVar() helper below
+ * FIX: title updated to "Total Portfolio Value Over Time"
+ * The API now returns wallet balance + asset value combined per day.
  *
  * API endpoint (when USE_MOCK = false):
- *   GET /api/v1/dashboard/portfolio-history
+ *   GET /api/v1/dashboard/portfolio-history?range=1W|1M|3M
  *   Returns: { labels: string[], values: number[] }
  */
 
@@ -79,16 +71,16 @@ export default function PortfolioChart() {
       data: {
         labels:   chartData.labels,
         datasets: [{
-          label:            'Portfolio Value (USD)',
-          data:             chartData.values,
-          borderColor:      accent,
-          backgroundColor:  `${accent}22`,
-          borderWidth:      2,
-          pointRadius:      5,
-          pointHoverRadius: 8,
+          label:                'Total Portfolio Value (USD)',
+          data:                 chartData.values,
+          borderColor:          accent,
+          backgroundColor:      `${accent}22`,
+          borderWidth:          2,
+          pointRadius:          5,
+          pointHoverRadius:     8,
           pointBackgroundColor: accent,
-          tension:          0.4,
-          fill:             true,
+          tension:              0.4,
+          fill:                 true,
         }],
       },
       options: {
@@ -143,7 +135,7 @@ export default function PortfolioChart() {
     <Card variant="default" padding="md" className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-(--color-text-primary)">
-          Portfolio Value Over Time
+          Total Portfolio Value Over Time
         </h3>
         <div className="flex gap-1">
           {TIME_RANGES.map(r => (
@@ -163,7 +155,7 @@ export default function PortfolioChart() {
         </div>
       </div>
       <div style={{ height: 280 }}>
-        <canvas ref={canvasRef} aria-label="Portfolio value over time" role="img" />
+        <canvas ref={canvasRef} aria-label="Total portfolio value over time" role="img" />
       </div>
     </Card>
   );

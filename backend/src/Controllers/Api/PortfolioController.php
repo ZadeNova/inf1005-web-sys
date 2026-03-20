@@ -37,12 +37,21 @@ class PortfolioController
                 a.condition_state,
                 a.image_url,
                 a.collection,
-                (
-                    SELECT MIN(l.price)
-                    FROM listings l
-                    WHERE l.asset_id = a.id
-                      AND l.status   = 'active'
-                      AND l.seller_id != :userIdSub
+                COALESCE(
+                    (
+                        SELECT MIN(l.price)
+                        FROM listings l
+                        WHERE l.asset_id = a.id
+                          AND l.status   = 'active'
+                    ),
+                    (
+                        SELECT t.price
+                        FROM transactions t
+                        WHERE t.asset_id = a.id
+                        ORDER BY t.completed_at DESC
+                        LIMIT 1
+                    ),
+                    0
                 ) AS market_value
             FROM inventory i
             JOIN assets a ON a.id = i.asset_id
@@ -50,7 +59,7 @@ class PortfolioController
             ORDER BY i.acquired_at DESC
         ");
 
-        $stmt->execute([':userId' => $userId, ':userIdSub' => $userId]);
+        $stmt->execute([':userId' => $userId]);
         $items = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         return $this->json($response, [
@@ -173,6 +182,13 @@ class PortfolioController
 
     /**
      * GET /api/v1/dashboard/portfolio-history?range=1W|1M|3M
+     *
+     * Returns total portfolio value per day =
+     *   wallet balance at end of that day + current asset value.
+     *
+     * FIX: asset value subquery now scoped to THIS user's inventory only,
+     * identical to the query in PageController so chart and stat card always
+     * show consistent numbers.
      */
     public function portfolioHistory(Request $request, Response $response): Response
     {
@@ -186,10 +202,11 @@ class PortfolioController
             default => '30 DAY',
         };
 
+        // Step 1: wallet balance per day (highest balance_after that day)
         $stmt = $this->db->prepare("
             SELECT
                 DATE(created_at)   AS label,
-                MAX(balance_after) AS value
+                MAX(balance_after) AS wallet_balance
             FROM wallet_ledger
             WHERE user_id   = :uid
               AND created_at >= DATE_SUB(NOW(), INTERVAL {$interval})
@@ -197,17 +214,63 @@ class PortfolioController
             ORDER BY DATE(created_at) ASC
         ");
         $stmt->execute([':uid' => $userId]);
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $ledgerRows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Step 2: current asset value for THIS user's inventory only
+        // Uses same logic as PageController stat card:
+        //   1. Lowest active listing price for the asset
+        //   2. Last transaction price as fallback
+        //   3. 0 if neither exists
+        $assetStmt = $this->db->prepare("
+            SELECT COALESCE(SUM(
+                COALESCE(
+                    (
+                        SELECT MIN(l.price)
+                        FROM listings l
+                        WHERE l.asset_id = a.id
+                          AND l.status   = 'active'
+                    ),
+                    (
+                        SELECT t.price
+                        FROM transactions t
+                        WHERE t.asset_id = a.id
+                        ORDER BY t.completed_at DESC
+                        LIMIT 1
+                    ),
+                    0
+                )
+            ), 0) AS asset_total
+            FROM inventory i
+            JOIN assets a ON a.id = i.asset_id
+            WHERE i.user_id = :uid
+        ");
+        $assetStmt->execute([':uid' => $userId]);
+        $assetValue = (float) $assetStmt->fetchColumn();
+
+        // Step 3: each chart point = wallet balance that day + asset value
+        // This gives true net worth at each point in time
+        $labels = [];
+        $values = [];
+        foreach ($ledgerRows as $row) {
+            $labels[] = $row['label'];
+            $values[] = round((float) $row['wallet_balance'] + $assetValue, 2);
+        }
+
+        // If no ledger entries in range, return a single point for today
+        if (empty($labels)) {
+            $currentBalance = $this->wallet->getBalance($userId);
+            $labels[] = date('Y-m-d');
+            $values[] = round($currentBalance + $assetValue, 2);
+        }
 
         return $this->json($response, [
-            'labels' => array_column($rows, 'label'),
-            'values' => array_map(fn($r) => (float) $r['value'], $rows),
+            'labels' => $labels,
+            'values' => $values,
         ]);
     }
 
     /**
      * GET /api/v1/users/{userId}/profile
-     * FIX: now reads bio from DB instead of hardcoding null
      */
     public function profile(Request $request, Response $response, array $args): Response
     {
@@ -217,7 +280,6 @@ class PortfolioController
             return $this->json($response, ['success' => false, 'message' => 'Invalid user ID.'], 422);
         }
 
-        // FIX: added bio to SELECT
         $stmt = $this->db->prepare("
             SELECT u.id, u.username, u.verified, u.registered_at,
                    u.bio,
@@ -257,7 +319,7 @@ class PortfolioController
                 'id'         => (int)  $user['id'],
                 'username'   =>        $user['username'],
                 'isVerified' => (bool) $user['verified'],
-                'bio'        =>        $user['bio'] ?? null, // FIX: reads from DB now
+                'bio'        =>        $user['bio'] ?? null,
                 'joinedAt'   =>        $user['registered_at'],
             ],
             'stats' => [
@@ -275,7 +337,6 @@ class PortfolioController
 
     /**
      * PATCH /api/v1/users/{userId}/profile
-     * FIX: now updates bio column correctly
      */
     public function updateProfile(Request $request, Response $response, array $args): Response
     {
@@ -308,7 +369,6 @@ class PortfolioController
             ], 422);
         }
 
-        // FIX: bio column now exists in DB so this won't throw PDOException
         $stmt = $this->db->prepare("
             UPDATE users
             SET username = :username,

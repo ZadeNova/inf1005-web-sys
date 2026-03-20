@@ -17,7 +17,7 @@ $builder = new ContainerBuilder();
 
 $builder->addDefinitions([
 
-    // ── Database connection (singleton — one PDO for the whole request) ──
+    // ── Database connection (singleton) ──────────────────────────────────
     PDO::class => function () {
         $dsn = sprintf('mysql:host=%s;dbname=%s;charset=utf8mb4',
             $_ENV['DB_HOST'] ?? getenv('DB_HOST'),
@@ -95,22 +95,24 @@ $builder->addDefinitions([
     },
 
     App\Controllers\Api\BlogController::class => function ($c) {
-    return new App\Controllers\Api\BlogController(
-        $c->get(PDO::class)
-    );
-},
+        return new App\Controllers\Api\BlogController(
+            $c->get(PDO::class)
+        );
+    },
 
-App\Controllers\Api\AdminController::class => function ($c) {
-    return new App\Controllers\Api\AdminController(
-        $c->get(PDO::class)
-    );
-},
+    App\Controllers\Api\AdminController::class => function ($c) {
+        return new App\Controllers\Api\AdminController(
+            $c->get(PDO::class)
+        );
+    },
 
-App\Controllers\PageController::class => function ($c) {
-    return new App\Controllers\PageController(
-        $c->get(App\Services\WalletService::class)
-    );
-},
+    // FIX: PageController now receives PDO for portfolio value calculation
+    App\Controllers\PageController::class => function ($c) {
+        return new App\Controllers\PageController(
+            $c->get(App\Services\WalletService::class),
+            $c->get(PDO::class)
+        );
+    },
 
 ]);
 

@@ -1,16 +1,11 @@
 /**
  * RarityDonutChart.jsx — Dev 2 Island
  * Owner: WH (Dev 2)
- * Extracted from: frontend/src/pages/dashboard.jsx
  * Mounts via: mountIsland('rarity-donut-chart-root', RarityDonutChart)
  * PHP view: backend/src/Views/dashboard.php
  *
- * Doughnut chart — portfolio breakdown by rarity tier.
- * Uses Chart.js (already installed).
- *
- * API endpoint (when USE_MOCK = false):
- *   GET /api/v1/user/portfolio
- *   Returns: { portfolio: [{ rarity, ... }, ...] }
+ * FIX: RARITY_COLORS now covers all DB Title Case values AND
+ * SCREAMING_SNAKE_CASE mock values. All lookups normalised.
  */
 
 import { useEffect, useRef, useMemo } from 'react';
@@ -29,18 +24,33 @@ import {
 
 Chart.register(ArcElement, DoughnutController, Tooltip, Legend);
 
-/* Paul Tol palette — colourblind-safe, matches colorblind CSS var theme */
+// FIX: normalise any incoming rarity string to a single lookup key
+// Handles DB Title Case ('Ultra Rare'), SCREAMING_SNAKE ('ULTRA_RARE'),
+// and anything in between.
+function normaliseRarity(raw) {
+  if (!raw) return 'COMMON';
+  return raw.toUpperCase().replace(/\s+/g, '_');
+}
+
+// FIX: keyed by normalised SCREAMING_SNAKE — covers all 5 rarity tiers
 const RARITY_COLORS = {
-    // DB Title Case values
-    'Common':    '#94a3b8',
-    'Rare':      '#60a5fa',
-    'Legendary': '#f59e0b',
-    // Uppercase for mock data
-    'COMMON':      '#94a3b8',
-    'UNCOMMON':    '#4ade80',
-    'RARE':        '#60a5fa',
-    'ULTRA_RARE':  '#c084fc',
-    'SECRET_RARE': '#f59e0b',
+  COMMON:      '#94a3b8',
+  UNCOMMON:    '#4ade80',
+  RARE:        '#60a5fa',
+  ULTRA_RARE:  '#c084fc',
+  SECRET_RARE: '#f59e0b',
+  // DB also uses 'Legendary' as a legacy value in the ENUM — map it too
+  LEGENDARY:   '#f59e0b',
+};
+
+// Human-readable labels for the legend
+const RARITY_LABELS = {
+  COMMON:      'Common',
+  UNCOMMON:    'Uncommon',
+  RARE:        'Rare',
+  ULTRA_RARE:  'Ultra Rare',
+  SECRET_RARE: 'Secret Rare',
+  LEGENDARY:   'Legendary',
 };
 
 function cssVar(name) {
@@ -56,13 +66,16 @@ export default function RarityDonutChart() {
     { auto: !USE_MOCK }
   );
 
+  // FIX: normalise rarity keys before counting so DB and mock values
+  // both resolve to the same bucket
   const rarityCounts = useMemo(() => {
     const source = USE_MOCK
       ? mockAssets
       : (data?.portfolio ?? []);
 
     return source.reduce((acc, a) => {
-      acc[a.rarity] = (acc[a.rarity] ?? 0) + 1;
+      const key = normaliseRarity(a.rarity);
+      acc[key] = (acc[key] ?? 0) + 1;
       return acc;
     }, {});
   }, [data]);
@@ -71,9 +84,11 @@ export default function RarityDonutChart() {
     if (!canvasRef.current || Object.keys(rarityCounts).length === 0) return;
     if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
 
-    const labels    = Object.keys(rarityCounts);
+    const keys      = Object.keys(rarityCounts);
     const values    = Object.values(rarityCounts);
-    const colors    = labels.map(r => RARITY_COLORS[r] ?? '#94a3b8');
+    // Use human-readable labels in the legend
+    const labels    = keys.map(k => RARITY_LABELS[k] ?? k);
+    const colors    = keys.map(k => RARITY_COLORS[k] ?? '#94a3b8');
     const textMuted = cssVar('--color-text-muted');
     const surface2  = cssVar('--color-surface-2');
     const border    = cssVar('--color-border');
@@ -125,28 +140,28 @@ export default function RarityDonutChart() {
 
   if (error) {
     return (
-        <Card variant="default" padding="md">
-            <p role="alert" className="text-sm text-(--color-danger)">
-                Failed to load chart: {error}
-            </p>
-        </Card>
+      <Card variant="default" padding="md">
+        <p role="alert" className="text-sm text-(--color-danger)">
+          Failed to load chart: {error}
+        </p>
+      </Card>
     );
-}
+  }
 
-if (Object.keys(rarityCounts).length === 0) {
+  if (Object.keys(rarityCounts).length === 0) {
     return (
-        <Card variant="default" padding="md" className="flex flex-col gap-3">
-            <h3 className="text-sm font-bold text-(--color-text-primary)">
-                Portfolio by Rarity
-            </h3>
-            <div className="flex items-center justify-center" style={{ height: 200 }}>
-                <p className="text-sm text-(--color-text-muted)">
-                    No assets in portfolio yet.
-                </p>
-            </div>
-        </Card>
+      <Card variant="default" padding="md" className="flex flex-col gap-3">
+        <h3 className="text-sm font-bold text-(--color-text-primary)">
+          Portfolio by Rarity
+        </h3>
+        <div className="flex items-center justify-center" style={{ height: 200 }}>
+          <p className="text-sm text-(--color-text-muted)">
+            No assets in portfolio yet.
+          </p>
+        </div>
+      </Card>
     );
-}
+  }
 
   return (
     <Card variant="default" padding="md" className="flex flex-col gap-3">

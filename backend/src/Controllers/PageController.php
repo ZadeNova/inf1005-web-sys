@@ -10,24 +10,21 @@ use App\Services\WalletService;
 
 class PageController
 {
-
     private WalletService $wallet;
+    private \PDO          $db;
 
-    public function __construct(WalletService $wallet)
+    public function __construct(WalletService $wallet, \PDO $db)
     {
         $this->wallet = $wallet;
+        $this->db     = $db;
     }
-    
-    // Helper: renders a view and writes it to the response
+
     private function render(Response $response, string $view, array $data = []): Response
     {
-        // Extract data array into variables for the view
         extract($data);
-
         ob_start();
         require __DIR__ . '/../Views/' . $view . '.php';
         $content = ob_get_clean();
-
         $response->getBody()->write($content);
         return $response;
     }
@@ -77,16 +74,56 @@ class PageController
     public function dashboard(Request $request, Response $response): Response
     {
         $userId  = $_SESSION['user_id'] ?? null;
-        $balance = $userId ? $this->wallet->getBalance((int) $userId) : 0.00;
+
+        // Wallet cash balance
+        $walletBalance = $userId
+            ? $this->wallet->getBalance((int) $userId)
+            : 0.00;
+
+        // Asset value: for every owned asset, use the best available price:
+        //   1. Lowest active listing price on the market for that asset
+        //   2. Last transaction price (most recent sale)
+        //   3. 0 if neither exists yet
+        $assetValue = 0.00;
+        if ($userId) {
+            $stmt = $this->db->prepare("
+                SELECT COALESCE(SUM(
+                    COALESCE(
+                        (
+                            SELECT MIN(l.price)
+                            FROM listings l
+                            WHERE l.asset_id = a.id
+                              AND l.status   = 'active'
+                        ),
+                        (
+                            SELECT t.price
+                            FROM transactions t
+                            WHERE t.asset_id = a.id
+                            ORDER BY t.completed_at DESC
+                            LIMIT 1
+                        ),
+                        0
+                    )
+                ), 0) AS asset_total
+                FROM inventory i
+                JOIN assets a ON a.id = i.asset_id
+                WHERE i.user_id = :uid
+            ");
+            $stmt->execute([':uid' => (int) $userId]);
+            $assetValue = (float) $stmt->fetchColumn();
+        }
+
+        // Total portfolio = wallet cash + estimated asset value
+        $portfolioValue = $walletBalance + $assetValue;
 
         return $this->render($response, 'dashboard', [
             'title'      => 'Dashboard — Vapour FT',
             'dashStats'  => [
                 'username'        => $_SESSION['username'] ?? 'Trader',
                 'isVerified'      => false,
-                'portfolioValue'  => 0,       
+                'portfolioValue'  => $portfolioValue,
                 'portfolioChange' => null,
-                'walletBalance'   => $balance,
+                'walletBalance'   => $walletBalance,
                 'currency'        => 'VPR',
             ],
         ]);
