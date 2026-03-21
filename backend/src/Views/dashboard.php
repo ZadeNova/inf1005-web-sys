@@ -5,14 +5,19 @@
  *
  * Islands mounted here (all must be registered in main.jsx):
  *   #portfolio-chart-root         → PortfolioChart
- *   #rarity-donut-chart-root      → RarityDonutChart        (new island)
- *   #active-listings-manager-root → ActiveListingsManager   (new island)
+ *   #rarity-donut-chart-root      → RarityDonutChart
+ *   #active-listings-manager-root → ActiveListingsManager
+ *   #portfolio-table-root         → PortfolioTable
  *   #activity-feed-root           → ActivityFeed
+ *   #wallet-balance-root          → WalletBalance
  *
  * Controller passes via extract($data):
  *   $title      string  — page <title>
  *   $dashStats  array   — keys: username, isVerified, portfolioValue,
  *                         portfolioChange, walletBalance, currency
+ *
+ * FIX: walletBalance is now displayed server-side in the stat card.
+ * WalletBalance island (#wallet-balance-root) shows ledger detail below.
  */
 
 $username        = $dashStats['username']        ?? ($_SESSION['username'] ?? 'Trader');
@@ -55,9 +60,10 @@ ob_start();
             My Portfolio
         </h2>
 
-        <?php /* Stat cards — 2-col */ ?>
+        <?php /* ── Stat cards ─────────────────────────────────────── */ ?>
         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
+            <?php /* Portfolio Value card — server-rendered, always accurate */ ?>
             <div class="rounded-lg border border-(--color-border)
                         bg-(--color-surface) p-4 flex flex-col gap-2">
                 <dt class="text-[10px] text-(--color-text-muted) uppercase tracking-wide">
@@ -65,7 +71,7 @@ ob_start();
                 </dt>
                 <dd class="text-2xl font-bold text-(--color-text-primary) tabular-nums">
                     <?php if ($portfolioValue !== null): ?>
-                        <?= htmlspecialchars('$' . number_format((float)$portfolioValue, 0)) ?>
+                        <?= htmlspecialchars('$' . number_format((float) $portfolioValue, 2)) ?>
                     <?php else: ?>
                         <span class="inline-block h-8 w-28 rounded bg-(--color-surface-2) animate-pulse"
                               aria-label="Loading"></span>
@@ -76,13 +82,17 @@ ob_start();
                     <?= htmlspecialchars($portfolioChange) ?>
                 </dd>
                 <?php endif; ?>
+                <?php /* Note: chart may show slightly different value due to timing */ ?>
+                <dd class="text-[10px] text-(--color-text-muted)">Wallet + asset market value</dd>
             </div>
 
+            <?php /* Wallet Balance card — server-rendered from PageController */ ?>
             <div class="rounded-lg border border-(--color-border)
                         bg-(--color-surface) p-4 flex flex-col gap-2">
                 <dt class="flex items-center gap-2 text-[10px] text-(--color-text-muted) uppercase tracking-wide">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" aria-hidden="true">
+                         stroke="currentColor" stroke-width="2" aria-hidden="true"
+                         style="color: var(--color-warning);">
                         <rect x="2" y="5" width="20" height="14" rx="2"/>
                         <path d="M16 12h2"/><path d="M2 10h20"/>
                     </svg>
@@ -90,7 +100,7 @@ ob_start();
                 </dt>
                 <dd class="text-2xl font-bold text-(--color-accent) tabular-nums">
                     <?php if ($walletBalance !== null): ?>
-                        <?= htmlspecialchars('$' . number_format((float)$walletBalance, 2)) ?>
+                        <?= htmlspecialchars('$' . number_format((float) $walletBalance, 2)) ?>
                         <span class="text-xs font-normal text-(--color-text-muted) ml-1">
                             <?= htmlspecialchars($currency) ?>
                         </span>
@@ -99,43 +109,49 @@ ob_start();
                               aria-label="Loading"></span>
                     <?php endif; ?>
                 </dd>
+                <dd class="text-[10px] text-(--color-text-muted)">Available to spend</dd>
             </div>
         </dl>
 
-        <?php /* Chart row: PortfolioChart (2/3) + RarityDonutChart (1/3) */ ?>
+        <?php /* ── Chart row ─────────────────────────────────────── */ ?>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
             <div class="lg:col-span-2">
-                <?php /* Island: PortfolioChart — #portfolio-chart-root */ ?>
                 <div id="portfolio-chart-root"
                      data-props='<?= json_encode(['userId' => $userId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
                     <div class="rounded-lg border border-(--color-border) bg-(--color-surface)
-                                p-4 h-56 animate-pulse" aria-hidden="true"></div>
+                                p-4 h-72 animate-pulse flex items-center justify-center"
+                         aria-label="Loading portfolio chart" aria-hidden="true">
+                        <span class="text-xs text-(--color-text-muted)">Loading chart…</span>
+                    </div>
                 </div>
             </div>
 
             <div>
-                <?php /* Island: RarityDonutChart — #rarity-donut-chart-root */ ?>
                 <div id="rarity-donut-chart-root"
                      data-props='<?= json_encode(['userId' => $userId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
                     <div class="rounded-lg border border-(--color-border) bg-(--color-surface)
-                                p-4 h-56 animate-pulse" aria-hidden="true"></div>
+                                p-4 h-72 animate-pulse" aria-hidden="true"></div>
                 </div>
             </div>
         </div>
+
+        <?php /* ── Wallet ledger island (shows transaction history) ── */ ?>
+        <div id="wallet-balance-root"
+             data-props='<?= json_encode(['userId' => $userId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
+            <div class="rounded-lg border border-(--color-border) bg-(--color-surface)
+                        p-4 animate-pulse h-24" aria-hidden="true"></div>
+        </div>
     </section>
 
-
-    <?php /* ── My Portfolio Table ─────────────────────────── */ ?>
+    <?php /* ── My Assets (PortfolioTable) ─────────────────────── */ ?>
     <section aria-labelledby="portfolio-table-heading">
         <h2 id="portfolio-table-heading"
             class="text-base font-bold text-(--color-text-primary) mb-4">
             My Assets
         </h2>
-
         <div id="portfolio-table-root"
-            data-props='<?= json_encode(['userId' => $userId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
-            <?php /* Skeleton while React hydrates */ ?>
+             data-props='<?= json_encode(['userId' => $userId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
             <div class="flex flex-col gap-0 animate-pulse" aria-hidden="true">
                 <?php for ($i = 0; $i < 4; $i++): ?>
                 <div class="flex items-center gap-4 py-3
@@ -152,18 +168,15 @@ ob_start();
         </div>
     </section>
 
-    <?php /* ── My Listings section ─────────────────────────── */ ?>
+    <?php /* ── My Listings ───────────────────────────────────── */ ?>
     <section aria-labelledby="listings-heading">
-        <h2 id="listings-heading" class="sr-only">My active listings</h2>
-
-        <?php /* Island: ActiveListingsManager — #active-listings-manager-root */ ?>
         <div id="active-listings-manager-root"
              data-props='<?= json_encode([
                  'userId'    => $userId,
                  'csrfToken' => $_SESSION['csrf_token'] ?? '',
              ], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
             <div class="flex flex-col gap-3 animate-pulse" aria-hidden="true">
-                <?php for ($i = 0; $i < 3; $i++): ?>
+                <?php for ($i = 0; $i < 2; $i++): ?>
                 <div class="flex items-center gap-4 p-4 rounded-lg border border-(--color-border) bg-(--color-surface)">
                     <div class="w-14 h-14 rounded-md bg-(--color-surface-2) shrink-0"></div>
                     <div class="flex-1 flex flex-col gap-2">
@@ -177,22 +190,19 @@ ob_start();
         </div>
     </section>
 
-    <?php /* ── Recent Activity section ──────────────────────── */ ?>
+    <?php /* ── Recent Activity ─────────────────────────────── */ ?>
     <section aria-labelledby="activity-heading">
         <h2 id="activity-heading"
             class="text-base font-bold text-(--color-text-primary) mb-4">
             Recent Activity
         </h2>
-
-        <?php /* Island: ActivityFeed — #activity-feed-root */ ?>
         <div id="activity-feed-root"
              role="region"
              aria-label="Recent trading activity"
              aria-live="polite"
              data-props='<?= json_encode(['userId' => $userId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
-            <div class="rounded-lg border border-(--color-border)
-                        bg-(--color-surface) p-4 flex flex-col gap-3 animate-pulse"
-                 aria-hidden="true">
+            <div class="rounded-lg border border-(--color-border) bg-(--color-surface)
+                        p-4 flex flex-col gap-3 animate-pulse" aria-hidden="true">
                 <?php for ($i = 0; $i < 5; $i++): ?>
                 <div class="flex items-center gap-3 py-3
                             <?= $i < 4 ? 'border-b border-(--color-border)' : '' ?>">

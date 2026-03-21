@@ -1,6 +1,9 @@
 -- =============================================================
--- Vapour FT — Database Schema
--- init.sql is auto-run by MySQL on first container start
+-- Vapour FT — Database Schema (FIXED)
+-- FIX: assets.rarity ENUM updated from 3-tier to 5-tier system
+--      to match frontend RARITY constants exactly.
+-- FIX: assets.condition_state ENUM updated to match frontend CONDITION constants.
+-- FIX: Seed assets now use correct rarity tiers.
 -- =============================================================
 
 CREATE DATABASE IF NOT EXISTS vapourft
@@ -11,8 +14,6 @@ USE vapourft;
 
 -- =============================================================
 -- USERS
--- Managed by delight-im/PHP-Auth — do NOT rename core columns
--- FIX: added bio column for profile page
 -- =============================================================
 CREATE TABLE IF NOT EXISTS users (
     id              INT UNSIGNED    NOT NULL AUTO_INCREMENT,
@@ -29,7 +30,6 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- =============================================================
 -- WALLETS
--- One wallet per user, created at registration
 -- =============================================================
 CREATE TABLE IF NOT EXISTS wallets (
     id          INT UNSIGNED        NOT NULL AUTO_INCREMENT,
@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS wallets (
 
 -- =============================================================
 -- WALLET LEDGER
--- Double-entry audit log — every balance mutation recorded here
 -- =============================================================
 CREATE TABLE IF NOT EXISTS wallet_ledger (
     id              INT UNSIGNED        NOT NULL AUTO_INCREMENT,
@@ -60,15 +59,19 @@ CREATE TABLE IF NOT EXISTS wallet_ledger (
 
 -- =============================================================
 -- ASSETS
+-- FIX: rarity ENUM now uses 5-tier system matching frontend RARITY constants
+-- FIX: condition_state ENUM now matches frontend CONDITION constants
 -- =============================================================
 CREATE TABLE IF NOT EXISTS assets (
     id              INT UNSIGNED        NOT NULL AUTO_INCREMENT,
     name            VARCHAR(128)        NOT NULL,
     description     TEXT                NULL,
     image_url       VARCHAR(512)        NULL,
-    rarity          ENUM('Common', 'Rare', 'Legendary') NOT NULL DEFAULT 'Common',
+    rarity          ENUM('COMMON', 'UNCOMMON', 'RARE', 'ULTRA_RARE', 'SECRET_RARE')
+                    NOT NULL DEFAULT 'COMMON',
     collection      VARCHAR(64)         NULL,
-    condition_state ENUM('Mint', 'Used') NOT NULL DEFAULT 'Mint',
+    condition_state ENUM('Mint', 'Near Mint', 'Lightly Played', 'Moderately Played', 'Heavily Played')
+                    NOT NULL DEFAULT 'Mint',
     created_at      DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -122,7 +125,6 @@ CREATE TABLE IF NOT EXISTS transactions (
 
 -- =============================================================
 -- BLOG POSTS
--- FIX: added category column
 -- =============================================================
 CREATE TABLE IF NOT EXISTS blog_posts (
     id          INT UNSIGNED    NOT NULL AUTO_INCREMENT,
@@ -164,21 +166,26 @@ INSERT INTO wallet_ledger (user_id, transaction_ref, type, amount, balance_befor
 (1, 'SEED-ADMIN-001', 'credit', 10000.00, 0.00, 10000.00, 'seed_deposit'),
 (2, 'SEED-USER-001',  'credit',   500.00, 0.00,   500.00, 'seed_deposit');
 
+-- =============================================================
+-- SEED ASSETS — using correct 5-tier rarity + full condition values
+-- Rarities:   COMMON | UNCOMMON | RARE | ULTRA_RARE | SECRET_RARE
+-- Conditions: Mint | Near Mint | Lightly Played | Moderately Played | Heavily Played
+-- =============================================================
 INSERT INTO assets (name, description, rarity, collection, condition_state) VALUES
-('Ember Blade',       'A legendary sword forged in volcanic fire.',          'Legendary', 'Season 1', 'Mint'),
-('Shadow Hood',       'Rare stealth armor worn by elite scouts.',            'Rare',      'Season 1', 'Mint'),
-('Iron Buckler',      'A basic shield. Gets the job done.',                  'Common',    'Season 1', 'Used'),
-('Phantom Dagger',    'Strikes before you see it coming.',                   'Rare',      'Season 1', 'Mint'),
-('Founders Cape',     'Exclusive to early adopters. Highly sought after.',   'Legendary', 'Founders', 'Mint'),
-('Bronze Helm',       'Standard issue headgear for new recruits.',           'Common',    'Season 1', 'Used'),
-('Void Katana',       'Forged in a collapsing star. One of three ever made.','Legendary', 'Season 2', 'Mint'),
-('Storm Gauntlets',   'Channel lightning through your fists.',               'Rare',      'Season 2', 'Mint'),
-('Cracked Visor',     'Seen better days, but still blocks bullets.',         'Common',    'Season 2', 'Used'),
-('Ashen Cloak',       'Renders the wearer almost invisible in smoke.',       'Rare',      'Season 2', 'Mint'),
-('Founders Blade',    'Twin to the Founders Cape. Extremely rare.',          'Legendary', 'Founders', 'Mint'),
-('Neon Wraps',        'Glowing hand wraps from the first tournament.',       'Rare',      'Founders', 'Mint'),
-('Dented Canteen',    'Holds water. Usually.',                               'Common',    'Season 1', 'Used'),
-('Worn Boot Knife',   'Every soldier carries one. Most never use it.',       'Common',    'Season 2', 'Used');
+('Ember Blade',       'A legendary sword forged in volcanic fire.',          'ULTRA_RARE',  'Season 1', 'Mint'),
+('Shadow Hood',       'Rare stealth armor worn by elite scouts.',            'RARE',        'Season 1', 'Mint'),
+('Iron Buckler',      'A basic shield. Gets the job done.',                  'COMMON',      'Season 1', 'Lightly Played'),
+('Phantom Dagger',    'Strikes before you see it coming.',                   'RARE',        'Season 1', 'Mint'),
+('Founders Cape',     'Exclusive to early adopters. Highly sought after.',   'SECRET_RARE', 'Founders', 'Mint'),
+('Bronze Helm',       'Standard issue headgear for new recruits.',           'COMMON',      'Season 1', 'Moderately Played'),
+('Void Katana',       'Forged in a collapsing star. One of three ever made.','SECRET_RARE', 'Season 2', 'Mint'),
+('Storm Gauntlets',   'Channel lightning through your fists.',               'ULTRA_RARE',  'Season 2', 'Mint'),
+('Cracked Visor',     'Seen better days, but still blocks bullets.',         'COMMON',      'Season 2', 'Heavily Played'),
+('Ashen Cloak',       'Renders the wearer almost invisible in smoke.',       'RARE',        'Season 2', 'Mint'),
+('Founders Blade',    'Twin to the Founders Cape. Extremely rare.',          'SECRET_RARE', 'Founders', 'Mint'),
+('Neon Wraps',        'Glowing hand wraps from the first tournament.',       'UNCOMMON',    'Founders', 'Mint'),
+('Dented Canteen',    'Holds water. Usually.',                               'COMMON',      'Season 1', 'Heavily Played'),
+('Worn Boot Knife',   'Every soldier carries one. Most never use it.',       'COMMON',      'Season 2', 'Heavily Played');
 
 INSERT INTO inventory (user_id, asset_id) VALUES
 (1, 1),(1, 5),(1, 7),(1, 11),(1, 12),(1, 8);
@@ -213,7 +220,7 @@ UPDATE inventory SET user_id = 2 WHERE user_id = 1 AND asset_id = 5;
 UPDATE inventory SET user_id = 1 WHERE user_id = 2 AND asset_id = 3;
 
 INSERT INTO wallet_ledger (user_id, transaction_ref, type, amount, balance_before, balance_after, reason) VALUES
-(2, 'SEED-TXN-001', 'debit',  320.00, 500.00,  180.00, 'purchase:Founders Cape'),
+(2, 'SEED-TXN-001', 'debit',  320.00, 500.00,   180.00, 'purchase:Founders Cape'),
 (1, 'SEED-TXN-001', 'credit', 320.00, 10000.00, 10320.00, 'sale:Founders Cape');
 
 INSERT INTO wallet_ledger (user_id, transaction_ref, type, amount, balance_before, balance_after, reason) VALUES

@@ -20,6 +20,47 @@ class PortfolioController
     }
 
     /**
+     * Shared helper — calculates total asset market value for a user.
+     *
+     * Priority order (identical to PageController::dashboard):
+     *   1. Last transaction price  — most recent sale on the platform
+     *   2. Other sellers' floor   — lowest active listing, own listings excluded
+     *   3. Zero                   — never traded, no external listings
+     *
+     * Extracted into a method so portfolio(), portfolioHistory(), and
+     * PageController all use provably identical logic.
+     */
+    private function calcAssetValue(int $userId): float
+    {
+        $stmt = $this->db->prepare("
+            SELECT COALESCE(SUM(
+                COALESCE(
+                    (
+                        SELECT t.price
+                        FROM transactions t
+                        WHERE t.asset_id = a.id
+                        ORDER BY t.completed_at DESC
+                        LIMIT 1
+                    ),
+                    (
+                        SELECT MIN(l.price)
+                        FROM listings l
+                        WHERE l.asset_id   = a.id
+                          AND l.status     = 'active'
+                          AND l.seller_id != :excludeUid
+                    ),
+                    0
+                )
+            ), 0) AS asset_total
+            FROM inventory i
+            JOIN assets a ON a.id = i.asset_id
+            WHERE i.user_id = :uid
+        ");
+        $stmt->execute([':uid' => $userId, ':excludeUid' => $userId]);
+        return (float) $stmt->fetchColumn();
+    }
+
+    /**
      * GET /api/v1/user/portfolio
      */
     public function portfolio(Request $request, Response $response): Response
@@ -39,17 +80,18 @@ class PortfolioController
                 a.collection,
                 COALESCE(
                     (
-                        SELECT MIN(l.price)
-                        FROM listings l
-                        WHERE l.asset_id = a.id
-                          AND l.status   = 'active'
-                    ),
-                    (
                         SELECT t.price
                         FROM transactions t
                         WHERE t.asset_id = a.id
                         ORDER BY t.completed_at DESC
                         LIMIT 1
+                    ),
+                    (
+                        SELECT MIN(l.price)
+                        FROM listings l
+                        WHERE l.asset_id   = a.id
+                          AND l.status     = 'active'
+                          AND l.seller_id != :excludeUid
                     ),
                     0
                 ) AS market_value
@@ -58,14 +100,12 @@ class PortfolioController
             WHERE i.user_id = :userId
             ORDER BY i.acquired_at DESC
         ");
-
-        $stmt->execute([':userId' => $userId]);
-        $items = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $stmt->execute([':userId' => $userId, ':excludeUid' => $userId]);
 
         return $this->json($response, [
             'success'   => true,
-            'portfolio' => $items,
-            'count'     => count($items),
+            'portfolio' => $stmt->fetchAll(\PDO::FETCH_ASSOC),
+            'count'     => $stmt->rowCount(),
         ]);
     }
 
@@ -90,28 +130,25 @@ class PortfolioController
                 CASE
                     WHEN t.buyer_id  = :userIdCase  THEN 'buy'
                     WHEN t.seller_id = :userIdCase2 THEN 'sell'
-                END             AS role
+                END AS role
             FROM transactions t
-            JOIN assets a           ON a.id       = t.asset_id
-            JOIN users  buyer       ON buyer.id   = t.buyer_id
-            JOIN users  seller      ON seller.id  = t.seller_id
+            JOIN assets a         ON a.id      = t.asset_id
+            JOIN users  buyer     ON buyer.id  = t.buyer_id
+            JOIN users  seller    ON seller.id = t.seller_id
             WHERE t.buyer_id = :buyerId OR t.seller_id = :sellerId
             ORDER BY t.completed_at DESC
             LIMIT 50
         ");
-
         $stmt->execute([
             ':userIdCase'  => $userId,
             ':userIdCase2' => $userId,
             ':buyerId'     => $userId,
             ':sellerId'    => $userId,
         ]);
-        $txns = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         return $this->json($response, [
             'success'      => true,
-            'transactions' => $txns,
-            'count'        => count($txns),
+            'transactions' => $stmt->fetchAll(\PDO::FETCH_ASSOC),
         ]);
     }
 
@@ -123,14 +160,11 @@ class PortfolioController
         $user   = $this->auth->getCurrentUser();
         $userId = (int) $user['id'];
 
-        $balance = $this->wallet->getBalance($userId);
-        $ledger  = $this->wallet->getLedger($userId, 20);
-
         return $this->json($response, [
             'success' => true,
             'wallet'  => [
-                'balance' => $balance,
-                'ledger'  => $ledger,
+                'balance' => $this->wallet->getBalance($userId),
+                'ledger'  => $this->wallet->getLedger($userId, 20),
             ],
         ]);
     }
@@ -146,12 +180,12 @@ class PortfolioController
         $stmt = $this->db->prepare("
             SELECT
                 t.id,
-                t.price                                                          AS amount,
-                t.completed_at                                                   AS createdAt,
-                a.name                                                           AS assetName,
-                CASE WHEN t.buyer_id  = :uid  THEN 'buy'  ELSE 'sell' END       AS type,
-                CASE WHEN t.buyer_id  = :uid2 THEN seller.username
-                                              ELSE buyer.username  END           AS counterparty
+                t.price                                                    AS amount,
+                t.completed_at                                             AS createdAt,
+                a.name                                                     AS assetName,
+                CASE WHEN t.buyer_id = :uid  THEN 'buy' ELSE 'sell' END   AS type,
+                CASE WHEN t.buyer_id = :uid2
+                     THEN seller.username ELSE buyer.username END          AS counterparty
             FROM transactions t
             JOIN assets a       ON a.id      = t.asset_id
             JOIN users  buyer   ON buyer.id  = t.buyer_id
@@ -161,12 +195,9 @@ class PortfolioController
             LIMIT 20
         ");
         $stmt->execute([
-            ':uid'  => $userId,
-            ':uid2' => $userId,
-            ':uid3' => $userId,
-            ':uid4' => $userId,
+            ':uid'  => $userId, ':uid2' => $userId,
+            ':uid3' => $userId, ':uid4' => $userId,
         ]);
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $activities = array_map(fn($r) => [
             'id'           => 'act-' . $r['id'],
@@ -175,7 +206,7 @@ class PortfolioController
             'amount'       => (float) $r['amount'],
             'counterparty' => $r['counterparty'],
             'createdAt'    => $r['createdAt'],
-        ], $rows);
+        ], $stmt->fetchAll(\PDO::FETCH_ASSOC));
 
         return $this->json($response, ['activities' => $activities]);
     }
@@ -183,27 +214,28 @@ class PortfolioController
     /**
      * GET /api/v1/dashboard/portfolio-history?range=1W|1M|3M
      *
-     * Returns total portfolio value per day =
-     *   wallet balance at end of that day + current asset value.
+     * Each chart data point = end-of-day wallet balance + current asset market value.
      *
-     * FIX: asset value subquery now scoped to THIS user's inventory only,
-     * identical to the query in PageController so chart and stat card always
-     * show consistent numbers.
+     * Asset value uses calcAssetValue() — identical priority logic to the PHP stat card.
+     * This guarantees the rightmost chart point always matches Portfolio Value in the UI.
+     *
+     * Today's point is always derived from the LIVE wallet balance (not ledger snapshot)
+     * so it stays in sync with the stat card even if the user transacts mid-session.
      */
     public function portfolioHistory(Request $request, Response $response): Response
     {
-        $user     = $this->auth->getCurrentUser();
-        $userId   = (int) $user['id'];
-        $range    = $request->getQueryParams()['range'] ?? '1M';
+        $user   = $this->auth->getCurrentUser();
+        $userId = (int) $user['id'];
+        $range  = $request->getQueryParams()['range'] ?? '1M';
 
-        $interval = match($range) {
-            '1W'    => '7 DAY',
-            '3M'    => '90 DAY',
-            default => '30 DAY',
-        };
+        $allowedIntervals = ['1W' => '7 DAY', '1M' => '30 DAY', '3M' => '90 DAY'];
+        $interval = $allowedIntervals[$range] ?? '30 DAY';
 
-        // Step 1: wallet balance per day (highest balance_after that day)
-        $stmt = $this->db->prepare("
+        // Asset value is the same number used by the stat card
+        $assetValue = $this->calcAssetValue($userId);
+
+        // End-of-day wallet balance per day from the ledger
+        $ledgerStmt = $this->db->prepare("
             SELECT
                 DATE(created_at)   AS label,
                 MAX(balance_after) AS wallet_balance
@@ -213,54 +245,34 @@ class PortfolioController
             GROUP BY DATE(created_at)
             ORDER BY DATE(created_at) ASC
         ");
-        $stmt->execute([':uid' => $userId]);
-        $ledgerRows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $ledgerStmt->execute([':uid' => $userId]);
+        $rows = $ledgerStmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        // Step 2: current asset value for THIS user's inventory only
-        // Uses same logic as PageController stat card:
-        //   1. Lowest active listing price for the asset
-        //   2. Last transaction price as fallback
-        //   3. 0 if neither exists
-        $assetStmt = $this->db->prepare("
-            SELECT COALESCE(SUM(
-                COALESCE(
-                    (
-                        SELECT MIN(l.price)
-                        FROM listings l
-                        WHERE l.asset_id = a.id
-                          AND l.status   = 'active'
-                    ),
-                    (
-                        SELECT t.price
-                        FROM transactions t
-                        WHERE t.asset_id = a.id
-                        ORDER BY t.completed_at DESC
-                        LIMIT 1
-                    ),
-                    0
-                )
-            ), 0) AS asset_total
-            FROM inventory i
-            JOIN assets a ON a.id = i.asset_id
-            WHERE i.user_id = :uid
-        ");
-        $assetStmt->execute([':uid' => $userId]);
-        $assetValue = (float) $assetStmt->fetchColumn();
-
-        // Step 3: each chart point = wallet balance that day + asset value
-        // This gives true net worth at each point in time
         $labels = [];
         $values = [];
-        foreach ($ledgerRows as $row) {
+
+        foreach ($rows as $row) {
             $labels[] = $row['label'];
             $values[] = round((float) $row['wallet_balance'] + $assetValue, 2);
         }
 
-        // If no ledger entries in range, return a single point for today
+        // Always pin today's point to the live wallet balance so the chart's
+        // rightmost value matches the Portfolio Value stat card exactly.
+        $todayLabel  = date('Y-m-d');
+        $liveBalance = $this->wallet->getBalance($userId);
+        $todayValue  = round($liveBalance + $assetValue, 2);
+
         if (empty($labels)) {
-            $currentBalance = $this->wallet->getBalance($userId);
-            $labels[] = date('Y-m-d');
-            $values[] = round($currentBalance + $assetValue, 2);
+            // New user with no ledger history — just show one point for today
+            $labels[] = $todayLabel;
+            $values[] = $todayValue;
+        } elseif (end($labels) === $todayLabel) {
+            // Today already in series — replace with live value for accuracy
+            $values[count($values) - 1] = $todayValue;
+        } else {
+            // Today not yet in series — append it
+            $labels[] = $todayLabel;
+            $values[] = $todayValue;
         }
 
         return $this->json($response, [
@@ -281,8 +293,7 @@ class PortfolioController
         }
 
         $stmt = $this->db->prepare("
-            SELECT u.id, u.username, u.verified, u.registered_at,
-                   u.bio,
+            SELECT u.id, u.username, u.verified, u.registered_at, u.bio,
                    COALESCE(w.balance, 0.00) AS balance
             FROM users u
             LEFT JOIN wallets w ON w.user_id = u.id
@@ -305,11 +316,8 @@ class PortfolioController
             WHERE buyer_id = :uid4 OR seller_id = :uid5
         ");
         $stmt->execute([
-            ':uid'  => $userId,
-            ':uid2' => $userId,
-            ':uid3' => $userId,
-            ':uid4' => $userId,
-            ':uid5' => $userId,
+            ':uid'  => $userId, ':uid2' => $userId, ':uid3' => $userId,
+            ':uid4' => $userId, ':uid5' => $userId,
         ]);
         $stats = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -345,10 +353,7 @@ class PortfolioController
         $currentUserId = (int) $currentUser['id'];
 
         if ($userId !== $currentUserId) {
-            return $this->json($response, [
-                'success' => false,
-                'message' => 'You can only edit your own profile.',
-            ], 403);
+            return $this->json($response, ['success' => false, 'message' => 'You can only edit your own profile.'], 403);
         }
 
         $data        = $request->getParsedBody() ?? [];
@@ -356,42 +361,25 @@ class PortfolioController
         $bio         = trim($data['bio']         ?? '');
 
         if (strlen($displayName) > 30) {
-            return $this->json($response, [
-                'success' => false,
-                'message' => 'Display name must be 30 characters or fewer.',
-            ], 422);
+            return $this->json($response, ['success' => false, 'message' => 'Display name must be 30 characters or fewer.'], 422);
         }
-
         if (strlen($bio) > 150) {
-            return $this->json($response, [
-                'success' => false,
-                'message' => 'Bio must be 150 characters or fewer.',
-            ], 422);
+            return $this->json($response, ['success' => false, 'message' => 'Bio must be 150 characters or fewer.'], 422);
         }
 
-        $stmt = $this->db->prepare("
-            UPDATE users
-            SET username = :username,
-                bio      = :bio
-            WHERE id = :id
-        ");
+        $stmt = $this->db->prepare("UPDATE users SET username = :username, bio = :bio WHERE id = :id");
         $stmt->execute([
             ':username' => $displayName ?: $currentUser['username'],
             ':bio'      => $bio ?: null,
             ':id'       => $userId,
         ]);
 
-        return $this->json($response, [
-            'success' => true,
-            'message' => 'Profile updated successfully.',
-        ]);
+        return $this->json($response, ['success' => true, 'message' => 'Profile updated successfully.']);
     }
 
     private function json(Response $response, array $data, int $status = 200): Response
     {
         $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
-        return $response
-            ->withHeader('Content-Type', 'application/json')
-            ->withStatus($status);
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
     }
 }

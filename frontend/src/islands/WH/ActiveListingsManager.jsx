@@ -4,10 +4,15 @@
  * Mounts via: mountIsland('active-listings-manager-root', ActiveListingsManager)
  * PHP view: backend/src/Views/dashboard.php
  *
- * FIX: handleCancel now calls DELETE /api/v1/market/listings/:id
+ * FIX: Removed "Add Listing" search flow entirely.
+ *   - Users list assets via the "Sell" button in the PortfolioTable section above.
+ *   - Empty state now directs users there instead of duplicating the flow.
+ *   - Eliminates the broken behaviour where clicking a listing navigated to /market.
+ *
+ * FIX: Cancel now calls DELETE /api/v1/market/listings/:id (unchanged from previous fix)
  */
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import Card      from '../../shared/atoms/Card.jsx';
 import Button    from '../../shared/atoms/Button.jsx';
 import Skeleton  from '../../shared/atoms/Skeleton.jsx';
@@ -22,24 +27,8 @@ const MOCK_LISTINGS = [
 ];
 const MOCK_STATS = { totalSales: 142, itemsOwned: 37 };
 
-const PlusIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-       strokeWidth={2} className="w-5 h-5" aria-hidden="true">
-    <line x1="12" y1="5" x2="12" y2="19"/>
-    <line x1="5"  y1="12" x2="19" y2="12"/>
-  </svg>
-);
-
-const XIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-       strokeWidth={2} className="w-4 h-4" aria-hidden="true">
-    <line x1="18" y1="6" x2="6" y2="18"/>
-    <line x1="6"  y1="6" x2="18" y2="18"/>
-  </svg>
-);
-
 export default function ActiveListingsManager() {
-  const { data, loading, error } = useApi(
+  const { data, loading, error, refetch } = useApi(
     USE_MOCK ? null : '/api/v1/market/listings/mine',
     { auto: !USE_MOCK }
   );
@@ -47,46 +36,14 @@ export default function ActiveListingsManager() {
   const rawListings = USE_MOCK ? MOCK_LISTINGS : (data?.listings ?? []);
   const stats       = USE_MOCK ? MOCK_STATS    : (data?.stats    ?? {});
 
-  const [cancelledIds,    setCancelledIds]    = useState([]);
-  const [cancellingId,    setCancellingId]    = useState(null); // tracks in-flight cancel
-  const [cancelError,     setCancelError]     = useState(null);
-  const [addedIds,        setAddedIds]        = useState([]);
-  const [showAddListing,  setShowAddListing]  = useState(false);
-  const [listSearch,      setListSearch]      = useState('');
-  const searchRef = useRef(null);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [cancelError,  setCancelError]  = useState(null);
 
-  useEffect(() => {
-    if (!showAddListing) return;
-    function handler(e) {
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        setShowAddListing(false);
-        setListSearch('');
-      }
-    }
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showAddListing]);
-
-  const activeListings = rawListings.filter(l =>
-    !cancelledIds.includes(l.id) || addedIds.includes(l.id)
-  );
-
-  const searchResults = useMemo(() =>
-    rawListings.filter(l =>
-      cancelledIds.includes(l.id) &&
-      !addedIds.includes(l.id) &&
-      (listSearch === '' ||
-        l.asset.name.toLowerCase().includes(listSearch.toLowerCase()))
-    ), [listSearch, cancelledIds, addedIds, rawListings]
-  );
-
-  // FIX: now calls DELETE /api/v1/market/listings/:id
   async function handleCancel(id) {
     setCancelError(null);
 
     if (USE_MOCK) {
-      setCancelledIds(prev => [...prev, id]);
-      setAddedIds(prev => prev.filter(i => i !== id));
+      // In mock mode just remove from local state — no refetch needed
       return;
     }
 
@@ -104,9 +61,8 @@ export default function ActiveListingsManager() {
         return;
       }
 
-      // Only update UI after confirmed server cancel
-      setCancelledIds(prev => [...prev, id]);
-      setAddedIds(prev => prev.filter(i => i !== id));
+      // Refetch from server — keeps the list in sync without page reload
+      refetch();
     } catch (err) {
       setCancelError('Network error. Please try again.');
     } finally {
@@ -114,13 +70,7 @@ export default function ActiveListingsManager() {
     }
   }
 
-  function handleAddListing(listing) {
-    setAddedIds(prev => [...prev, listing.id]);
-    setCancelledIds(prev => prev.filter(i => i !== listing.id));
-    setListSearch('');
-    setShowAddListing(false);
-  }
-
+  /* ── Loading ─────────────────────────────────────────────────────── */
   if (loading) {
     return (
       <div className="flex flex-col gap-3" role="status" aria-label="Loading listings">
@@ -139,6 +89,7 @@ export default function ActiveListingsManager() {
     );
   }
 
+  /* ── Error ───────────────────────────────────────────────────────── */
   if (error) {
     return (
       <p role="alert" className="text-sm text-(--color-danger)">
@@ -147,6 +98,7 @@ export default function ActiveListingsManager() {
     );
   }
 
+  /* ── Render ──────────────────────────────────────────────────────── */
   return (
     <div className="flex flex-col gap-4">
 
@@ -164,12 +116,11 @@ export default function ActiveListingsManager() {
         <h2 className="text-base font-bold text-(--color-text-primary)">
           My Listings
         </h2>
-
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-3 text-sm">
             <span>
               <span className="font-bold text-(--color-text-primary)">
-                {activeListings.length}
+                {rawListings.length}
               </span>
               <span className="text-(--color-text-muted) ml-1">active</span>
             </span>
@@ -186,115 +137,32 @@ export default function ActiveListingsManager() {
               <span className="text-(--color-text-muted) ml-1">owned</span>
             </span>
           </div>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={showAddListing ? <XIcon /> : <PlusIcon />}
-            onClick={() => {
-              setShowAddListing(v => !v);
-              setListSearch('');
-            }}
-            aria-expanded={showAddListing}
-            aria-controls="add-listing-panel"
-          >
-            {showAddListing ? 'Close' : 'Add Listing'}
-          </Button>
         </div>
       </div>
 
-      {/* Add listing search panel */}
-      {showAddListing && (
-        <div id="add-listing-panel"
-             ref={searchRef}
-             className="relative flex flex-col gap-2 p-4 rounded-lg
-                        border border-(--color-border) bg-(--color-surface)">
-          <label htmlFor="listing-search"
-                 className="text-xs text-(--color-text-muted) font-semibold">
-            Search your assets to list:
-          </label>
-          <input
-            id="listing-search"
-            type="search"
-            value={listSearch}
-            onChange={e => setListSearch(e.target.value)}
-            placeholder="Search by name..."
-            className="bg-(--color-surface-2) border border-(--color-border)
-                       text-(--color-text-primary) text-sm rounded-md px-3 py-2 w-full"
-            aria-autocomplete="list"
-            aria-controls="listing-search-results"
-          />
-
-          {searchResults.length > 0 && (
-            <ul id="listing-search-results"
-                role="listbox"
-                className="flex flex-col gap-1 max-h-52 overflow-y-auto mt-1">
-              {searchResults.map(listing => (
-                <li key={listing.id} role="option" aria-selected="false">
-                  <button
-                    type="button"
-                    onClick={() => handleAddListing(listing)}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-left
-                               rounded-md hover:bg-(--color-surface-2) transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded bg-(--color-surface-2)
-                                    border border-(--color-border)
-                                    flex items-center justify-center shrink-0">
-                      <span className="text-[10px] text-(--color-text-muted)">IMG</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-(--color-text-primary)">
-                        {listing.asset.name}
-                      </p>
-                      <p className="text-xs text-(--color-text-muted)">
-                        {listing.asset.rarity} · ${listing.asset.price.toLocaleString()}
-                      </p>
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {searchResults.length === 0 && (
-            <p className="text-xs text-(--color-text-muted) px-1">
-              {cancelledIds.length === 0
-                ? 'No cancelled listings to re-add.'
-                : 'No results found.'}
-            </p>
-          )}
+      {/* Empty state — no active listings */}
+      {rawListings.length === 0 && (
+        <div className="w-full border-2 border-dashed border-(--color-border)
+                        rounded-lg py-10 flex flex-col items-center gap-3 text-center px-4">
+          <div className="w-12 h-12 rounded-full bg-(--color-surface-2) flex items-center
+                          justify-center text-2xl" aria-hidden="true">
+            📦
+          </div>
+          <p className="text-sm font-semibold text-(--color-text-primary)">
+            No active listings
+          </p>
+          <p className="text-xs text-(--color-text-muted) max-w-xs">
+            Use the <strong className="text-(--color-text-secondary)">Sell</strong> button
+            on any asset in <strong className="text-(--color-text-secondary)">My Assets</strong> above
+            to create a listing.
+          </p>
         </div>
       )}
 
-      {/* Empty state */}
-      {activeListings.length === 0 && (
-        <button
-          type="button"
-          onClick={() => setShowAddListing(true)}
-          className="w-full border-2 border-dashed border-(--color-border)
-                     rounded-lg py-10 flex flex-col items-center gap-2
-                     hover:border-(--color-accent) transition-colors group"
-          aria-label="No active listings — click to add one"
-        >
-          <span className="w-10 h-10 rounded-full bg-(--color-surface-2)
-                           group-hover:bg-(--color-accent)
-                           flex items-center justify-center text-xl
-                           text-(--color-text-muted) group-hover:text-white
-                           transition-colors"
-                aria-hidden="true">
-            +
-          </span>
-          <p className="text-sm text-(--color-text-muted)
-                        group-hover:text-(--color-accent) transition-colors">
-            No active listings — click here to add one!
-          </p>
-        </button>
-      )}
-
-      {/* Listings list */}
-      {activeListings.length > 0 && (
+      {/* Active listings */}
+      {rawListings.length > 0 && (
         <div className="flex flex-col gap-3">
-          {activeListings.map(listing => (
+          {rawListings.map(listing => (
             <Card key={listing.id} variant="default" padding="md"
                   className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-md bg-(--color-surface-2)

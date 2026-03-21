@@ -33,14 +33,12 @@ function viteCss(string $entry): string
 }
 
 // ── Theme resolution ──────────────────────────────────────────────────────
-$validThemes  = ['dark', 'light', 'colorblind'];
-$cookieTheme  = $_COOKIE['vft-theme'] ?? 'dark';
-$activeTheme  = in_array($cookieTheme, $validThemes, true) ? $cookieTheme : 'dark';
+$validThemes = ['dark', 'light', 'colorblind'];
+$cookieTheme = $_COOKIE['vft-theme'] ?? 'dark';
+$activeTheme = in_array($cookieTheme, $validThemes, true) ? $cookieTheme : 'dark';
 
 // ── Nav links ─────────────────────────────────────────────────────────────
-// currentPath is injected by PageController via render() $data array.
-// Falls back to parsing REQUEST_URI so it always works even if omitted.
-$currentPath  = $currentPath ?? strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
+$currentPath = $currentPath ?? strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
 
 $navLinks = [
     ['href' => '/',        'label' => 'Home'],
@@ -48,35 +46,53 @@ $navLinks = [
     ['href' => '/blog',    'label' => 'News'],
     ['href' => '/about',   'label' => 'About'],
 ];
+
+// ── Wallet balance for nav (logged-in users only) ─────────────────────────
+// Re-use the balance already calculated by PageController where available,
+// otherwise do a lightweight direct query. This avoids a second full
+// WalletService instantiation for non-dashboard pages.
+$navWalletBalance = null;
+if (isset($_SESSION['user_id'])) {
+    // If PageController already passed $dashStats use it — free
+    if (isset($dashStats['walletBalance'])) {
+        $navWalletBalance = $dashStats['walletBalance'];
+    } else {
+        // Any other protected page — do a quick balance lookup
+        try {
+            global $container;
+            if ($container && $container->has(\App\Services\WalletService::class)) {
+                /** @var \App\Services\WalletService $ws */
+                $ws = $container->get(\App\Services\WalletService::class);
+                $navWalletBalance = $ws->getBalance((int) $_SESSION['user_id']);
+            }
+        } catch (\Throwable $e) {
+            // Silently skip — nav wallet is non-critical
+            $navWalletBalance = null;
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="<?= htmlspecialchars($activeTheme) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- CSRF token — read by React islands via: document.querySelector('meta[name="csrf-token"]').content -->
     <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-
     <title><?= htmlspecialchars($title ?? 'Vapour FT') ?></title>
-
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
 
-    <!-- Compiled CSS (production) or Vite dev server (local) -->
     <?php if (file_exists(__DIR__ . '/../../../public/assets/.vite/manifest.json')): ?>
-    <?= viteCss('src/main.jsx') ?>
-    <script type="module" src="<?= viteAsset('src/main.jsx') ?>"></script>
-<?php else: ?>
-    <script type="module" src="http://localhost:3000/@vite/client"></script>
-    <link  rel="stylesheet" href="http://localhost:3000/src/index.css">
-    <script type="module"   src="http://localhost:3000/src/main.jsx"></script>
-<?php endif; ?>
+        <?= viteCss('src/main.jsx') ?>
+        <script type="module" src="<?= viteAsset('src/main.jsx') ?>"></script>
+    <?php else: ?>
+        <script type="module" src="http://localhost:3000/@vite/client"></script>
+        <link  rel="stylesheet" href="http://localhost:3000/src/index.css">
+        <script type="module"   src="http://localhost:3000/src/main.jsx"></script>
+    <?php endif; ?>
 </head>
 
 <body class="vft-bg vft-text min-h-screen flex flex-col">
 
-    <?php /* ── Skip link (WCAG 2.4.1) ─────────────────────────────── */ ?>
     <a href="#main-content"
        class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4
               focus:z-9999 focus:px-4 focus:py-2 focus:rounded-md
@@ -85,12 +101,11 @@ $navLinks = [
         Skip to main content
     </a>
 
-    <?php /* ── Header + Nav ─────────────────────────────────────────── */ ?>
     <header class="sticky top-0 z-50 vft-surface border-b border-(--color-border)">
         <nav aria-label="Main navigation"
              class="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
 
-            <?php /* Logo */ ?>
+            <?php /* ── Logo ─────────────────────────────────────────── */ ?>
             <a href="/"
                class="flex items-center gap-2 shrink-0 focus-visible:outline-2
                       focus-visible:outline-(--color-accent) focus-visible:outline-offset-2
@@ -105,9 +120,8 @@ $navLinks = [
                 </span>
             </a>
 
-            <?php /* Desktop nav links */ ?>
-            <ul role="list"
-                class="hidden md:flex items-center gap-1">
+            <?php /* ── Desktop nav links ──────────────────────────────── */ ?>
+            <ul role="list" class="hidden md:flex items-center gap-1">
                 <?php foreach ($navLinks as $link):
                     $isActive = ($link['href'] === '/')
                         ? ($currentPath === '/')
@@ -128,48 +142,69 @@ $navLinks = [
                 </li>
                 <?php endforeach; ?>
 
-                <?php /* Auth-gated links */ ?>
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <li>
-                        <a href="/dashboard"
-                           <?= str_starts_with($currentPath, '/dashboard') ? 'aria-current="page"' : '' ?>
-                           class="px-3 py-1.5 rounded-md text-sm transition-colors
-                                  focus-visible:outline-2 focus-visible:outline-(--color-accent)
-                                  focus-visible:outline-offset-2
-                                  <?= str_starts_with($currentPath, '/dashboard')
-                                      ? 'text-(--color-accent) font-semibold bg-(--color-accent-subtle)'
-                                      : 'text-(--color-text-secondary) hover:text-(--color-text-primary) hover:bg-(--color-surface-2)'
-                                  ?>">
-                            Dashboard
-                        </a>
-                    </li>
+                <li>
+                    <a href="/dashboard"
+                       <?= str_starts_with($currentPath, '/dashboard') ? 'aria-current="page"' : '' ?>
+                       class="px-3 py-1.5 rounded-md text-sm transition-colors
+                              focus-visible:outline-2 focus-visible:outline-(--color-accent)
+                              focus-visible:outline-offset-2
+                              <?= str_starts_with($currentPath, '/dashboard')
+                                  ? 'text-(--color-accent) font-semibold bg-(--color-accent-subtle)'
+                                  : 'text-(--color-text-secondary) hover:text-(--color-text-primary) hover:bg-(--color-surface-2)'
+                              ?>">
+                        Dashboard
+                    </a>
+                </li>
                 <?php endif; ?>
 
-                <?php /* Admin link — only for admin role */ ?>
-                <?php if (isset($_SESSION['user_id']) && isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
-                    <li>
-                        <a href="/admin"
-                           <?= str_starts_with($currentPath, '/admin') ? 'aria-current="page"' : '' ?>
-                           class="px-3 py-1.5 rounded-md text-sm transition-colors
-                                  focus-visible:outline-2 focus-visible:outline-(--color-accent)
-                                  focus-visible:outline-offset-2
-                                  <?= str_starts_with($currentPath, '/admin')
-                                      ? 'text-(--color-accent) font-semibold bg-(--color-accent-subtle)'
-                                      : 'text-(--color-text-secondary) hover:text-(--color-text-primary) hover:bg-(--color-surface-2)'
-                                  ?>">
-                            Admin
-                        </a>
-                    </li>
+                <?php if (isset($_SESSION['user_id'], $_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                <li>
+                    <a href="/admin"
+                       <?= str_starts_with($currentPath, '/admin') ? 'aria-current="page"' : '' ?>
+                       class="px-3 py-1.5 rounded-md text-sm transition-colors
+                              focus-visible:outline-2 focus-visible:outline-(--color-accent)
+                              focus-visible:outline-offset-2
+                              <?= str_starts_with($currentPath, '/admin')
+                                  ? 'text-(--color-accent) font-semibold bg-(--color-accent-subtle)'
+                                  : 'text-(--color-text-secondary) hover:text-(--color-text-primary) hover:bg-(--color-surface-2)'
+                              ?>">
+                        Admin
+                    </a>
+                </li>
                 <?php endif; ?>
             </ul>
 
-            <?php /* Right side: theme toggle + auth CTA */ ?>
+            <?php /* ── Right side controls ───────────────────────────── */ ?>
             <div class="flex items-center gap-2 shrink-0">
 
                 <?php /* ThemeToggle React island */ ?>
                 <div id="theme-toggle-root" data-props="{}"></div>
 
                 <?php if (isset($_SESSION['user_id'])): ?>
+
+                    <?php /* ── Wallet balance pill ──────────────────── */ ?>
+                    <?php if ($navWalletBalance !== null): ?>
+                    <a href="/dashboard"
+                       aria-label="Wallet balance: $<?= number_format((float) $navWalletBalance, 2) ?> VPR"
+                       class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5
+                              rounded-full text-xs font-bold tabular-nums
+                              bg-(--color-accent-subtle) border border-(--color-accent)
+                              text-(--color-accent) hover:bg-(--color-accent)
+                              hover:text-white transition-colors
+                              focus-visible:outline-2 focus-visible:outline-(--color-accent)
+                              focus-visible:outline-offset-2">
+                        <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <rect x="2" y="5" width="20" height="14" rx="2"/>
+                            <path d="M16 12h2"/><path d="M2 10h20"/>
+                        </svg>
+                        $<?= number_format((float) $navWalletBalance, 2) ?>
+                        <span class="font-normal opacity-70">VPR</span>
+                    </a>
+                    <?php endif; ?>
+
+                    <?php /* ── Profile link ─────────────────────────── */ ?>
                     <a href="/profile"
                        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5
                               rounded-md text-xs font-semibold
@@ -182,35 +217,31 @@ $navLinks = [
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                             <circle cx="12" cy="7" r="4"/>
                         </svg>
-                        Profile
+                        <?= htmlspecialchars($_SESSION['username'] ?? 'Profile') ?>
                     </a>
-                    <button
-                        type="button"
-                        id="logout-btn"
-                        class="hidden sm:inline-flex px-3 py-1.5 rounded-md text-xs font-semibold
-                            text-(--color-text-muted) hover:text-(--color-danger)
-                            transition-colors focus-visible:outline-2
-                            focus-visible:outline-(--color-accent)
-                            focus-visible:outline-offset-2">
+
+                    <?php /* ── Sign out ─────────────────────────────── */ ?>
+                    <button type="button" id="logout-btn"
+                            class="hidden sm:inline-flex px-3 py-1.5 rounded-md text-xs
+                                   font-semibold text-(--color-text-muted)
+                                   hover:text-(--color-danger) transition-colors
+                                   focus-visible:outline-2 focus-visible:outline-(--color-accent)
+                                   focus-visible:outline-offset-2">
                         Sign Out
                     </button>
-
                     <script>
-                    document.getElementById('logout-btn').addEventListener('click', async function() {
+                    document.getElementById('logout-btn').addEventListener('click', async function () {
                         const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-                        const res = await fetch('/api/v1/auth/logout', {
+                        const res  = await fetch('/api/v1/auth/logout', {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-Token': csrf,
-                            },
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
                         });
-                        if (res.ok) {
-                            window.location.href = '/';
-                        }
+                        if (res.ok) window.location.href = '/';
                     });
                     </script>
+
                 <?php else: ?>
+
                     <a href="/login"
                        class="hidden sm:inline-flex px-3 py-1.5 rounded-md text-xs
                               font-semibold text-(--color-text-secondary)
@@ -228,13 +259,12 @@ $navLinks = [
                               focus-visible:outline-offset-2">
                         Register
                     </a>
+
                 <?php endif; ?>
 
-                <?php /* Mobile hamburger — toggles #mobile-menu */ ?>
-                <button type="button"
-                        id="mobile-menu-btn"
-                        aria-controls="mobile-menu"
-                        aria-expanded="false"
+                <?php /* ── Mobile hamburger ───────────────────────── */ ?>
+                <button type="button" id="mobile-menu-btn"
+                        aria-controls="mobile-menu" aria-expanded="false"
                         aria-label="Open navigation menu"
                         class="md:hidden p-2 rounded-md text-(--color-text-secondary)
                                hover:bg-(--color-surface-2) transition-colors
@@ -255,10 +285,8 @@ $navLinks = [
             </div>
         </nav>
 
-        <?php /* Mobile menu drawer */ ?>
-        <div id="mobile-menu"
-             role="navigation"
-             aria-label="Mobile navigation"
+        <?php /* ── Mobile menu drawer ───────────────────────────────── */ ?>
+        <div id="mobile-menu" role="navigation" aria-label="Mobile navigation"
              class="hidden md:hidden border-t border-(--color-border)
                     bg-(--color-surface) px-4 py-3">
             <ul role="list" class="flex flex-col gap-1">
@@ -281,71 +309,72 @@ $navLinks = [
                 <?php endforeach; ?>
 
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <li>
-                        <a href="/dashboard"
-                           class="block px-3 py-2 rounded-md text-sm
-                                  text-(--color-text-secondary)
-                                  hover:text-(--color-text-primary)
-                                  hover:bg-(--color-surface-2) transition-colors">
-                            Dashboard
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/profile"
-                           class="block px-3 py-2 rounded-md text-sm
-                                  text-(--color-text-secondary)
-                                  hover:text-(--color-text-primary)
-                                  hover:bg-(--color-surface-2) transition-colors">
-                            Profile
-                        </a>
-                    </li>
+                <li>
+                    <a href="/dashboard"
+                       class="block px-3 py-2 rounded-md text-sm text-(--color-text-secondary)
+                              hover:text-(--color-text-primary) hover:bg-(--color-surface-2) transition-colors">
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="/profile"
+                       class="block px-3 py-2 rounded-md text-sm text-(--color-text-secondary)
+                              hover:text-(--color-text-primary) hover:bg-(--color-surface-2) transition-colors">
+                        Profile
+                    </a>
+                </li>
+                <?php if ($navWalletBalance !== null): ?>
+                <li>
+                    <div class="px-3 py-2 flex items-center gap-2 text-sm">
+                        <svg class="w-4 h-4 text-(--color-accent)" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <rect x="2" y="5" width="20" height="14" rx="2"/>
+                            <path d="M16 12h2"/><path d="M2 10h20"/>
+                        </svg>
+                        <span class="text-(--color-text-muted)">Wallet:</span>
+                        <span class="font-bold text-(--color-accent) tabular-nums">
+                            $<?= number_format((float) $navWalletBalance, 2) ?> VPR
+                        </span>
+                    </div>
+                </li>
+                <?php endif; ?>
                 <?php else: ?>
-                    <li class="pt-2 border-t border-(--color-border) mt-1">
-                        <a href="/login"
-                           class="block px-3 py-2 rounded-md text-sm
-                                  text-(--color-text-secondary)
-                                  hover:text-(--color-text-primary)
-                                  hover:bg-(--color-surface-2) transition-colors">
-                            Sign In
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/register"
-                           class="block px-3 py-2 rounded-md text-sm font-semibold
-                                  text-white bg-(--color-accent)
-                                  hover:bg-(--color-accent-hover) transition-colors">
-                            Register
-                        </a>
-                    </li>
+                <li class="pt-2 border-t border-(--color-border) mt-1">
+                    <a href="/login"
+                       class="block px-3 py-2 rounded-md text-sm text-(--color-text-secondary)
+                              hover:text-(--color-text-primary) hover:bg-(--color-surface-2) transition-colors">
+                        Sign In
+                    </a>
+                </li>
+                <li>
+                    <a href="/register"
+                       class="block px-3 py-2 rounded-md text-sm font-semibold
+                              text-white bg-(--color-accent) hover:bg-(--color-accent-hover) transition-colors">
+                        Register
+                    </a>
+                </li>
                 <?php endif; ?>
 
                 <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
-                    <li>
-                        <a href="/admin"
-                           class="block px-3 py-2 rounded-md text-sm
-                                  text-(--color-text-secondary)
-                                  hover:text-(--color-text-primary)
-                                  hover:bg-(--color-surface-2) transition-colors">
-                            Admin
-                        </a>
-                    </li>
+                <li>
+                    <a href="/admin"
+                       class="block px-3 py-2 rounded-md text-sm text-(--color-text-secondary)
+                              hover:text-(--color-text-primary) hover:bg-(--color-surface-2) transition-colors">
+                        Admin
+                    </a>
+                </li>
                 <?php endif; ?>
             </ul>
         </div>
     </header>
 
-    <?php /* ── Main content ─────────────────────────────────────────── */ ?>
     <main id="main-content" tabindex="-1" class="flex-1">
         <?= $content ?? '' ?>
     </main>
 
-    <?php /* ── Footer ───────────────────────────────────────────────── */ ?>
-    <footer aria-label="Site footer"
-            class="border-t border-(--color-border) vft-surface mt-auto">
+    <footer aria-label="Site footer" class="border-t border-(--color-border) vft-surface mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8
                     flex flex-col sm:flex-row items-center justify-between gap-4">
-
-            <?php /* Brand */ ?>
             <div class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-(--color-accent)" viewBox="0 0 24 24"
                      fill="currentColor" aria-hidden="true">
@@ -355,82 +384,52 @@ $navLinks = [
                     <span class="text-(--color-accent)">Vapour</span> FT
                 </span>
             </div>
-
-            <?php /* Footer links */ ?>
             <nav aria-label="Footer navigation">
-                <ul role="list" class="flex flex-wrap items-center gap-x-5 gap-y-1
-                                        justify-center">
+                <ul role="list" class="flex flex-wrap items-center gap-x-5 gap-y-1 justify-center">
+                    <?php foreach ([
+                        ['/', 'Home'], ['/listings', 'Market'],
+                        ['/blog', 'News'], ['/about', 'About'],
+                    ] as [$href, $label]): ?>
                     <li>
-                        <a href="/"
-                           class="text-xs text-(--color-text-muted)
-                                  hover:text-(--color-text-secondary) transition-colors">
-                            Home
+                        <a href="<?= $href ?>"
+                           class="text-xs text-(--color-text-muted) hover:text-(--color-text-secondary) transition-colors">
+                            <?= $label ?>
                         </a>
                     </li>
-                    <li>
-                        <a href="/listings"
-                           class="text-xs text-(--color-text-muted)
-                                  hover:text-(--color-text-secondary) transition-colors">
-                            Market
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/blog"
-                           class="text-xs text-(--color-text-muted)
-                                  hover:text-(--color-text-secondary) transition-colors">
-                            News
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/about"
-                           class="text-xs text-(--color-text-muted)
-                                  hover:text-(--color-text-secondary) transition-colors">
-                            About
-                        </a>
-                    </li>
+                    <?php endforeach; ?>
                 </ul>
             </nav>
-
             <p class="text-xs text-(--color-text-muted)">
                 &copy; <?= date('Y') ?> Vapour FT. All rights reserved.
             </p>
         </div>
     </footer>
 
-    <?php /* ── Mobile menu toggle script ─────────────────────────────
-       Minimal vanilla JS — no framework, no build step.
-       Runs after DOM is painted (end of body).
-    ─────────────────────────────────────────────────────────────── */ ?>
     <script>
-        (function () {
-            var btn  = document.getElementById('mobile-menu-btn');
-            var menu = document.getElementById('mobile-menu');
-            var iconOpen  = document.getElementById('icon-open');
-            var iconClose = document.getElementById('icon-close');
-
-            if (!btn || !menu) return;
-
-            btn.addEventListener('click', function () {
-                var isOpen = menu.classList.toggle('hidden') === false;
-                btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-                btn.setAttribute('aria-label',
-                    isOpen ? 'Close navigation menu' : 'Open navigation menu');
-                iconOpen.classList.toggle('hidden',  isOpen);
-                iconClose.classList.toggle('hidden', !isOpen);
-            });
-
-            // Close menu on Escape key
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
-                    menu.classList.add('hidden');
-                    btn.setAttribute('aria-expanded', 'false');
-                    btn.setAttribute('aria-label', 'Open navigation menu');
-                    iconOpen.classList.remove('hidden');
-                    iconClose.classList.add('hidden');
-                    btn.focus();
-                }
-            });
-        })();
+    (function () {
+        var btn       = document.getElementById('mobile-menu-btn');
+        var menu      = document.getElementById('mobile-menu');
+        var iconOpen  = document.getElementById('icon-open');
+        var iconClose = document.getElementById('icon-close');
+        if (!btn || !menu) return;
+        btn.addEventListener('click', function () {
+            var isOpen = menu.classList.toggle('hidden') === false;
+            btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            btn.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+            iconOpen.classList.toggle('hidden',  isOpen);
+            iconClose.classList.toggle('hidden', !isOpen);
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+                btn.setAttribute('aria-expanded', 'false');
+                btn.setAttribute('aria-label', 'Open navigation menu');
+                iconOpen.classList.remove('hidden');
+                iconClose.classList.add('hidden');
+                btn.focus();
+            }
+        });
+    })();
     </script>
 
 </body>
