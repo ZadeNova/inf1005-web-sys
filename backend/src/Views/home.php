@@ -66,7 +66,7 @@ $featured = $featured ?? [
     Skip to main content
 </a>
 
-<main id="main-content" tabindex="-1">
+<div>
 
     <?php /* ══════════════════════════════════════════════════════════
        1. HERO
@@ -262,8 +262,7 @@ $featured = $featured ?? [
                 </a>
             </div>
 
-            <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
-                role="list">
+            <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 <?php foreach ($featured as $asset): ?>
                 <li class="bg-(--color-surface) border border-(--color-border)
                             rounded-lg p-4 flex flex-col gap-3
@@ -319,10 +318,9 @@ $featured = $featured ?? [
                                 <?= htmlspecialchars($asset['name']) ?>
                             </a>
                         </h3>
-                        <p class="text-xs text-(--color-text-muted)">
-                            <?= htmlspecialchars($asset['collection']) ?>
-                        </p>
-                        <p class="text-[11px] text-(--color-text-muted)">
+                        <dd class="text-xs text-(--color-text-muted)">
+                            <?= htmlspecialchars($asset['collection']) ?> </dd>
+                        <dd class="text-[11px] text-(--color-text-muted)">
                             Listed by
                             <a href="/profile?user=<?= urlencode($asset['seller']) ?>"
                                class="text-(--color-accent) hover:underline
@@ -330,15 +328,15 @@ $featured = $featured ?? [
                                       focus-visible:outline-offset-1 rounded-sm">
                                 <?= htmlspecialchars($asset['seller']) ?>
                             </a>
-                        </p>
+                        </dd>
                     </div>
 
                     <?php /* Price + CTA */ ?>
                     <div class="flex items-center justify-between pt-2
                                 border-t border-(--color-border) mt-auto">
-                        <p class="text-lg font-bold text-(--color-text-primary) tabular-nums">
+                        <dd class="text-lg font-bold text-(--color-text-primary) tabular-nums">
                             <?= htmlspecialchars($asset['price']) ?>
-                        </p>
+                        </dd>
                         <a href="/listings?asset=<?= urlencode($asset['id']) ?>"
                            class="inline-flex items-center gap-1.5 px-3 py-1.5
                                   rounded-md text-xs font-semibold text-white
@@ -380,10 +378,10 @@ $featured = $featured ?? [
                         class="text-2xl sm:text-3xl font-bold text-(--color-text-primary)">
                         Ready to Start Trading?
                     </h2>
-                    <p class="text-(--color-text-secondary) max-w-md">
+                    <dd class="text-(--color-text-secondary) max-w-md">
                         Join thousands of collectors buying, selling, and trading
                         rare digital assets on Vapour FT.
-                    </p>
+                    </dd>
                     <div class="flex flex-wrap justify-center gap-3 mt-2">
                         <a href="/register"
                            class="inline-flex items-center gap-2 px-6 py-3
@@ -410,7 +408,7 @@ $featured = $featured ?? [
         </div>
     </section>
 
-</main>
+</div>
 
 <?php
 $content = ob_get_clean();

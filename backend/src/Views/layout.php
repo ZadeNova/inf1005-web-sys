@@ -79,7 +79,7 @@ if (isset($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
     <title><?= htmlspecialchars($title ?? 'Vapour FT') ?></title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E">
 
     <?php if (file_exists(__DIR__ . '/../../../public/assets/.vite/manifest.json')): ?>
         <?= viteCss('src/main.jsx') ?>
@@ -121,7 +121,7 @@ if (isset($_SESSION['user_id'])) {
             </a>
 
             <?php /* ── Desktop nav links ──────────────────────────────── */ ?>
-            <ul role="list" class="hidden md:flex items-center gap-1">
+            <ul class="hidden md:flex items-center gap-1">
                 <?php foreach ($navLinks as $link):
                     $isActive = ($link['href'] === '/')
                         ? ($currentPath === '/')
@@ -289,7 +289,7 @@ if (isset($_SESSION['user_id'])) {
         <div id="mobile-menu" role="navigation" aria-label="Mobile navigation"
              class="hidden md:hidden border-t border-(--color-border)
                     bg-(--color-surface) px-4 py-3">
-            <ul role="list" class="flex flex-col gap-1">
+            <ul class="flex flex-col gap-1">
                 <?php foreach ($navLinks as $link):
                     $isActive = ($link['href'] === '/')
                         ? ($currentPath === '/')
@@ -385,7 +385,7 @@ if (isset($_SESSION['user_id'])) {
                 </span>
             </div>
             <nav aria-label="Footer navigation">
-                <ul role="list" class="flex flex-wrap items-center gap-x-5 gap-y-1 justify-center">
+                <ul class="flex flex-wrap items-center gap-x-5 gap-y-1 justify-center">
                     <?php foreach ([
                         ['/', 'Home'], ['/listings', 'Market'],
                         ['/blog', 'News'], ['/about', 'About'],
