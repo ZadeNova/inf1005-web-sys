@@ -197,9 +197,9 @@ $featured = $featured ?? [
                         <?= htmlspecialchars($stat['value']) ?>
                     </dd>
                     <?php if (!empty($stat['sub'])): ?>
-                    <p class="text-xs text-(--color-text-muted)">
+                    <dd class="text-xs text-(--color-text-muted)">
                         <?= htmlspecialchars($stat['sub']) ?>
-                    </p>
+                    </dd>
                     <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
@@ -225,7 +225,6 @@ $featured = $featured ?? [
                 </h2>
             </div>
 
-            <?php /* PriceChart React island — registered in main.jsx */ ?>
             <div id="price-chart-root" data-props="{}"></div>
         </div>
     </section>
@@ -286,7 +285,6 @@ $featured = $featured ?? [
 
                     <?php /* Badges row */ ?>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <?php /* Rarity badge — colour + symbol (WCAG: never colour alone) */ ?>
                         <span class="inline-flex items-center gap-1 text-[10px] font-semibold
                                      px-2 py-0.5 rounded-full border"
                               style="
@@ -298,7 +296,6 @@ $featured = $featured ?? [
                             <?= htmlspecialchars($asset['rarity_label']) ?>
                         </span>
 
-                        <?php /* Condition badge */ ?>
                         <span class="inline-flex items-center text-[10px] font-semibold
                                      px-2 py-0.5 rounded-full
                                      bg-(--color-surface-2) border border-(--color-border)
@@ -309,8 +306,7 @@ $featured = $featured ?? [
 
                     <?php /* Name + collection */ ?>
                     <div class="flex flex-col gap-0.5">
-                        <h3 class="text-sm font-bold text-(--color-text-primary)
-                                   leading-snug">
+                        <h3 class="text-sm font-bold text-(--color-text-primary) leading-snug">
                             <a href="/listings?asset=<?= urlencode($asset['id']) ?>"
                                class="hover:text-(--color-accent) transition-colors
                                       focus-visible:outline-2 focus-visible:outline-(--color-accent)
@@ -318,9 +314,10 @@ $featured = $featured ?? [
                                 <?= htmlspecialchars($asset['name']) ?>
                             </a>
                         </h3>
-                        <dd class="text-xs text-(--color-text-muted)">
-                            <?= htmlspecialchars($asset['collection']) ?> </dd>
-                        <dd class="text-[11px] text-(--color-text-muted)">
+                        <p class="text-xs text-(--color-text-muted)">
+                            <?= htmlspecialchars($asset['collection']) ?>
+                        </p>
+                        <p class="text-[11px] text-(--color-text-muted)">
                             Listed by
                             <a href="/profile?user=<?= urlencode($asset['seller']) ?>"
                                class="text-(--color-accent) hover:underline
@@ -328,15 +325,15 @@ $featured = $featured ?? [
                                       focus-visible:outline-offset-1 rounded-sm">
                                 <?= htmlspecialchars($asset['seller']) ?>
                             </a>
-                        </dd>
+                        </p>
                     </div>
 
                     <?php /* Price + CTA */ ?>
                     <div class="flex items-center justify-between pt-2
                                 border-t border-(--color-border) mt-auto">
-                        <dd class="text-lg font-bold text-(--color-text-primary) tabular-nums">
+                        <p class="text-lg font-bold text-(--color-text-primary) tabular-nums">
                             <?= htmlspecialchars($asset['price']) ?>
-                        </dd>
+                        </p>
                         <a href="/listings?asset=<?= urlencode($asset['id']) ?>"
                            class="inline-flex items-center gap-1.5 px-3 py-1.5
                                   rounded-md text-xs font-semibold text-white
@@ -367,7 +364,6 @@ $featured = $featured ?? [
                         border border-(--color-border) rounded-xl p-8 sm:p-12
                         text-center">
 
-                <?php /* Glow backdrop */ ?>
                 <div class="absolute inset-0 pointer-events-none"
                      aria-hidden="true"
                      style="background: radial-gradient(ellipse 70% 80% at 50% 50%,
@@ -378,10 +374,10 @@ $featured = $featured ?? [
                         class="text-2xl sm:text-3xl font-bold text-(--color-text-primary)">
                         Ready to Start Trading?
                     </h2>
-                    <dd class="text-(--color-text-secondary) max-w-md">
+                    <p class="text-(--color-text-secondary) max-w-md">
                         Join thousands of collectors buying, selling, and trading
                         rare digital assets on Vapour FT.
-                    </dd>
+                    </p>
                     <div class="flex flex-wrap justify-center gap-3 mt-2">
                         <a href="/register"
                            class="inline-flex items-center gap-2 px-6 py-3
