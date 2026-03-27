@@ -94,8 +94,7 @@ ob_start();
 
                 <?php /* Card grid skeleton */ ?>
                 <div class="grid grid-cols-2 sm:grid-cols-2
-                            lg:grid-cols-3 xl:grid-cols-4 gap-5 animate-pulse"
-                     aria-label="Loading listings">
+                            lg:grid-cols-3 xl:grid-cols-4 gap-5 animate-pulse">
                     <?php for ($i = 0; $i < 8; $i++): ?>
                     <div class="rounded-lg border border-(--color-border)
                                 bg-(--color-surface) overflow-hidden flex flex-col">
