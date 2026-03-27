@@ -2,15 +2,14 @@
 =======================================================
   Vapour FT — W3C Validation Audit
   Target : http://35.212.199.144
-  Time   : 2026-03-27 22:18:30
+  Time   : 2026-03-27 22:28:36
 =======================================================
 
 ───────────────────────────────────────────────────────
   PUBLIC ROUTES
 ───────────────────────────────────────────────────────
 
-  [x] FAIL  (1 error(s)) — http://35.212.199.144/
-        [ERROR] Line —: Request failed: 503 Server Error: Service Unavailable for url: https://validator.w3.org/nu/?out=json
+  [v] PASS — http://35.212.199.144/
 
   [v] PASS — http://35.212.199.144/about
 
@@ -22,7 +21,7 @@
 
   [v] PASS — http://35.212.199.144/blog
 
-  Section total: 1 error(s), 0 warning(s)
+  Section total: 0 error(s), 0 warning(s)
 
   To check a regular user routes, paste your PHPSESSID cookie.
   Steps:
@@ -35,14 +34,11 @@
   AUTHENTICATED ROUTES  (user)
 ───────────────────────────────────────────────────────
 
-  [x] FAIL  (2 error(s)) — http://35.212.199.144/dashboard
-        [ERROR] Line 285: The “aria-label” attribute must not be specified on any “div” element unless the element has a “role” value other than “caption”, “code”, “deletion”, “emphasis”, “generic”, “insertion”, “paragraph”, “presentation”, “strong”, “subscript”, or “superscript”.
-        [ERROR] Line 355: The “aria-labelledby” attribute references “listings-heading”, which is not the ID of any element in this document.
-        [WARN]  Line 355: Section lacks heading. Consider using “h2”-“h6” elements to add identifying headings to all sections, or else use a “div” element instead for any cases where no heading is needed.
+  [v] PASS — http://35.212.199.144/dashboard
 
   [v] PASS — http://35.212.199.144/profile
 
-  Section total: 2 error(s), 1 warning(s)
+  Section total: 0 error(s), 0 warning(s)
 
   Use the same session for admin routes? (y/n): 
   To check an admin user routes, paste your PHPSESSID cookie.
