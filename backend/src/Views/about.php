@@ -88,7 +88,7 @@ $stack = [
 ];
 ?>
 
-<main id="main-content" tabindex="-1">
+<div class="about-page">
 
     <?php /* ══════════════════════════════════════════════════════════
        HERO
@@ -201,8 +201,7 @@ $stack = [
             </div>
 
             <ol class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0
-                       md:divide-x divide-(--color-border)"
-                role="list">
+                       md:divide-x divide-(--color-border)">
                 <?php
                 $steps = [
                     [
@@ -271,8 +270,7 @@ $stack = [
                 </h2>
             </div>
 
-            <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-                role="list">
+            <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <?php foreach ($features as $feature): ?>
                 <li class="bg-(--color-surface) border border-(--color-border)
                             rounded-lg p-6 flex flex-col gap-3
@@ -322,8 +320,7 @@ $stack = [
             </div>
 
             <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5
-                       gap-4"
-                role="list">
+                       gap-4">
                 <?php foreach ($team as $member): ?>
                 <li class="bg-(--color-surface-2) border border-(--color-border)
                             rounded-lg p-5 flex flex-col items-center
@@ -361,13 +358,13 @@ $stack = [
              class="border-b border-(--color-border)">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12">
 
-            <p id="stack-heading"
+            <h2 id="stack-heading"
                class="text-center text-[11px] font-semibold uppercase
                       tracking-widest text-(--color-text-muted) mb-8">
                 Built with
-            </p>
+            </h2>
 
-            <ul class="flex flex-wrap justify-center gap-3" role="list">
+            <ul class="flex flex-wrap justify-center gap-3">
                 <?php foreach ($stack as $tech): ?>
                 <li class="flex flex-col items-center px-5 py-3
                             bg-(--color-surface) border border-(--color-border)
@@ -437,7 +434,7 @@ $stack = [
         </div>
     </section>
 
-</main>
+</div>
 
 <?php
 $content = ob_get_clean();
