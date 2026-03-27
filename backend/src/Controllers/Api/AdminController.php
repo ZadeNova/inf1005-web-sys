@@ -85,4 +85,32 @@ class AdminController
         $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
         return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
     }
+
+
+
+    public function editBlogPost(Request $request, Response $response, array $args): Response
+    {
+        $id   = (int)($args['id'] ?? 0);
+        $data = $request->getParsedBody() ?? [];
+        $this->db->prepare("
+            UPDATE blog_posts SET title = :title, body = :body, category = :category
+            WHERE id = :id
+        ")->execute([
+            ':title'    => trim($data['title'] ?? ''),
+            ':body'     => trim($data['body'] ?? ''),
+            ':category' => trim($data['category'] ?? 'Market Update'),
+            ':id'       => $id,
+        ]);
+        return $this->json($response, ['success' => true]);
+    }
+
+    public function deleteBlogPost(Request $request, Response $response, array $args): Response
+    {
+        $id = (int)($args['id'] ?? 0);
+        $this->db->prepare("DELETE FROM blog_posts WHERE id = :id")
+                ->execute([':id' => $id]);
+        return $this->json($response, ['success' => true]);
+    }
+
+
 }

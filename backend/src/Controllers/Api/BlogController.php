@@ -79,4 +79,24 @@ class BlogController
         $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
         return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
     }
+
+    public function show(Request $request, Response $response, array $args): Response
+    {
+        $stmt = $this->db->prepare("
+            SELECT bp.id, bp.title, bp.body, bp.category, bp.created_at,
+                u.username AS author
+            FROM blog_posts bp
+            JOIN users u ON u.id = bp.author_id
+            WHERE bp.id = :id
+        ");
+        $stmt->execute([':id' => (int)$args['id']]);
+        $post = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$post) {
+            return $this->json($response, ['message' => 'Post not found'], 404);
+        }
+        return $this->json($response, ['post' => $post]);
+    }
+
+
 }

@@ -59,6 +59,11 @@ return function (App $app) {
         $group->get('/blog/posts',  [BlogController::class, 'index']);
         $group->post('/blog/posts', [BlogController::class, 'store'])
             ->add(AuthMiddleware::class);
+        $group->get('/blog/posts/{id}',           [BlogController::class, 'show']);
+        $group->patch('/admin/blog/posts/{id}',   [AdminController::class, 'editBlogPost'])
+            ->add(AdminMiddleware::class);
+        $group->delete('/admin/blog/posts/{id}',  [AdminController::class, 'deleteBlogPost'])
+            ->add(AdminMiddleware::class);
 
         // ── Admin (all admin-only) ────────────────────────────────────────
         $group->get('/admin/listings',         [AdminController::class, 'listings'])

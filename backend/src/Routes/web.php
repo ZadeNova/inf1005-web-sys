@@ -26,4 +26,7 @@ return function (App $app) {
     // Admin Routes (AdminMiddleware added later)
     $app->get('/admin', [PageController::class, 'admin'])
         ->add(AdminMiddleware::class);
+
+
+    $app->get('/blog/{id}', [PageController::class, 'blogPost']);
 };

@@ -145,4 +145,25 @@ class PageController
             'title' => 'Admin Panel — Vapour FT',
         ]);
     }
+
+
+    public function blogPost(Request $request, Response $response, array $args): Response
+    {
+        $id   = (int)($args['id'] ?? 0);
+        $stmt = $this->db->prepare("
+            SELECT bp.id, bp.title, bp.body, bp.category, bp.created_at,
+                u.username AS author
+            FROM blog_posts bp
+            JOIN users u ON u.id = bp.author_id
+            WHERE bp.id = :id
+        ");
+        $stmt->execute([':id' => $id]);
+        $post = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$post) {
+            return $response->withStatus(404);
+        }
+
+        return $this->render($response, 'blog-post.php', ['post' => $post]);
+    }
 }

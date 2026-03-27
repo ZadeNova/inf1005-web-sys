@@ -131,7 +131,7 @@ def run_section(title: str, paths: list, cookies: dict = None):
         print_result(url, messages)
         total_errors   += len([m for m in messages if m["type"] == "error"])
         total_warnings += len([m for m in messages if m["type"] == "info"])
-        time.sleep(1)   # be polite to the W3C API — don't hammer it
+        time.sleep(20)   # be polite to the W3C API — don't hammer it
 
     print(f"\n  Section total: {total_errors} error(s), {total_warnings} warning(s)")
 
