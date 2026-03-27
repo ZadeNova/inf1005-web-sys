@@ -79,8 +79,7 @@ if (isset($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
     <title><?= htmlspecialchars($title ?? 'Vapour FT') ?></title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%236366f1' d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E">
-
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%3E%3Cpath%20fill=%27%236366f1%27%20d=%27M13%202L3%2014h9l-1%208%2010-12h-9l1-8z%27/%3E%3C/svg%3E">
     <?php if (file_exists(__DIR__ . '/../../../public/assets/.vite/manifest.json')): ?>
         <?= viteCss('src/main.jsx') ?>
         <script type="module" src="<?= viteAsset('src/main.jsx') ?>"></script>
