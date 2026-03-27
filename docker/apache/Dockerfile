@@ -107,3 +107,4 @@ WORKDIR /var/www
 COPY --from=composer-build /app /var/www/backend
 # Copy built frontend assets into public/assets
 COPY --from=frontend-build /public/assets /var/www/public/assets
+COPY public/ /var/www/public/
