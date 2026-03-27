@@ -4,17 +4,17 @@
  * Route:   GET /dashboard  (AuthMiddleware required)
  *
  * Islands mounted here (all must be registered in main.jsx):
- *   #portfolio-chart-root         → PortfolioChart
- *   #rarity-donut-chart-root      → RarityDonutChart
- *   #active-listings-manager-root → ActiveListingsManager
- *   #portfolio-table-root         → PortfolioTable
- *   #activity-feed-root           → ActivityFeed
- *   #wallet-balance-root          → WalletBalance
+ * #portfolio-chart-root         → PortfolioChart
+ * #rarity-donut-chart-root      → RarityDonutChart
+ * #active-listings-manager-root → ActiveListingsManager
+ * #portfolio-table-root         → PortfolioTable
+ * #activity-feed-root           → ActivityFeed
+ * #wallet-balance-root          → WalletBalance
  *
  * Controller passes via extract($data):
- *   $title      string  — page <title>
- *   $dashStats  array   — keys: username, isVerified, portfolioValue,
- *                         portfolioChange, walletBalance, currency
+ * $title      string  — page <title>
+ * $dashStats  array   — keys: username, isVerified, portfolioValue,
+ * portfolioChange, walletBalance, currency
  *
  * FIX: walletBalance is now displayed server-side in the stat card.
  * WalletBalance island (#wallet-balance-root) shows ledger detail below.
@@ -73,8 +73,7 @@ ob_start();
                     <?php if ($portfolioValue !== null): ?>
                         <?= htmlspecialchars('$' . number_format((float) $portfolioValue, 2)) ?>
                     <?php else: ?>
-                        <span class="inline-block h-8 w-28 rounded bg-(--color-surface-2) animate-pulse"
-                              aria-label="Loading"></span>
+                        <span class="inline-block h-8 w-28 rounded bg-(--color-surface-2) animate-pulse"></span>
                     <?php endif; ?>
                 </dd>
                 <?php if ($portfolioChange !== null): ?>
@@ -105,8 +104,7 @@ ob_start();
                             <?= htmlspecialchars($currency) ?>
                         </span>
                     <?php else: ?>
-                        <span class="inline-block h-8 w-24 rounded bg-(--color-surface-2) animate-pulse"
-                              aria-label="Loading"></span>
+                        <span class="inline-block h-8 w-24 rounded bg-(--color-surface-2) animate-pulse"></span>
                     <?php endif; ?>
                 </dd>
                 <dd class="text-[10px] text-(--color-text-muted)">Available to spend</dd>
@@ -121,7 +119,7 @@ ob_start();
                      data-props='<?= json_encode(['userId' => $userId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
                     <div class="rounded-lg border border-(--color-border) bg-(--color-surface)
                                 p-4 h-72 animate-pulse flex items-center justify-center"
-                         aria-label="Loading portfolio chart" aria-hidden="true">
+                         aria-hidden="true">
                         <span class="text-xs text-(--color-text-muted)">Loading chart…</span>
                     </div>
                 </div>
@@ -170,6 +168,10 @@ ob_start();
 
     <?php /* ── My Listings ───────────────────────────────────── */ ?>
     <section aria-labelledby="listings-heading">
+        <h2 id="listings-heading"
+            class="text-base font-bold text-(--color-text-primary) mb-4">
+            My Listings
+        </h2>
         <div id="active-listings-manager-root"
              data-props='<?= json_encode([
                  'userId'    => $userId,
