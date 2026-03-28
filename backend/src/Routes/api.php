@@ -35,6 +35,8 @@ return function (App $app) {
             ->add(AuthMiddleware::class);
         $group->delete('/market/listings/{id}', [MarketController::class, 'cancel'])
             ->add(AuthMiddleware::class);
+        $group->get('/market/listings/{id}',               [MarketController::class, 'getListing']);
+        $group->get('/market/listings/{id}/price-history', [MarketController::class, 'getAssetPriceHistory']);
 
         // ── Portfolio (all protected) ─────────────────────────────────────
         $group->get('/user/portfolio',    [PortfolioController::class, 'portfolio'])

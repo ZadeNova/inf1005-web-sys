@@ -96,7 +96,7 @@ class MarketService
      * Task 3 — Atomic purchase. See full implementation below.
      */
     public function executePurchase(int $buyerId, int $listingId): array
-{
+    {
     try {
         $this->db->beginTransaction();
 
@@ -214,5 +214,61 @@ class MarketService
         error_log('MarketService::executePurchase error: ' . $e->getMessage());
         return ['success' => false, 'message' => 'Transaction failed. Please try again.'];
     }
-}
+    }
+
+    /**
+     * Task 3a — Single listing detail for the listing detail page.
+     * Returns shaped response ready for ListingDetail.jsx.
+     */
+    public function findListingById(int $listingId): array|false
+    {
+        $row = $this->listings->findById($listingId);
+        if (!$row) {
+            return false;
+        }
+
+        return [
+            'id'     => (int)    $row['id'],
+            'price'  => (float)  $row['price'],
+            'status' => $row['status'],
+            'listedAt' => $row['created_at'],
+            'asset'  => [
+                'id'          => (int)  $row['asset_id'],
+                'name'        => $row['asset_name'],
+                'rarity'      => $row['rarity'],
+                'condition'   => $row['condition_state'],
+                'imageUrl'    => $row['image_url'],
+                'description' => $row['asset_description'] ?? '',
+                'collection'  => $row['asset_collection']  ?? '',
+            ],
+            'seller' => [
+                'username' => $row['seller_username'],
+            ],
+        ];
+    }
+
+    /**
+     * Task 3b — Per-asset price history from completed transactions.
+     * Used by ListingPriceChart.jsx on the listing detail page.
+     * Returns [{price, soldAt}] ordered ASC.
+     */
+    public function getAssetPriceHistory(int $assetId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT t.price, t.completed_at AS sold_at
+            FROM transactions t
+            JOIN listings l ON l.id = t.listing_id
+            WHERE l.asset_id = :assetId
+            ORDER BY t.completed_at ASC
+        ");
+        $stmt->execute([':assetId' => $assetId]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return array_map(fn($r) => [
+            'price'  => (float) $r['price'],
+            'soldAt' => $r['sold_at'],
+        ], $rows);
+    }
+
+
 }

@@ -78,12 +78,21 @@ class ListingRepository
      * Find a single listing by ID, regardless of status.
      * Used by executePurchase to lock the row.
      */
-    public function findById(int $id): array|false
+public function findById(int $id): array|false
     {
         $stmt = $this->db->prepare("
-            SELECT l.*, a.name AS asset_name, a.rarity, a.condition_state, a.image_url
+            SELECT l.id, l.price, l.status, l.created_at,
+                   a.id          AS asset_id,
+                   a.name        AS asset_name,
+                   a.rarity,
+                   a.condition_state,
+                   a.image_url,
+                   a.description AS asset_description,
+                   a.collection  AS asset_collection,
+                   u.username    AS seller_username
             FROM listings l
-            JOIN assets a ON a.id = l.asset_id
+            JOIN assets  a ON a.id = l.asset_id
+            JOIN users   u ON u.id = l.seller_id
             WHERE l.id = :id
             LIMIT 1
         ");

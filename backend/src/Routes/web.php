@@ -15,6 +15,7 @@ return function (App $app) {
     $app->get('/login', [PageController::class, 'login']);
     $app->get('/register', [PageController::class, 'register']);
     $app->get('/listings', [PageController::class, 'listings']);
+    $app->get('/listings/{id}', [PageController::class, 'listing']);
     $app->get('/blog', [PageController::class, 'blog']);
 
     // Protected Routes (AuthMiddleware added later)
@@ -29,4 +30,5 @@ return function (App $app) {
 
 
     $app->get('/blog/{id}', [PageController::class, 'blogPost']);
+
 };

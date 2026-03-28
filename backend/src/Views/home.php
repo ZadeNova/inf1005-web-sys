@@ -307,7 +307,7 @@ $featured = $featured ?? [
                     <?php /* Name + collection */ ?>
                     <div class="flex flex-col gap-0.5">
                         <h3 class="text-sm font-bold text-(--color-text-primary) leading-snug">
-                            <a href="/listings?asset=<?= urlencode($asset['id']) ?>"
+                            <a href="/listings/<?= (int) $asset['id'] ?>"
                                class="hover:text-(--color-accent) transition-colors
                                       focus-visible:outline-2 focus-visible:outline-(--color-accent)
                                       focus-visible:outline-offset-2 rounded-sm">
@@ -334,7 +334,7 @@ $featured = $featured ?? [
                         <p class="text-lg font-bold text-(--color-text-primary) tabular-nums">
                             <?= htmlspecialchars($asset['price']) ?>
                         </p>
-                        <a href="/listings?asset=<?= urlencode($asset['id']) ?>"
+                        <a href="/listings/<?= (int) $asset['id'] ?>"
                            class="inline-flex items-center gap-1.5 px-3 py-1.5
                                   rounded-md text-xs font-semibold text-white
                                   bg-(--color-accent) hover:bg-(--color-accent-hover)

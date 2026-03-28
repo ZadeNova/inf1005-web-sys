@@ -249,6 +249,41 @@ class MarketController
         return $this->json($response, ['labels' => $labels, 'datasets' => $datasets]);
     }
 
+
+    /**
+     * GET /api/v1/market/listings/{id}
+     * Public. Returns full listing detail for the listing detail page.
+     */
+    public function getListing(Request $request, Response $response, array $args): Response
+    {
+        $id      = isset($args['id']) ? (int) $args['id'] : 0;
+        $listing = $this->market->findListingById($id);
+
+        if (!$listing) {
+            return $this->json($response, ['error' => 'Listing not found.'], 404);
+        }
+
+        return $this->json($response, $listing);
+    }
+
+    /**
+     * GET /api/v1/market/listings/{id}/price-history
+     * Public. Returns per-asset transaction history for PriceChart.
+     */
+    public function getAssetPriceHistory(Request $request, Response $response, array $args): Response
+    {
+        $listingId = isset($args['id']) ? (int) $args['id'] : 0;
+
+        // Resolve asset_id from listing_id so the frontend only needs listing context
+        $listing = $this->market->findListingById($listingId);
+        if (!$listing) {
+            return $this->json($response, ['error' => 'Listing not found.'], 404);
+        }
+
+        $history = $this->market->getAssetPriceHistory($listing['asset']['id']);
+        return $this->json($response, ['history' => $history]);
+    }
+
     // Same helper as AuthController — every API controller has this
     private function json(Response $response, array $data, int $status = 200): Response
     {
