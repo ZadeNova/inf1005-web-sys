@@ -11,28 +11,34 @@
  *   Body:    { listingId }
  *   Success: { success, transactionRef, assetName, price }
  *   Error:   { success: false, message }
+ *
+ * CHANGE: success and error states now fire a toast via useToast() in
+ * addition to (not instead of) the existing in-modal feedback.
+ * The modal auto-closes after a successful purchase; the toast persists
+ * so the user has confirmation even after the modal is gone.
  */
 
 import { useState } from 'react';
-import Card    from '../../shared/atoms/Card.jsx';
-import Button  from '../../shared/atoms/Button.jsx';
+import Card from '../../shared/atoms/Card.jsx';
+import Button from '../../shared/atoms/Button.jsx';
 import { RarityBadge, ConditionBadge } from '../../shared/atoms/Badge.jsx';
-import { usePost }  from '../../shared/hooks/useApi.js';
+import { usePost } from '../../shared/hooks/useApi.js';
 import { USE_MOCK } from '../../shared/mockAssets.js';
+import { useToast } from '../../shared/context/ToastContext.jsx';
 
 /* ── Icons ─────────────────────────────────────────────────────────────── */
 const CheckIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}
-       className="w-5 h-5" aria-hidden="true">
-    <polyline points="20 6 9 17 4 12"/>
+    className="w-5 h-5" aria-hidden="true">
+    <polyline points="20 6 9 17 4 12" />
   </svg>
 );
 
 const XIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
-       className="w-5 h-5" aria-hidden="true">
-    <line x1="18" y1="6" x2="6" y2="18"/>
-    <line x1="6"  y1="6" x2="18" y2="18"/>
+    className="w-5 h-5" aria-hidden="true">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
 
@@ -40,15 +46,21 @@ const XIcon = () => (
    idle → loading → success | error
    ─────────────────────────────────────────────────────────────────────── */
 export default function BuyModal({ listing, walletBalance, onClose, onSuccess }) {
-  const [phase,   setPhase]   = useState('idle');   // idle | loading | success | error
+  const [phase, setPhase] = useState('idle');   // idle | loading | success | error
   const [message, setMessage] = useState('');
+  const toast = useToast();
 
   const { execute: postBuy } = usePost('/api/v1/market/buy');
 
-  const canAfford   = walletBalance === null || walletBalance >= listing.price;
+  const canAfford = walletBalance === null || walletBalance >= listing.price;
   const balanceAfter = walletBalance !== null
     ? (walletBalance - listing.price).toFixed(2)
     : null;
+
+  const assetName = listing.asset?.name ?? listing.name ?? 'Unknown Asset';
+  const assetRarity = listing.asset?.rarity ?? listing.rarity ?? '';
+  const assetCondition = listing.asset?.condition ?? listing.condition ?? '';
+  const assetCollection = listing.asset?.collection ?? listing.collection ?? '';
 
   async function handleConfirm() {
     setPhase('loading');
@@ -57,8 +69,9 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
     if (USE_MOCK) {
       await new Promise(r => setTimeout(r, 900));
       setPhase('success');
-      setMessage(`You now own ${listing.asset?.name ?? listing.name}.`);
-      onSuccess?.({ assetName: listing.asset?.name ?? listing.name, price: listing.price });
+      setMessage(`You now own ${assetName}.`);
+      toast.success('Purchase successful', `${assetName} is now in your portfolio`);
+      onSuccess?.({ assetName, price: listing.price });
       return;
     }
 
@@ -66,40 +79,37 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
       const result = await postBuy({ listingId: listing.id });
       setPhase('success');
       setMessage(`You now own ${result.assetName}.`);
+      toast.success('Purchase successful', `${result.assetName} is now in your portfolio`);
       onSuccess?.(result);
     } catch (err) {
+      const msg = err.message ?? 'Purchase failed. Please try again.';
       setPhase('error');
-      setMessage(err.message ?? 'Purchase failed. Please try again.');
+      setMessage(msg);
+      toast.error('Purchase failed', msg);
     }
   }
-
-  /* Trap focus inside modal on mount */
-  const assetName      = listing.asset?.name      ?? listing.name      ?? 'Unknown Asset';
-  const assetRarity    = listing.asset?.rarity    ?? listing.rarity    ?? '';
-  const assetCondition = listing.asset?.condition ?? listing.condition ?? '';
-  const assetCollection= listing.asset?.collection?? listing.collection?? '';
 
   return (
     /* ── Backdrop ──────────────────────────────────────────────────── */
     <div role="dialog"
-         aria-modal="true"
-         aria-labelledby="buy-modal-title"
-         className="fixed inset-0 z-50 flex items-center justify-center
+      aria-modal="true"
+      aria-labelledby="buy-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center
                     bg-black/60 px-4"
-         onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
 
       <Card variant="default" padding="lg" className="w-full max-w-sm flex flex-col gap-5">
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="flex items-start justify-between gap-3">
           <h2 id="buy-modal-title"
-              className="text-base font-bold text-(--color-text-primary)">
+            className="text-base font-bold text-(--color-text-primary)">
             {phase === 'success' ? 'Purchase complete!' : 'Confirm purchase'}
           </h2>
           <button type="button"
-                  onClick={onClose}
-                  aria-label="Close modal"
-                  className="text-(--color-text-muted) hover:text-(--color-text-primary)
+            onClick={onClose}
+            aria-label="Close modal"
+            className="text-(--color-text-muted) hover:text-(--color-text-primary)
                              transition-colors shrink-0">
             <XIcon />
           </button>
@@ -128,7 +138,7 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
         {phase === 'error' && (
           <div className="flex flex-col gap-3">
             <p role="alert"
-               className="text-sm text-(--color-danger)
+              className="text-sm text-(--color-danger)
                           bg-(--color-danger-subtle) border border-(--color-danger)
                           rounded-md px-3 py-2">
               {message}
@@ -138,7 +148,7 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
                 Cancel
               </Button>
               <Button variant="primary" size="sm"
-                      onClick={() => setPhase('idle')}>
+                onClick={() => setPhase('idle')}>
                 Try again
               </Button>
             </div>
@@ -152,14 +162,14 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
             <div className="flex items-center gap-3 p-3 rounded-lg
                             bg-(--color-surface-2) border border-(--color-border)">
               <div className="w-14 h-14 rounded-md bg-(--color-surface)
-                border border-(--color-border)
-                flex items-center justify-center shrink-0 overflow-hidden"
+                              border border-(--color-border)
+                              flex items-center justify-center shrink-0 overflow-hidden"
                 aria-hidden="true">
                 {(() => {
-                  const imgSrc = listing.imageUrl          // flat shape (ListingsGrid)
-                    ?? listing.asset?.imageUrl   // nested camelCase (ListingDetail)
-                    ?? listing.asset?.image_url  // nested snake_case fallback
-                    ?? listing.image_url;        // flat snake_case fallback
+                  const imgSrc = listing.imageUrl         // flat shape (ListingsGrid)
+                    ?? listing.asset?.imageUrl            // nested camelCase (ListingDetail)
+                    ?? listing.asset?.image_url           // nested snake_case fallback
+                    ?? listing.image_url;                 // flat snake_case fallback
                   return imgSrc
                     ? <img src={imgSrc} alt="" className="w-full h-full object-cover" />
                     : <span className="text-xs text-(--color-text-muted)">IMG</span>;
@@ -170,7 +180,7 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
                   {assetName}
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {assetRarity    && <RarityBadge    tier={assetRarity}       size="sm" />}
+                  {assetRarity && <RarityBadge tier={assetRarity} size="sm" />}
                   {assetCondition && <ConditionBadge condition={assetCondition} size="sm" />}
                 </div>
                 <p className="text-xs text-(--color-text-muted) truncate">
@@ -196,7 +206,7 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
                       ${walletBalance.toLocaleString()}
                     </span>
                   </div>
-                  <div className="h-px bg-(--color-border)" aria-hidden="true"/>
+                  <div className="h-px bg-(--color-border)" aria-hidden="true" />
                   <div className="flex justify-between font-semibold">
                     <span className="text-(--color-text-secondary)">Balance after</span>
                     <span className={canAfford
@@ -212,7 +222,7 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
             {/* Insufficient funds warning */}
             {!canAfford && (
               <p role="alert"
-                 className="text-sm text-(--color-danger)
+                className="text-sm text-(--color-danger)
                             bg-(--color-danger-subtle) border border-(--color-danger)
                             rounded-md px-3 py-2">
                 Insufficient funds. Top up your wallet to proceed.
@@ -222,14 +232,14 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
             {/* Actions */}
             <div className="flex gap-2 justify-end">
               <Button variant="secondary" size="md"
-                      onClick={onClose}
-                      disabled={phase === 'loading'}>
+                onClick={onClose}
+                disabled={phase === 'loading'}>
                 Cancel
               </Button>
               <Button variant="primary" size="md"
-                      loading={phase === 'loading'}
-                      disabled={!canAfford}
-                      onClick={handleConfirm}>
+                loading={phase === 'loading'}
+                disabled={!canAfford}
+                onClick={handleConfirm}>
                 Confirm purchase
               </Button>
             </div>
