@@ -101,9 +101,14 @@ export default function ListingsGrid({ userId }) {
 		? null
 		: `/api/v1/market/listings?search=${encodeURIComponent(search)}&rarity=${rarity}&condition=${condition}&sort=${sort}&page=${serverPage}`;
 
-	const { data, loading, error } = useApi(listingsUrl, { auto: !USE_MOCK });
+	const {
+		data,
+		loading,
+		error,
+		refetch: refetchListings,
+	} = useApi(listingsUrl, { auto: !USE_MOCK });
 
-	const { data: walletData } = useApi(
+	const { data: walletData, refetch: refetchWallet } = useApi(
 		USE_MOCK || !userId ? null : "/api/v1/user/wallet",
 		{ auto: !USE_MOCK && !!userId },
 	);
@@ -494,14 +499,19 @@ export default function ListingsGrid({ userId }) {
 				)}
 
 				{/* ── List view ───────────────────────────────────────── */}
+				{/* ── List view ───────────────────────────────────────── */}
+				{/* ── List view ───────────────────────────────────────── */}
 				{view === "list" && pageAssets.length > 0 && (
 					<div className="flex flex-col gap-3">
 						{pageAssets.map((asset) => (
-							<div
+							<a
 								key={asset.id}
+								href={`/listings/${asset.id}`} /* Adjust this route to match your actual asset detail page */
 								className="flex items-center gap-4 p-4 rounded-lg
-                              bg-(--color-surface) border border-(--color-border)"
+                                           bg-(--color-surface) border border-(--color-border)
+                                           hover:border-(--color-accent) transition-colors cursor-pointer group text-left"
 							>
+								{/* ── Image ── */}
 								{asset.imageUrl || asset.image_url ? (
 									<img
 										src={asset.imageUrl}
@@ -520,17 +530,39 @@ export default function ListingsGrid({ userId }) {
 										</span>
 									</div>
 								)}
+
+								{/* ── Text Info (with Seller) ── */}
 								<div className="flex-1 min-w-0">
 									<p className="text-sm font-semibold text-(--color-text-primary) truncate">
 										{highlight(asset.name, search)}
 									</p>
-									<p className="text-xs text-(--color-text-muted)">
+									<p className="text-xs text-(--color-text-muted) mt-0.5">
 										{asset.collection} · {asset.rarity}
 									</p>
-									<p className="text-xs text-(--color-text-muted)">
-										{asset.condition}
-									</p>
+									<div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
+										<p className="text-xs text-(--color-text-muted)">
+											{asset.condition}
+										</p>
+										{asset.seller?.username && (
+											<>
+												<span
+													className="text-xs text-(--color-text-muted) hidden sm:inline"
+													aria-hidden="true"
+												>
+													·
+												</span>
+												<p className="text-xs text-(--color-text-muted)">
+													Seller:{" "}
+													<span className="font-medium text-(--color-text-primary)">
+														{asset.seller.username}
+													</span>
+												</p>
+											</>
+										)}
+									</div>
 								</div>
+
+								{/* ── Action ── */}
 								<div className="flex items-center gap-3 shrink-0">
 									<p className="text-sm font-bold text-(--color-text-primary)">
 										${asset.price.toLocaleString()}
@@ -538,14 +570,17 @@ export default function ListingsGrid({ userId }) {
 									<Button
 										variant="primary"
 										size="sm"
-										onClick={() => handleBuy(asset.id)}
+										onClick={(e) => {
+											e.preventDefault(); // Stops the <a> tag from navigating when Buy is clicked
+											handleBuy(asset.id);
+										}}
 										aria-label={`Buy ${asset.name}`}
-										className="rounded-full"
+										className="rounded-full relative z-10"
 									>
 										Buy
 									</Button>
 								</div>
-							</div>
+							</a>
 						))}
 					</div>
 				)}
@@ -593,7 +628,11 @@ export default function ListingsGrid({ userId }) {
 					listing={buyTarget}
 					walletBalance={walletBalance}
 					onClose={() => setBuyTarget(null)}
-					onSuccess={() => setBuyTarget(null)}
+					onSuccess={() => {
+						setBuyTarget(null);
+						if (refetchListings) refetchListings();
+						if (refetchWallet) refetchWallet();
+					}}
 				/>
 			)}
 		</>

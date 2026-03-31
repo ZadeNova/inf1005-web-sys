@@ -260,11 +260,12 @@ class MarketService
     public function getAssetPriceHistory(int $assetId): array
     {
         $stmt = $this->db->prepare("
-            SELECT t.price, t.completed_at AS sold_at
+            SELECT DATE(t.completed_at) AS sold_at, AVG(t.price) AS price
             FROM transactions t
             JOIN listings l ON l.id = t.listing_id
             WHERE l.asset_id = :assetId
-            ORDER BY t.completed_at ASC
+            GROUP BY DATE(t.completed_at)
+            ORDER BY sold_at ASC
         ");
         $stmt->execute([':assetId' => $assetId]);
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
