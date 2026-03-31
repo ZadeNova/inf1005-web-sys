@@ -39,6 +39,32 @@ export default function ActiveListingsManager() {
 	const [cancellingId, setCancellingId] = useState(null);
 	const [cancelError, setCancelError] = useState(null);
 
+	const [editingPriceId, setEditingPriceId] = useState(null);
+	const [editPrice, setEditPrice] = useState('');
+	const [updatingId, setUpdatingId] = useState(null);
+
+	async function handleUpdatePrice(id) {
+	const parsed = parseFloat(editPrice);
+	if (!parsed || parsed <= 0) return;
+	setUpdatingId(id);
+	try {
+		const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+		const res = await fetch(`/api/v1/market/listings/${id}`, {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+		body: JSON.stringify({ price: parsed }),
+		});
+		if (!res.ok) throw new Error('Failed to update price.');
+		refetch();
+		setEditingPriceId(null);
+		setEditPrice('');
+	} catch (err) {
+		setCancelError(err.message);
+	} finally {
+		setUpdatingId(null);
+	}
+	}
+
 	async function handleCancel(id) {
 		setCancelError(null);
 
@@ -124,10 +150,7 @@ export default function ActiveListingsManager() {
 			)}
 
 			{/* Section header */}
-			<div className="flex items-center justify-between flex-wrap gap-3">
-				<h2 className="text-base font-bold text-(--color-text-primary)">
-					My Listings
-				</h2>
+			<div className="flex items-center justify-end flex-wrap gap-3">
 				<div className="flex items-center gap-4 flex-wrap">
 					<div className="flex items-center gap-3 text-sm">
 						<span>

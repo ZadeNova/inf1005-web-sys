@@ -37,6 +37,8 @@ return function (App $app) {
             ->add(AuthMiddleware::class);
         $group->get('/market/listings/{id}',               [MarketController::class, 'getListing']);
         $group->get('/market/listings/{id}/price-history', [MarketController::class, 'getAssetPriceHistory']);
+        $group->patch('/market/listings/{id}', [MarketController::class, 'updateListing'])
+            ->add(AuthMiddleware::class);
 
         // ── Portfolio (all protected) ─────────────────────────────────────
         $group->get('/user/portfolio',    [PortfolioController::class, 'portfolio'])

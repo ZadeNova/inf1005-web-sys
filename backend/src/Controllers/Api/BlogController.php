@@ -32,6 +32,7 @@ class BlogController
         $shaped = array_map(fn($p) => [
             'id'          => (string) $p['id'],
             'title'       => $p['title'],
+            'body'        => $p['body'],
             'excerpt'     => mb_substr(strip_tags($p['body']), 0, 160) . '...',
             'author'      => $p['author'],
             'publishedAt' => $p['created_at'],

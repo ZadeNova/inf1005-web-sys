@@ -297,4 +297,35 @@ class MarketController
             ->withHeader('Content-Type', 'application/json')
             ->withStatus($status);
     }
+
+    public function updateListing(Request $request, Response $response, array $args): Response
+    {
+        $listingId = isset($args['id']) ? (int) $args['id'] : 0;
+        $data      = $request->getParsedBody() ?? [];
+        $price     = isset($data['price']) ? (float) $data['price'] : null;
+
+        if ($listingId <= 0 || !$price || $price <= 0 || $price > 999999.99) {
+            return $this->json($response, ['success' => false, 'message' => 'Invalid price.'], 422);
+        }
+
+        $user = $this->auth->getCurrentUser();
+
+        $stmt = $this->db->prepare(
+            "SELECT seller_id FROM listings WHERE id = :id AND status = 'active' LIMIT 1"
+        );
+        $stmt->execute([':id' => $listingId]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            return $this->json($response, ['success' => false, 'message' => 'Listing not found.'], 404);
+        }
+        if ((int) $row['seller_id'] !== (int) $user['id']) {
+            return $this->json($response, ['success' => false, 'message' => 'Not your listing.'], 403);
+        }
+
+        $this->db->prepare("UPDATE listings SET price = :price WHERE id = :id")
+                ->execute([':price' => $price, ':id' => $listingId]);
+
+        return $this->json($response, ['success' => true]);
+    }
 }

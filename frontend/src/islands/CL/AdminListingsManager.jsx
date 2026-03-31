@@ -29,7 +29,6 @@ export default function AdminListingsManager({ csrfToken = '' }) {
   );
 
   const [localListings, setLocalListings] = useState([]);
-  const [deletingId,    setDeletingId]    = useState(null);
   const [cancellingId,  setCancellingId]  = useState(null);
   const [actionError,   setActionError]   = useState(null);
 
@@ -72,29 +71,7 @@ export default function AdminListingsManager({ csrfToken = '' }) {
   }, [localListings, statusFilter, rarityFilter, sellerFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  async function handleDelete(id) {
-    if (!window.confirm("Permanently remove this listing? This cannot be undone.")) return;
-    setDeletingId(id);
-    setActionError(null);
-    try {
-      const res = await fetch(`/api/v1/admin/listings/${id}`, {
-        method:  "DELETE",
-        headers: { "X-CSRF-Token": getCsrf() },
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message ?? `Server error ${res.status}`);
-      }
-      // Optimistic removal from local state — no full refetch needed
-      setLocalListings((prev) => prev.filter((l) => l.id !== id));
-    } catch (err) {
-      setActionError(err.message);
-    } finally {
-      setDeletingId(null);
-    }
-  }
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);``
 
   async function handleForceCancel(id) {
     setCancellingId(id);
@@ -265,15 +242,6 @@ export default function AdminListingsManager({ csrfToken = '' }) {
                         aria-label={`Force cancel listing for ${listing.name}`}
                       >
                         Force Cancel
-                      </Button>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        loading={deletingId === listing.id}
-                        onClick={() => handleDelete(listing.id)}
-                        aria-label={`Delete listing for ${listing.name}`}
-                      >
-                        Delete
                       </Button>
                     </div>
                   </td>
