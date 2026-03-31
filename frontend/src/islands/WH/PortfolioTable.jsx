@@ -79,7 +79,7 @@ function ListedBadge({ price }) {
 }
 
 /* ── Sell Modal ─────────────────────────────────────────────────────────── */
-export default function SellModal({ item, onClose, onSuccess }) {
+function SellModal({ item, onClose, onSuccess }) {
   const [price,   setPrice]   = useState('');
   const [phase,   setPhase]   = useState('idle');
   const [message, setMessage] = useState('');
