@@ -152,10 +152,17 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
             <div className="flex items-center gap-3 p-3 rounded-lg
                             bg-(--color-surface-2) border border-(--color-border)">
               <div className="w-14 h-14 rounded-md bg-(--color-surface)
-                              border border-(--color-border)
-                              flex items-center justify-center shrink-0"
-                   aria-hidden="true">
-                <span className="text-xs text-(--color-text-muted)">IMG</span>
+                border border-(--color-border)
+                flex items-center justify-center shrink-0 overflow-hidden"
+                aria-hidden="true">
+                {(listing.asset?.imageUrl ?? listing.asset?.image_url ?? listing.image_url)
+                  ? <img
+                    src={listing.asset?.imageUrl ?? listing.asset?.image_url ?? listing.image_url}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                  : <span className="text-xs text-(--color-text-muted)">IMG</span>
+                }
               </div>
               <div className="flex flex-col gap-1 min-w-0">
                 <p className="text-sm font-bold text-(--color-text-primary) truncate">
