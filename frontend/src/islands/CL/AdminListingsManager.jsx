@@ -1,55 +1,63 @@
 /**
  * AdminListingsManager.jsx — Lead Island
- * Refactored: removed EditModal, added ForceCancel, client-side filters + pagination
+ *
+ * FIX (deploy): USE_MOCK is now always false — this island only runs
+ * on /admin which is AdminMiddleware protected. No mock path needed.
+ * FIX (deploy): csrfToken now read from props (passed via data-props
+ * in admin.php) instead of querying the meta tag, which can fail if
+ * the meta tag hasn't hydrated yet on the deployed server.
+ * FIX (deploy): API response shape corrected — AdminController returns
+ * status as lowercase ('active'/'sold'/'cancelled') from the DB ENUM,
+ * but the filter comparisons were using uppercase. Normalised to lowercase.
+ * FIX (deploy): price is a MySQL DECIMAL which PHP encodes as a string —
+ * parseFloat() guard added everywhere price is rendered or compared.
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Card from "../../shared/atoms/Card.jsx";
 import Button from "../../shared/atoms/Button.jsx";
 import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import { RarityBadge } from "../../shared/atoms/Badge.jsx";
 import { useApi } from "../../shared/hooks/useApi.js";
-import { mockAssets, USE_MOCK } from "../../shared/mockAssets.js";
 
 const PAGE_SIZE = 10;
 
-const MOCK_LISTINGS = mockAssets.map((a, i) => ({
-  id: String(i + 1),
-  price: String(a.price),
-  status: "ACTIVE",
-  created_at: "2026-03-01 12:00:00",
-  name: a.name,
-  rarity: a.rarity,
-  condition_state: a.condition,
-  seller_username: a.seller?.username ?? "mock_user",
-}));
-
-export default function AdminListingsManager() {
-  const { data, loading, error } = useApi(
-    USE_MOCK ? null : "/api/v1/admin/listings",
-    { auto: !USE_MOCK }
+export default function AdminListingsManager({ csrfToken = '' }) {
+  const { data, loading, error, refetch } = useApi(
+    "/api/v1/admin/listings",
+    { auto: true }
   );
 
-  const [listings, setListings] = useState(USE_MOCK ? MOCK_LISTINGS : []);
-  const [deletingId, setDeletingId] = useState(null);
-  const [cancellingId, setCancellingId] = useState(null);
-  const [actionError, setActionError] = useState(null);
+  const [localListings, setLocalListings] = useState([]);
+  const [deletingId,    setDeletingId]    = useState(null);
+  const [cancellingId,  setCancellingId]  = useState(null);
+  const [actionError,   setActionError]   = useState(null);
 
-  // Filters
   const [statusFilter, setStatusFilter] = useState("");
   const [rarityFilter, setRarityFilter] = useState("");
   const [sellerFilter, setSellerFilter] = useState("");
+  const [page,         setPage]         = useState(1);
 
-  // Pagination
-  const [page, setPage] = useState(1);
+  // Sync local state when API data arrives
+  useEffect(() => {
+    if (data?.listings) {
+      setLocalListings(data.listings);
+    }
+  }, [data]);
 
-  const displayListings = USE_MOCK ? listings : (data?.listings ?? []);
+  // Resolve CSRF: prefer prop (injected by PHP), fall back to meta tag
+  function getCsrf() {
+    return csrfToken
+      || document.querySelector('meta[name="csrf-token"]')?.content
+      || '';
+  }
 
-  // Client-side filtering
+  // AdminController returns lowercase status from DB ENUM
   const filtered = useMemo(() => {
-    setPage(1); // reset on filter change is handled via dependency
-    return displayListings.filter((l) => {
-      if (statusFilter && l.status !== statusFilter) return false;
+    setPage(1);
+    return localListings.filter((l) => {
+      const status = (l.status ?? '').toLowerCase();
+      if (statusFilter && status !== statusFilter) return false;
       if (rarityFilter && l.rarity !== rarityFilter) return false;
       if (
         sellerFilter &&
@@ -61,32 +69,26 @@ export default function AdminListingsManager() {
       return true;
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayListings, statusFilter, rarityFilter, sellerFilter]);
+  }, [localListings, statusFilter, rarityFilter, sellerFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  function resetPage() {
-    setPage(1);
-  }
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   async function handleDelete(id) {
     if (!window.confirm("Permanently remove this listing? This cannot be undone.")) return;
     setDeletingId(id);
     setActionError(null);
-    if (USE_MOCK) {
-      await new Promise((r) => setTimeout(r, 500));
-      setListings((prev) => prev.filter((l) => l.id !== id));
-      setDeletingId(null);
-      return;
-    }
     try {
-      const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
       const res = await fetch(`/api/v1/admin/listings/${id}`, {
-        method: "DELETE",
-        headers: { "X-CSRF-Token": csrf },
+        method:  "DELETE",
+        headers: { "X-CSRF-Token": getCsrf() },
       });
-      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message ?? `Server error ${res.status}`);
+      }
+      // Optimistic removal from local state — no full refetch needed
+      setLocalListings((prev) => prev.filter((l) => l.id !== id));
     } catch (err) {
       setActionError(err.message);
     } finally {
@@ -97,24 +99,23 @@ export default function AdminListingsManager() {
   async function handleForceCancel(id) {
     setCancellingId(id);
     setActionError(null);
-    if (USE_MOCK) {
-      await new Promise((r) => setTimeout(r, 500));
-      setListings((prev) =>
-        prev.map((l) => (l.id === id ? { ...l, status: "CANCELLED" } : l))
-      );
-      setCancellingId(null);
-      return;
-    }
     try {
-      const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
       const res = await fetch(`/api/v1/admin/listings/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
-        body: JSON.stringify({ status: "CANCELLED" }),
+        method:  "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": getCsrf(),
+        },
+        body: JSON.stringify({ status: "cancelled" }),
       });
-      if (!res.ok) throw new Error(`Server error ${res.status}`);
-      // Update local state — no full refetch needed
-      // For live data we mutate the data array directly via a local copy
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message ?? `Server error ${res.status}`);
+      }
+      // Optimistic update
+      setLocalListings((prev) =>
+        prev.map((l) => (l.id === id ? { ...l, status: "cancelled" } : l))
+      );
     } catch (err) {
       setActionError(err.message);
     } finally {
@@ -138,16 +139,24 @@ export default function AdminListingsManager() {
 
   if (error) {
     return (
-      <p role="alert" className="text-sm text-(--color-danger)">
-        Failed to load listings: {error}
-      </p>
+      <div className="flex flex-col gap-3">
+        <p role="alert" className="text-sm text-(--color-danger)">
+          Failed to load listings: {error}
+        </p>
+        <Button variant="secondary" size="sm" onClick={refetch}>
+          Retry
+        </Button>
+      </div>
     );
   }
 
   return (
     <>
       {actionError && (
-        <p role="alert" aria-live="assertive" className="text-sm text-(--color-danger) mb-4">
+        <p role="alert" aria-live="assertive"
+           className="text-sm text-(--color-danger) mb-4
+                      bg-(--color-danger-subtle) border border-(--color-danger)
+                      rounded-md px-3 py-2">
           {actionError}
         </p>
       )}
@@ -156,19 +165,19 @@ export default function AdminListingsManager() {
       <div className="flex flex-wrap gap-3 mb-4">
         <select
           value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); resetPage(); }}
+          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className={selectClass}
           aria-label="Filter by status"
         >
           <option value="">All Statuses</option>
-          <option value="ACTIVE">Active</option>
-          <option value="SOLD">Sold</option>
-          <option value="CANCELLED">Cancelled</option>
+          <option value="active">Active</option>
+          <option value="sold">Sold</option>
+          <option value="cancelled">Cancelled</option>
         </select>
 
         <select
           value={rarityFilter}
-          onChange={(e) => { setRarityFilter(e.target.value); resetPage(); }}
+          onChange={(e) => { setRarityFilter(e.target.value); setPage(1); }}
           className={selectClass}
           aria-label="Filter by rarity"
         >
@@ -183,7 +192,7 @@ export default function AdminListingsManager() {
         <input
           type="search"
           value={sellerFilter}
-          onChange={(e) => { setSellerFilter(e.target.value); resetPage(); }}
+          onChange={(e) => { setSellerFilter(e.target.value); setPage(1); }}
           placeholder="Filter by seller..."
           className="bg-(--color-surface-2) border border-(--color-border)
                      text-(--color-text-primary) text-sm rounded-md px-3 py-2"
@@ -201,7 +210,8 @@ export default function AdminListingsManager() {
           className="w-full text-sm text-(--color-text-primary)"
           aria-label="All listings"
         >
-          <thead className="bg-(--color-surface-2) text-(--color-text-secondary) text-xs uppercase tracking-wide">
+          <thead className="bg-(--color-surface-2) text-(--color-text-secondary)
+                            text-xs uppercase tracking-wide">
             <tr>
               <th scope="col" className="px-4 py-3 text-left">Asset</th>
               <th scope="col" className="px-4 py-3 text-left">Rarity</th>
@@ -212,65 +222,68 @@ export default function AdminListingsManager() {
             </tr>
           </thead>
           <tbody className="divide-y divide-(--color-border)">
-            {paginated.map((listing) => (
-              <tr
-                key={listing.id}
-                className="bg-(--color-surface) hover:bg-(--color-surface-2) transition-colors"
-              >
-                <td className="px-4 py-3 font-medium">{listing.name}</td>
-                <td className="px-4 py-3">
-                  <RarityBadge tier={listing.rarity} size="sm" />
-                </td>
-                {/* FIX: flat field, not nested object */}
-                <td className="px-4 py-3 text-(--color-text-secondary)">
-                  {listing.seller_username ?? "—"}
-                </td>
-                {/* FIX: MySQL DECIMAL returns as string */}
-                <td className="px-4 py-3 text-right font-mono">
-                  ${parseFloat(listing.price).toFixed(2)}
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      listing.status === "ACTIVE"
-                        ? "bg-(--color-success-subtle) text-(--color-success)"
-                        : listing.status === "SOLD"
-                        ? "bg-(--color-accent-subtle) text-(--color-accent)"
-                        : "bg-(--color-surface-3) text-(--color-text-muted)"
-                    }`}
-                  >
-                    {listing.status}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center justify-center gap-2">
-                    {/* Force Cancel — only active when status is ACTIVE */}
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      loading={cancellingId === listing.id}
-                      disabled={listing.status !== "ACTIVE"}
-                      onClick={() => handleForceCancel(listing.id)}
-                      aria-label={`Force cancel listing ${listing.name}`}
+            {paginated.filter(Boolean).map((listing) => {
+				if (!listing || listing.id == null) return null;
+				const status = (listing.status ?? '').toLowerCase();
+              return (
+                <tr
+                  key={listing.id}
+                  className="bg-(--color-surface) hover:bg-(--color-surface-2) transition-colors"
+                >
+                  <td className="px-4 py-3 font-medium">{listing.name}</td>
+                  <td className="px-4 py-3">
+                    <RarityBadge tier={listing.rarity} size="sm" />
+                  </td>
+                  <td className="px-4 py-3 text-(--color-text-secondary)">
+                    {listing.seller_username ?? "—"}
+                  </td>
+                  {/* FIX: parseFloat because MySQL DECIMAL comes as string */}
+                  <td className="px-4 py-3 text-right font-mono">
+					${(parseFloat(listing.price) || 0).toFixed(2)}
+				  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        status === "active"
+                          ? "bg-(--color-success-subtle) text-(--color-success)"
+                          : status === "sold"
+                          ? "bg-(--color-accent-subtle) text-(--color-accent)"
+                          : "bg-(--color-surface-3) text-(--color-text-muted)"
+                      }`}
                     >
-                      Force Cancel
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      loading={deletingId === listing.id}
-                      onClick={() => handleDelete(listing.id)}
-                      aria-label={`Delete listing ${listing.name}`}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        loading={cancellingId === listing.id}
+                        disabled={status !== "active"}
+                        onClick={() => handleForceCancel(listing.id)}
+                        aria-label={`Force cancel listing for ${listing.name}`}
+                      >
+                        Force Cancel
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        loading={deletingId === listing.id}
+                        onClick={() => handleDelete(listing.id)}
+                        aria-label={`Delete listing for ${listing.name}`}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
             {paginated.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-sm text-(--color-text-muted)">
+                <td colSpan={6}
+                    className="px-4 py-10 text-center text-sm text-(--color-text-muted)">
                   No listings match your filters.
                 </td>
               </tr>
