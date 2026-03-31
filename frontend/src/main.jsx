@@ -55,10 +55,12 @@ import ThemeToggle from './islands/CL/ThemeToggle.jsx';
 import PriceChart from './islands/CL/PriceChart.jsx';
 import CreateNewsPost from './islands/CL/CreateNewsPost.jsx';
 import AdminListingsManager from './islands/CL/AdminListingsManager.jsx';
+import AdminBlogManager from './islands/CL/AdminBlogManager.jsx';
 mountIsland('theme-toggle-root', ThemeToggle);
 mountIsland('price-chart-root', PriceChart);
 mountIsland('create-news-post-root', CreateNewsPost);
 mountIsland('admin-listings-manager-root', AdminListingsManager);
+mountIsland('admin-blog-manager-root', AdminBlogManager);
 
 /* ═══════════════════════════════════════════════════════════════
    Minal ISLANDS — Login · Register · Blog
@@ -83,6 +85,11 @@ import ProfileCollections      from './islands/WH/ProfileCollections.jsx';
 import WalletBalance      from './islands/WH/WalletBalance.jsx';
 import PortfolioTable     from './islands/WH/PortfolioTable.jsx';
 import TransactionHistory from './islands/WH/TransactionHistory.jsx';
+import ListingDetail    from './islands/WH/ListingDetail.jsx';
+import ListingPriceChart from './islands/WH/ListingPriceChart.jsx';
+
+mountIsland('listing-detail-root',      ListingDetail);
+mountIsland('listing-price-chart-root', ListingPriceChart);
 mountIsland('listings-grid-root',   ListingsGrid);
 mountIsland('profile-card-root',    ProfileCard);
 mountIsland('portfolio-chart-root', PortfolioChart);

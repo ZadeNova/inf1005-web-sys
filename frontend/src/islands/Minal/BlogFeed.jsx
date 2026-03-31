@@ -103,7 +103,9 @@ const MOCK_POSTS = [
 
 function BlogPostCard({ post }) {
 	return (
-		<Card variant="default" padding="md" glow as="article">
+		<Card variant="default" padding="md" glow as="article"
+      		className="hover:border-(--color-accent) transition-colors">
+ 		 <a href={`/blog/${post.id}`} className="flex flex-col gap-3 group">
 			<a href={`/blog/${post.id}`} className="flex flex-col gap-3 group">
 				<div className="flex items-center justify-between">
 					<Badge label={post.category} colour="accent" size="sm" />
@@ -125,6 +127,7 @@ function BlogPostCard({ post }) {
 					{post.excerpt}
 				</p>
 				<p className="text-xs text-(--color-text-muted)">By {post.author}</p>
+			</a>
 			</a>
 		</Card>
 	);

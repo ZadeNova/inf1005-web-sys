@@ -26,7 +26,7 @@ ob_start();
 
     <?php /* Listing detail island — two-column layout (image+info | buy panel) */ ?>
     <div id="listing-detail-root"
-         data-listing-id="<?= (int) $listingId ?>">
+     data-props='<?= json_encode(["listingId" => (int)$listingId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
     </div>
 
     <?php /* Price history chart island — full width below detail */ ?>
@@ -36,7 +36,7 @@ ob_start();
             Price History
         </h2>
         <div id="listing-price-chart-root"
-             data-listing-id="<?= (int) $listingId ?>">
+            data-props='<?= json_encode(["listingId" => (int)$listingId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
         </div>
     </section>
 

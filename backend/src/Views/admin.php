@@ -9,6 +9,13 @@ ob_start();
     <div id="create-news-post-root" data-props="{}"></div>
 </section>
 
+<section aria-labelledby="blog-heading" class="max-w-7xl mx-auto px-6 py-8 mb-12">
+    <h2 id="blog-heading" class="text-lg font-semibold text-(--color-text-primary) mb-4">
+        Manage Blog Posts
+    </h2>
+    <div id="admin-blog-manager-root" data-props="{}"></div>
+</section>
+
 <section aria-labelledby="listings-heading" class="max-w-7xl mx-auto px-6 pb-16">
     <h2 id="listings-heading" class="text-lg font-semibold text-(--color-text-primary) mb-4">
         Manage Listings
