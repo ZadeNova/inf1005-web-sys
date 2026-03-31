@@ -105,6 +105,7 @@ RUN sed -ri -e 's/AllowOverride None/AllowOverride All/g' \
     /etc/apache2/apache2.conf
 WORKDIR /var/www
 COPY --from=composer-build /app /var/www/backend
-# Copy built frontend assets into public/assets
-COPY --from=frontend-build /public/assets /var/www/public/assets
+# Copy public dir first (images, static files)
 COPY public/ /var/www/public/
+# Copy built frontend assets on top (so bundle isn't wiped)
+COPY --from=frontend-build /public/assets /var/www/public/assets
