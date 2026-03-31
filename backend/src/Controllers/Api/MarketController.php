@@ -158,7 +158,8 @@ class MarketController
 
         $stmt = $this->db->prepare("
             SELECT l.id, l.price, l.status, l.created_at,
-                   a.id AS asset_id, a.name AS asset_name, a.rarity, a.condition_state
+                a.id AS asset_id, a.name AS asset_name, a.rarity, a.condition_state,
+                a.image_url
             FROM listings l
             JOIN assets a ON a.id = l.asset_id
             WHERE l.seller_id = :uid AND l.status = 'active'
@@ -168,9 +169,10 @@ class MarketController
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $shaped = array_map(fn($r) => [
-            'id'       => (string) $r['id'],
-            'listedAt' => $r['created_at'],
-            'asset'    => [
+            'id'        => (string) $r['id'],
+            'listedAt'  => $r['created_at'],
+            'image_url' => $r['image_url'] ?? null,   // ← add this
+            'asset'     => [
                 'id'     => (string) $r['asset_id'],
                 'name'   => $r['asset_name'],
                 'rarity' => $r['rarity'],
