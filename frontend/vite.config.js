@@ -68,7 +68,11 @@ function mpaRewritePlugin() {
 }
 
 export default defineConfig({
-	plugins: [react({ jsxRuntime: 'automatic' }), tailwindcss(), mpaRewritePlugin()],
+	plugins: [
+		react({ jsxRuntime: "automatic" }),
+		tailwindcss(),
+		mpaRewritePlugin(),
+	],
 
 	build: {
 		outDir: "../public/assets",
@@ -84,6 +88,10 @@ export default defineConfig({
 		port: 3000,
 		proxy: {
 			"/api": {
+				target: "http://apache:80",
+				changeOrigin: true,
+			},
+			"/images": {
 				target: "http://apache:80",
 				changeOrigin: true,
 			},

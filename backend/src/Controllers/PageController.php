@@ -98,17 +98,19 @@ class PageController
     ];
 
     // ── Featured listings (3 most recent active) ──────────────────────
-    $stmt = $this->db->query("
-        SELECT l.id, l.price,
-               a.name, a.rarity, a.condition_state, a.collection,
-               u.username AS seller_username
-        FROM listings l
-        JOIN assets a ON a.id = l.asset_id
-        JOIN users  u ON u.id = l.seller_id
-        WHERE l.status = 'active'
-        ORDER BY l.created_at DESC
-        LIMIT 3
-    ");
+    // In PageController::home(), change the featured listings query:
+$stmt = $this->db->query("
+    SELECT l.id, l.price,
+           a.name, a.rarity, a.condition_state, a.collection,
+           a.image_url,
+           u.username AS seller_username
+    FROM listings l
+    JOIN assets a ON a.id = l.asset_id
+    JOIN users  u ON u.id = l.seller_id
+    WHERE l.status = 'active'
+    ORDER BY l.created_at DESC
+    LIMIT 3
+");
     $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
     // Rarity metadata map — mirrors frontend RARITY constants
@@ -121,18 +123,19 @@ class PageController
     ];
 
     $featured = array_map(function ($row) use ($rarityMeta) {
-        $meta = $rarityMeta[$row['rarity']] ?? $rarityMeta['COMMON'];
-        return [
-            'id'             => (string) $row['id'],
-            'name'           => $row['name'],
-            'collection'     => $row['collection'] ?? '',
-            'rarity_label'   => $meta['label'],
-            'rarity_symbol'  => $meta['symbol'],
-            'rarity_css_key' => $meta['css_key'],
-            'condition'      => $row['condition_state'],
-            'price'          => '$' . number_format((float) $row['price'], 2),
-            'seller'         => $row['seller_username'],
-        ];
+    $meta = $rarityMeta[$row['rarity']] ?? $rarityMeta['COMMON'];
+    return [
+        'id'             => (string) $row['id'],
+        'name'           => $row['name'],
+        'collection'     => $row['collection'] ?? '',
+        'rarity_label'   => $meta['label'],
+        'rarity_symbol'  => $meta['symbol'],
+        'rarity_css_key' => $meta['css_key'],
+        'condition'      => $row['condition_state'],
+        'price'          => '$' . number_format((float) $row['price'], 2),
+        'seller'         => $row['seller_username'],
+        'image_url'      => $row['image_url'] ?? null,  // ← add this
+    ];
     }, $rows);
 
     return $this->render($response, 'home', [

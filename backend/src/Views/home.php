@@ -268,7 +268,13 @@ $featured = $featured ?? [
                             hover:border-(--color-accent) transition-colors
                             focus-within:border-(--color-accent)">
 
-                    <?php /* Image placeholder */ ?>
+                    <?php /* Asset image */ ?>
+                    <?php if (!empty($asset['image_url'])): ?>
+                    <img src="<?= htmlspecialchars($asset['image_url']) ?>"
+                         alt="<?= htmlspecialchars($asset['name']) ?>"
+                         class="w-full aspect-square object-cover rounded-md border border-(--color-border)"
+                         loading="lazy">
+                    <?php else: ?>
                     <div class="w-full aspect-square bg-(--color-surface-2)
                                 rounded-md border border-(--color-border)
                                 flex items-center justify-center"
@@ -282,6 +288,7 @@ $featured = $featured ?? [
                                   stroke-dasharray="2 2" stroke-width="0.8"/>
                         </svg>
                     </div>
+                    <?php endif; ?>
 
                     <?php /* Badges row */ ?>
                     <div class="flex items-center gap-2 flex-wrap">
