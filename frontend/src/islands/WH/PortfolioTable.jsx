@@ -4,9 +4,9 @@
  * Mounts via: mountIsland('portfolio-table-root', PortfolioTable)
  * PHP view: backend/src/Views/dashboard.php → <div id="portfolio-table-root">
  *
- * FIX: Market value column and action column now have fixed widths so the
- *      "Market $XX" label never shifts regardless of whether the action is
- *      a "Sell" button or a wider "Listed" badge.
+ * FIX: Market value and action columns use sm:w-28 on tablet/desktop for
+ * perfect alignment, but allow flexbox to naturally hug content on mobile
+ * to prevent text truncation.
  */
 
 import { useState, useMemo } from "react";
@@ -16,7 +16,7 @@ import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import { RarityBadge, ConditionBadge } from "../../shared/atoms/Badge.jsx";
 import { useApi, usePost } from "../../shared/hooks/useApi.js";
 import { mockAssets, RARITY, USE_MOCK } from "../../shared/mockAssets.js";
-import { useToast } from '../../shared/context/ToastContext.jsx';
+import { useToast } from "../../shared/context/ToastContext.jsx";
 
 const RARITY_OPTIONS = [
 	{ value: "", label: "All Rarities" },
@@ -53,7 +53,7 @@ const MOCK_LISTINGS = [{ asset: { id: mockAssets[0].id, price: 249.99 } }];
 function ListedBadge({ price }) {
 	return (
 		<div
-			className="inline-flex items-center gap-2 px-3 py-2 rounded-lg
+			className="flex w-full justify-center items-center gap-1 sm:gap-2 px-1 py-1.5 sm:px-3 sm:py-2 rounded-lg
                     bg-(--color-success-subtle) border border-(--color-success)"
 			role="status"
 			aria-label={`Listed for sale at $${Number(price).toLocaleString()}`}
@@ -80,151 +80,219 @@ function ListedBadge({ price }) {
 
 /* ── Sell Modal ─────────────────────────────────────────────────────────── */
 function SellModal({ item, onClose, onSuccess }) {
-  const [price,   setPrice]   = useState('');
-  const [phase,   setPhase]   = useState('idle');
-  const [message, setMessage] = useState('');
-  const toast = useToast();
- 
-  const { execute: createListing } = usePost('/api/v1/market/listings');
- 
-  const parsedPrice = parseFloat(price);
-  const validPrice  = !isNaN(parsedPrice) && parsedPrice > 0 && parsedPrice <= 999999.99;
- 
-  async function handleList() {
-    if (!validPrice) return;
-    setPhase('loading');
- 
-    if (USE_MOCK) {
-      await new Promise(r => setTimeout(r, 700));
-      toast.listing(
-        'Listing created',
-        `${item.asset_name} listed for $${parsedPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
-      );
-      onSuccess?.({ assetId: item.asset_id, price: parsedPrice });
-      onClose();
-      return;
-    }
- 
-    try {
-      const result = await createListing({ assetId: item.asset_id, price: parsedPrice });
-      toast.listing(
-        'Listing created',
-        `${item.asset_name} listed for $${parsedPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
-      );
-      onSuccess?.({ ...result, assetId: item.asset_id, price: parsedPrice });
-      onClose();
-    } catch (err) {
-      const msg = err.message ?? 'Failed to create listing. Please try again.';
-      setPhase('error');
-      setMessage(msg);
-      toast.error('Listing failed', msg);
-    }
-  }
- 
-  return (
-    <div role="dialog" aria-modal="true" aria-labelledby="sell-modal-title"
-         className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
-         onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
- 
-      <Card variant="default" padding="lg" className="w-full max-w-sm flex flex-col gap-5">
- 
-        <div className="flex items-start justify-between gap-3">
-          <h2 id="sell-modal-title"
-              className="text-base font-bold text-(--color-text-primary)">
-            List for sale
-          </h2>
-          <button type="button" onClick={onClose} aria-label="Close modal"
-                  className="text-(--color-text-muted) hover:text-(--color-text-primary) transition-colors">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
-                 className="w-5 h-5" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
- 
-        {phase === 'error' && (
-          <div className="flex flex-col gap-3">
-            <p role="alert"
-               className="text-sm text-(--color-danger) bg-(--color-danger-subtle)
-                          border border-(--color-danger) rounded-md px-3 py-2">
-              {message}
-            </p>
-            <div className="flex gap-2 justify-end">
-              <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-              <Button variant="primary"   size="sm" onClick={() => setPhase('idle')}>Try again</Button>
-            </div>
-          </div>
-        )}
- 
-        {(phase === 'idle' || phase === 'loading') && (
-          <>
-            {/* Asset preview */}
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-(--color-surface-2) border border-(--color-border)">
-              {item.image_url
-                ? <img src={item.image_url} alt={item.asset_name}
-                       className="w-14 h-14 rounded-md object-cover border border-(--color-border) shrink-0"
-                       loading="lazy" />
-                : <div className="w-14 h-14 rounded-md bg-(--color-surface) border border-(--color-border)
-                                  flex items-center justify-center shrink-0" aria-hidden="true">
-                    <span className="text-xs text-(--color-text-muted)">IMG</span>
-                  </div>
-              }
-              <div className="flex flex-col gap-1 min-w-0">
-                <p className="text-sm font-bold text-(--color-text-primary) truncate">{item.asset_name}</p>
-                <div className="flex flex-wrap gap-1">
-                  <RarityBadge    tier={item.rarity}          size="sm" />
-                  <ConditionBadge condition={item.condition_state} size="sm" />
-                </div>
-                {item.market_value > 0 && (
-                  <p className="text-xs text-(--color-text-muted)">
-                    Market value: ${Number(item.market_value).toLocaleString()}
-                  </p>
-                )}
-              </div>
-            </div>
- 
-            {/* Price input */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="sell-price"
-                     className="text-sm font-semibold text-(--color-text-primary)">
-                Listing price (USD)
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-(--color-text-muted)"
-                      aria-hidden="true">$</span>
-                <input id="sell-price" type="number" min="0.01" max="999999.99" step="0.01"
-                       value={price}
-                       onChange={e => setPrice(e.target.value)}
-                       placeholder="0.00"
-                       aria-describedby="sell-price-hint"
-                       className="w-full pl-7 pr-3 py-2.5 text-sm rounded-md
+	const [price, setPrice] = useState("");
+	const [phase, setPhase] = useState("idle");
+	const [message, setMessage] = useState("");
+	const toast = useToast();
+
+	const { execute: createListing } = usePost("/api/v1/market/listings");
+
+	const parsedPrice = parseFloat(price);
+	const validPrice =
+		!isNaN(parsedPrice) && parsedPrice > 0 && parsedPrice <= 999999.99;
+
+	async function handleList() {
+		if (!validPrice) return;
+		setPhase("loading");
+
+		if (USE_MOCK) {
+			await new Promise((r) => setTimeout(r, 700));
+			toast.listing(
+				"Listing created",
+				`${item.asset_name} listed for $${parsedPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+			);
+			onSuccess?.({ assetId: item.asset_id, price: parsedPrice });
+			onClose();
+			return;
+		}
+
+		try {
+			const result = await createListing({
+				assetId: item.asset_id,
+				price: parsedPrice,
+			});
+			toast.listing(
+				"Listing created",
+				`${item.asset_name} listed for $${parsedPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+			);
+			onSuccess?.({ ...result, assetId: item.asset_id, price: parsedPrice });
+			onClose();
+		} catch (err) {
+			const msg = err.message ?? "Failed to create listing. Please try again.";
+			setPhase("error");
+			setMessage(msg);
+			toast.error("Listing failed", msg);
+		}
+	}
+
+	return (
+		<div
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="sell-modal-title"
+			className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+			onClick={(e) => {
+				if (e.target === e.currentTarget) onClose();
+			}}
+		>
+			<Card
+				variant="default"
+				padding="lg"
+				className="w-full max-w-sm flex flex-col gap-5"
+			>
+				<div className="flex items-start justify-between gap-3">
+					<h2
+						id="sell-modal-title"
+						className="text-base font-bold text-(--color-text-primary)"
+					>
+						List for sale
+					</h2>
+					<button
+						type="button"
+						onClick={onClose}
+						aria-label="Close modal"
+						className="text-(--color-text-muted) hover:text-(--color-text-primary) transition-colors"
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth={2}
+							className="w-5 h-5"
+							aria-hidden="true"
+						>
+							<line x1="18" y1="6" x2="6" y2="18" />
+							<line x1="6" y1="6" x2="18" y2="18" />
+						</svg>
+					</button>
+				</div>
+
+				{phase === "error" && (
+					<div className="flex flex-col gap-3">
+						<p
+							role="alert"
+							className="text-sm text-(--color-danger) bg-(--color-danger-subtle)
+                          border border-(--color-danger) rounded-md px-3 py-2"
+						>
+							{message}
+						</p>
+						<div className="flex gap-2 justify-end">
+							<Button variant="secondary" size="sm" onClick={onClose}>
+								Cancel
+							</Button>
+							<Button
+								variant="primary"
+								size="sm"
+								onClick={() => setPhase("idle")}
+							>
+								Try again
+							</Button>
+						</div>
+					</div>
+				)}
+
+				{(phase === "idle" || phase === "loading") && (
+					<>
+						{/* Asset preview */}
+						<div className="flex items-center gap-3 p-3 rounded-lg bg-(--color-surface-2) border border-(--color-border)">
+							{item.image_url ? (
+								<img
+									src={item.image_url}
+									alt={item.asset_name}
+									className="w-14 h-14 rounded-md object-cover border border-(--color-border) shrink-0"
+									loading="lazy"
+								/>
+							) : (
+								<div
+									className="w-14 h-14 rounded-md bg-(--color-surface) border border-(--color-border)
+                                  flex items-center justify-center shrink-0"
+									aria-hidden="true"
+								>
+									<span className="text-xs text-(--color-text-muted)">IMG</span>
+								</div>
+							)}
+							<div className="flex flex-col gap-1 min-w-0">
+								<p className="text-sm font-bold text-(--color-text-primary) truncate">
+									{item.asset_name}
+								</p>
+								<div className="flex flex-wrap gap-1">
+									<RarityBadge tier={item.rarity} size="sm" />
+									<ConditionBadge condition={item.condition_state} size="sm" />
+								</div>
+								{item.market_value > 0 && (
+									<p className="text-xs text-(--color-text-muted)">
+										Market value: ${Number(item.market_value).toLocaleString()}
+									</p>
+								)}
+							</div>
+						</div>
+
+						{/* Price input */}
+						<div className="flex flex-col gap-1.5">
+							<label
+								htmlFor="sell-price"
+								className="text-sm font-semibold text-(--color-text-primary)"
+							>
+								Listing price (USD)
+							</label>
+							<div className="relative">
+								<span
+									className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-(--color-text-muted)"
+									aria-hidden="true"
+								>
+									$
+								</span>
+								<input
+									id="sell-price"
+									type="number"
+									min="0.01"
+									max="999999.99"
+									step="0.01"
+									value={price}
+									onChange={(e) => setPrice(e.target.value)}
+									placeholder="0.00"
+									aria-describedby="sell-price-hint"
+									className="w-full pl-7 pr-3 py-2.5 text-sm rounded-md
                                   bg-(--color-input-bg) border border-(--color-input-border)
                                   text-(--color-text-primary)
                                   focus:outline-none focus:border-(--color-input-focus)
-                                  transition-colors" />
-              </div>
-              <p id="sell-price-hint" className="text-xs text-(--color-text-muted)">
-                {item.market_value > 0
-                  ? `Market floor: $${Number(item.market_value).toLocaleString()}`
-                  : 'No market price available — set your own price'}
-              </p>
-            </div>
- 
-            <div className="flex gap-2 justify-end">
-              <Button variant="secondary" size="md" onClick={onClose} disabled={phase === 'loading'}>
-                Cancel
-              </Button>
-              <Button variant="primary"   size="md" loading={phase === 'loading'}
-                      disabled={!validPrice} onClick={handleList}>
-                List for sale
-              </Button>
-            </div>
-          </>
-        )}
- 
-      </Card>
-    </div>
-  );
+                                  transition-colors"
+								/>
+							</div>
+							<p
+								id="sell-price-hint"
+								className="text-xs text-(--color-text-muted)"
+							>
+								{item.market_value > 0
+									? `Market floor: $${Number(item.market_value).toLocaleString()}`
+									: "No market price available — set your own price"}
+							</p>
+						</div>
+
+						<div className="flex gap-2 justify-end">
+							<Button
+								variant="secondary"
+								size="md"
+								onClick={onClose}
+								disabled={phase === "loading"}
+							>
+								Cancel
+							</Button>
+							<Button
+								variant="primary"
+								size="md"
+								loading={phase === "loading"}
+								disabled={!validPrice}
+								onClick={handleList}
+							>
+								List for sale
+							</Button>
+						</div>
+					</>
+				)}
+			</Card>
+		</div>
+	);
 }
 
 export default function PortfolioTable() {
@@ -390,7 +458,7 @@ export default function PortfolioTable() {
 							return (
 								<li
 									key={item.inventory_id}
-									className={`flex items-center gap-4 py-3
+									className={`flex items-center gap-3 sm:gap-4 py-3
                       ${idx < filtered.length - 1 ? "border-b border-(--color-border)" : ""}`}
 								>
 									{/* ── Thumbnail ── */}
@@ -416,7 +484,7 @@ export default function PortfolioTable() {
 
 									{/* Asset info — grows to fill available space */}
 									<div className="flex-1 min-w-0">
-										<p className="text-sm font-semibold text-(--color-text-primary) truncate">
+										<p className="text-sm font-semibold text-(--color-text-primary) line-clamp-2 sm:line-clamp-none sm:truncate pr-2">
 											{item.asset_name}
 										</p>
 										<div className="flex flex-wrap gap-1 mt-0.5">
@@ -437,11 +505,10 @@ export default function PortfolioTable() {
 									</div>
 
 									{/*
-                    FIX: Market value column has a fixed width (w-20) so it
-                    never shifts left or right regardless of whether the
-                    action column contains a "Sell" button or "Listed" badge.
+                    FIX: Market value column has a responsive fixed width (sm:w-28)
+                    so it aligns perfectly on tablet/desktop, but hides entirely on mobile.
                   */}
-									<div className="text-right shrink-0 hidden sm:block w-20">
+									<div className="text-right shrink-0 hidden sm:block sm:w-28">
 										<p className="text-xs text-(--color-text-muted)">Market</p>
 										<p className="text-sm font-bold text-(--color-text-primary)">
 											{item.market_value > 0 ? (
@@ -455,22 +522,25 @@ export default function PortfolioTable() {
 									</div>
 
 									{/*
-                    FIX: Action column has a fixed width (w-20) matching the
-                    market value column so both columns stay stable.
-                    Both ListedBadge and Sell button are constrained to this width.
+                    FIX: Action column drops the fixed width on mobile so it hugs the button/badge,
+                    allowing the asset title to expand. On desktop, it matches the sm:w-28
+                    market column for perfect alignment.
                   */}
-									<div className="shrink-0 flex justify-end w-20">
+									<div className="shrink-0 flex flex-col justify-center w-24 sm:w-28">
 										{isListed ? (
 											<ListedBadge price={listingPrice} />
 										) : (
-											<Button
-												variant="secondary"
-												size="sm"
-												onClick={() => setSellingItem(item)}
-												aria-label={`Sell ${item.asset_name}`}
-											>
-												Sell
-											</Button>
+											<div className="flex w-full">
+												<Button
+													variant="secondary"
+													size="sm"
+													className="w-full"
+													onClick={() => setSellingItem(item)}
+													aria-label={`Sell ${item.asset_name}`}
+												>
+													Sell
+												</Button>
+											</div>
 										)}
 									</div>
 								</li>
@@ -494,4 +564,3 @@ export default function PortfolioTable() {
 		</>
 	);
 }
-// listings
