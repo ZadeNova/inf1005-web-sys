@@ -76,7 +76,8 @@ return function (App $app) {
             ->add(AdminMiddleware::class);
         $group->delete('/admin/listings/{id}', [AdminController::class, 'deleteListing'])
             ->add(AdminMiddleware::class);
-
+        $group->post('/admin/assets', [AdminController::class, 'createAsset'])
+            ->add(AdminMiddleware::class);
     }); // <-- important semicolon here
 
     // $app->add(CsrfMiddleware::class); // optional global middleware
