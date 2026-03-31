@@ -54,7 +54,7 @@ $builder->addDefinitions([
     App\Middleware\SecurityHeadersMiddleware::class => function () {
     return new App\Middleware\SecurityHeadersMiddleware();
     },
-    
+
     // ── Middleware ────────────────────────────────────────────────────────
     App\Middleware\AuthMiddleware::class => function ($c) {
         return new App\Middleware\AuthMiddleware(
@@ -140,8 +140,35 @@ $app->add($container->get(App\Middleware\SecurityHeadersMiddleware::class));
 
 $app->addRoutingMiddleware();
 $app->addBodyParsingMiddleware();
-$app->addErrorMiddleware(true, true, true);
 
+//hide error details in production but show in development
+$isProduction = ($appEnv === 'production');
+$app->addErrorMiddleware(!$isProduction, true, true);
+
+//Custom 404 handler to return JSON for API routes and redirect for others
+$errorMiddleware->setErrorHandler(
+    \Slim\Exception\HttpNotFoundException::class,
+    function ($request, $exception) use ($app) {
+        $response = $app->getResponseFactory()->createResponse();
+
+        // If it's an API route, return JSON 404
+        $path = $request->getUri()->getPath();
+        if (str_starts_with($path, '/api/')) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Endpoint not found.',
+            ]));
+            return $response
+                ->withStatus(404)
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        // Otherwise redirect to homepage
+        return $response
+            ->withHeader('Location', '/')
+            ->withStatus(302);
+    }
+);
 (require __DIR__ . '/../backend/src/Routes/web.php')($app);
 (require __DIR__ . '/../backend/src/Routes/api.php')($app);
 
