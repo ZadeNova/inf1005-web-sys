@@ -390,7 +390,7 @@ class PortfolioController
             ':id'       => $userId,
         ]);
 
-        $_SESSION['user']['username'] = $displayName ?: $currentUser['username'];
+         $_SESSION['username'] = $displayName ?: $currentUser['username'];
         return $this->json($response, ['success' => true, 'message' => 'Profile updated successfully.']);
     }
 
