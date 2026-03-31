@@ -263,6 +263,6 @@ $stmt = $this->db->query("
             return $response->withStatus(404);
         }
 
-        return $this->render($response, 'blog-post.php', ['post' => $post]);
+        return $this->render($response, 'blog-post', ['post' => $post]);
     }
 }

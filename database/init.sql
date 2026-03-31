@@ -422,3 +422,14 @@ INSERT INTO wallet_ledger (user_id, transaction_ref, type, amount, balance_befor
 
 UPDATE wallets SET balance = 11425.00 WHERE user_id = 1;
 UPDATE wallets SET balance =    75.00 WHERE user_id = 2;
+
+
+
+
+-- SEED BLOG POSTS --
+
+INSERT INTO blog_posts (author_id, title, body, category) 
+VALUES 
+    (1, 'Welcome to the Vapour FT Blog', 'We are thrilled to launch our new platform. Stay tuned for the latest market insights, platform updates, and trading strategies from our expert team.', 'Company News'),
+    (1, 'Q3 Market Analysis: Tech Sector Volatility', 'The tech sector experienced unexpected turbulence this quarter. In this post, we break down the key drivers behind the recent price movements and what it means for your portfolio.', 'Market Update');
+
