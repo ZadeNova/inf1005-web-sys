@@ -363,3 +363,167 @@ body {
 	animation: vft-shimmer 1.4s ease-in-out infinite;
 	border-radius: var(--radius-md);
 }
+
+/* =============================================================
+   VFT TOAST NOTIFICATION SYSTEM
+   Add this block to the bottom of frontend/src/index.css
+   Uses CSS variables from the existing theme system — no
+   hardcoded colours. Slide-in/out animation via transform.
+   prefers-reduced-motion collapses animation to a simple fade.
+   ============================================================= */
+
+/* ── Stack: fixed bottom-right, stacks upward ──────────────── */
+.vft-toast-stack {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+/* ── Individual toast ───────────────────────────────────────── */
+.vft-toast {
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 280px;
+  max-width: 360px;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  /* border-left colour is set inline per type */
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+
+  /* Slide-in from the right */
+  animation: vft-toast-in var(--transition-base) ease forwards;
+}
+
+.vft-toast[data-exiting='true'] {
+  animation: vft-toast-out var(--transition-base) ease forwards;
+}
+
+/* ── Icon wrapper ───────────────────────────────────────────── */
+.vft-toast__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* ── Text ───────────────────────────────────────────────────── */
+.vft-toast__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.vft-toast__title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vft-toast__desc {
+  margin: 0.125rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Close button ───────────────────────────────────────────── */
+.vft-toast__close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.vft-toast__close:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-2);
+}
+
+.vft-toast__close:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ── Keyframes ──────────────────────────────────────────────── */
+@keyframes vft-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes vft-toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+
+/* ── Reduced motion: skip slide, keep fade ──────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .vft-toast {
+    animation: vft-toast-fade-in var(--transition-fast) ease forwards;
+  }
+  .vft-toast[data-exiting='true'] {
+    animation: vft-toast-fade-out var(--transition-fast) ease forwards;
+  }
+  @keyframes vft-toast-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes vft-toast-fade-out {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+}
+
+/* ── Mobile: full width, anchored to bottom ─────────────────── */
+@media (max-width: 480px) {
+  .vft-toast-stack {
+    right: 0.75rem;
+    left: 0.75rem;
+    bottom: 1rem;
+    align-items: stretch;
+  }
+  .vft-toast {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+  }
+}

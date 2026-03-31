@@ -16,6 +16,7 @@ import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import { RarityBadge, ConditionBadge } from "../../shared/atoms/Badge.jsx";
 import { useApi, usePost } from "../../shared/hooks/useApi.js";
 import { mockAssets, RARITY, USE_MOCK } from "../../shared/mockAssets.js";
+import { useToast } from '../../shared/context/ToastContext.jsx';
 
 const RARITY_OPTIONS = [
 	{ value: "", label: "All Rarities" },
@@ -78,247 +79,152 @@ function ListedBadge({ price }) {
 }
 
 /* ── Sell Modal ─────────────────────────────────────────────────────────── */
-function SellModal({ item, onClose, onSuccess }) {
-	const [price, setPrice] = useState("");
-	const [phase, setPhase] = useState("idle");
-	const [message, setMessage] = useState("");
-
-	const { execute: createListing } = usePost("/api/v1/market/listings");
-
-	const parsedPrice = parseFloat(price);
-	const validPrice = !isNaN(parsedPrice) && parsedPrice > 0;
-
-	async function handleList() {
-		if (!validPrice) return;
-		setPhase("loading");
-
-		if (USE_MOCK) {
-			await new Promise((r) => setTimeout(r, 700));
-			setPhase("success");
-			setMessage(`${item.asset_name} listed for $${parsedPrice.toFixed(2)}.`);
-			onSuccess?.({ assetId: item.asset_id, price: parsedPrice });
-			return;
-		}
-
-		try {
-			const result = await createListing({
-				assetId: item.asset_id,
-				price: parsedPrice,
-			});
-			setPhase("success");
-			setMessage(`${item.asset_name} listed for $${parsedPrice.toFixed(2)}.`);
-			onSuccess?.({ ...result, assetId: item.asset_id, price: parsedPrice });
-		} catch (err) {
-			setPhase("error");
-			setMessage(err.message ?? "Failed to create listing. Please try again.");
-		}
-	}
-
-	return (
-		<div
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby="sell-modal-title"
-			className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
-			onClick={(e) => {
-				if (e.target === e.currentTarget) onClose();
-			}}
-		>
-			<Card
-				variant="default"
-				padding="lg"
-				className="w-full max-w-sm flex flex-col gap-5"
-			>
-				<div className="flex items-start justify-between gap-3">
-					<h2
-						id="sell-modal-title"
-						className="text-base font-bold text-(--color-text-primary)"
-					>
-						{phase === "success" ? "Listing created!" : "List for sale"}
-					</h2>
-					<button
-						type="button"
-						onClick={onClose}
-						aria-label="Close modal"
-						className="text-(--color-text-muted) hover:text-(--color-text-primary) transition-colors"
-					>
-						<svg
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth={2}
-							className="w-5 h-5"
-							aria-hidden="true"
-						>
-							<line x1="18" y1="6" x2="6" y2="18" />
-							<line x1="6" y1="6" x2="18" y2="18" />
-						</svg>
-					</button>
-				</div>
-
-				{phase === "success" && (
-					<div className="flex flex-col items-center gap-3 py-4 text-center">
-						<span
-							className="w-12 h-12 rounded-full bg-(--color-success-subtle)
-                             flex items-center justify-center text-(--color-success)"
-						>
-							<svg
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth={2.5}
-								className="w-5 h-5"
-								aria-hidden="true"
-							>
-								<polyline points="20 6 9 17 4 12" />
-							</svg>
-						</span>
-						<p className="text-sm font-semibold text-(--color-text-primary)">
-							{message}
-						</p>
-						<p className="text-xs text-(--color-text-muted)">
-							Your listing is now live on the market.
-						</p>
-						<Button
-							variant="primary"
-							size="md"
-							onClick={onClose}
-							className="mt-2"
-						>
-							Done
-						</Button>
-					</div>
-				)}
-
-				{phase === "error" && (
-					<div className="flex flex-col gap-3">
-						<p
-							role="alert"
-							className="text-sm text-(--color-danger) bg-(--color-danger-subtle)
-                          border border-(--color-danger) rounded-md px-3 py-2"
-						>
-							{message}
-						</p>
-						<div className="flex gap-2 justify-end">
-							<Button variant="secondary" size="sm" onClick={onClose}>
-								Cancel
-							</Button>
-							<Button
-								variant="primary"
-								size="sm"
-								onClick={() => setPhase("idle")}
-							>
-								Try again
-							</Button>
-						</div>
-					</div>
-				)}
-
-				{(phase === "idle" || phase === "loading") && (
-					<>
-						<div
-							className="flex items-center gap-3 p-3 rounded-lg
-                            bg-(--color-surface-2) border border-(--color-border)"
-						>
-							{/* ── SellModal thumbnail ── */}
-							{item.image_url ? (
-								<img
-									src={item.image_url}
-									alt={item.asset_name}
-									className="w-14 h-14 rounded-md object-cover border border-(--color-border) shrink-0"
-									loading="lazy"
-								/>
-							) : (
-								<div
-									className="w-14 h-14 rounded-md bg-(--color-surface) border border-(--color-border)
-                              flex items-center justify-center shrink-0"
-									aria-hidden="true"
-								>
-									<span className="text-xs text-(--color-text-muted)">IMG</span>
-								</div>
-							)}
-
-							<div className="flex flex-col gap-1 min-w-0">
-								<p className="text-sm font-bold text-(--color-text-primary) truncate">
-									{item.asset_name}
-								</p>
-								<div className="flex flex-wrap gap-1">
-									<RarityBadge tier={item.rarity} size="sm" />
-									<ConditionBadge condition={item.condition_state} size="sm" />
-								</div>
-								{item.market_value > 0 && (
-									<p className="text-xs text-(--color-text-muted)">
-										Market value: ${Number(item.market_value).toLocaleString()}
-									</p>
-								)}
-							</div>
-						</div>
-
-						<div className="flex flex-col gap-1.5">
-							<label
-								htmlFor="sell-price"
-								className="text-sm font-semibold text-(--color-text-primary)"
-							>
-								Listing price (USD)
-							</label>
-							<div className="relative">
-								<span
-									className="absolute left-3 top-1/2 -translate-y-1/2
-                                 text-sm text-(--color-text-muted)"
-									aria-hidden="true"
-								>
-									$
-								</span>
-								<input
-									id="sell-price"
-									type="number"
-									min="0.01"
-									step="0.01"
-									value={price}
-									onChange={(e) => setPrice(e.target.value)}
-									placeholder="0.00"
-									aria-describedby="sell-price-hint"
-									className="w-full pl-7 pr-3 py-2.5 text-sm rounded-md
-                             bg-(--color-input-bg) border border-(--color-input-border)
-                             text-(--color-text-primary)
-                             focus:outline-none focus:border-(--color-input-focus)
-                             transition-colors"
-								/>
-							</div>
-							<p
-								id="sell-price-hint"
-								className="text-xs text-(--color-text-muted)"
-							>
-								{item.market_value > 0
-									? `Current market floor: $${Number(item.market_value).toLocaleString()}`
-									: "No market price available — set your own price"}
-							</p>
-						</div>
-
-						<div className="flex gap-2 justify-end">
-							<Button
-								variant="secondary"
-								size="md"
-								onClick={onClose}
-								disabled={phase === "loading"}
-							>
-								Cancel
-							</Button>
-							<Button
-								variant="primary"
-								size="md"
-								loading={phase === "loading"}
-								disabled={!validPrice}
-								onClick={handleList}
-							>
-								List for sale
-							</Button>
-						</div>
-					</>
-				)}
-			</Card>
-		</div>
-	);
+export default function SellModal({ item, onClose, onSuccess }) {
+  const [price,   setPrice]   = useState('');
+  const [phase,   setPhase]   = useState('idle');
+  const [message, setMessage] = useState('');
+  const toast = useToast();
+ 
+  const { execute: createListing } = usePost('/api/v1/market/listings');
+ 
+  const parsedPrice = parseFloat(price);
+  const validPrice  = !isNaN(parsedPrice) && parsedPrice > 0 && parsedPrice <= 999999.99;
+ 
+  async function handleList() {
+    if (!validPrice) return;
+    setPhase('loading');
+ 
+    if (USE_MOCK) {
+      await new Promise(r => setTimeout(r, 700));
+      toast.listing(
+        'Listing created',
+        `${item.asset_name} listed for $${parsedPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+      );
+      onSuccess?.({ assetId: item.asset_id, price: parsedPrice });
+      onClose();
+      return;
+    }
+ 
+    try {
+      const result = await createListing({ assetId: item.asset_id, price: parsedPrice });
+      toast.listing(
+        'Listing created',
+        `${item.asset_name} listed for $${parsedPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+      );
+      onSuccess?.({ ...result, assetId: item.asset_id, price: parsedPrice });
+      onClose();
+    } catch (err) {
+      const msg = err.message ?? 'Failed to create listing. Please try again.';
+      setPhase('error');
+      setMessage(msg);
+      toast.error('Listing failed', msg);
+    }
+  }
+ 
+  return (
+    <div role="dialog" aria-modal="true" aria-labelledby="sell-modal-title"
+         className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+         onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+ 
+      <Card variant="default" padding="lg" className="w-full max-w-sm flex flex-col gap-5">
+ 
+        <div className="flex items-start justify-between gap-3">
+          <h2 id="sell-modal-title"
+              className="text-base font-bold text-(--color-text-primary)">
+            List for sale
+          </h2>
+          <button type="button" onClick={onClose} aria-label="Close modal"
+                  className="text-(--color-text-muted) hover:text-(--color-text-primary) transition-colors">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+                 className="w-5 h-5" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+ 
+        {phase === 'error' && (
+          <div className="flex flex-col gap-3">
+            <p role="alert"
+               className="text-sm text-(--color-danger) bg-(--color-danger-subtle)
+                          border border-(--color-danger) rounded-md px-3 py-2">
+              {message}
+            </p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
+              <Button variant="primary"   size="sm" onClick={() => setPhase('idle')}>Try again</Button>
+            </div>
+          </div>
+        )}
+ 
+        {(phase === 'idle' || phase === 'loading') && (
+          <>
+            {/* Asset preview */}
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-(--color-surface-2) border border-(--color-border)">
+              {item.image_url
+                ? <img src={item.image_url} alt={item.asset_name}
+                       className="w-14 h-14 rounded-md object-cover border border-(--color-border) shrink-0"
+                       loading="lazy" />
+                : <div className="w-14 h-14 rounded-md bg-(--color-surface) border border-(--color-border)
+                                  flex items-center justify-center shrink-0" aria-hidden="true">
+                    <span className="text-xs text-(--color-text-muted)">IMG</span>
+                  </div>
+              }
+              <div className="flex flex-col gap-1 min-w-0">
+                <p className="text-sm font-bold text-(--color-text-primary) truncate">{item.asset_name}</p>
+                <div className="flex flex-wrap gap-1">
+                  <RarityBadge    tier={item.rarity}          size="sm" />
+                  <ConditionBadge condition={item.condition_state} size="sm" />
+                </div>
+                {item.market_value > 0 && (
+                  <p className="text-xs text-(--color-text-muted)">
+                    Market value: ${Number(item.market_value).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            </div>
+ 
+            {/* Price input */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="sell-price"
+                     className="text-sm font-semibold text-(--color-text-primary)">
+                Listing price (USD)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-(--color-text-muted)"
+                      aria-hidden="true">$</span>
+                <input id="sell-price" type="number" min="0.01" max="999999.99" step="0.01"
+                       value={price}
+                       onChange={e => setPrice(e.target.value)}
+                       placeholder="0.00"
+                       aria-describedby="sell-price-hint"
+                       className="w-full pl-7 pr-3 py-2.5 text-sm rounded-md
+                                  bg-(--color-input-bg) border border-(--color-input-border)
+                                  text-(--color-text-primary)
+                                  focus:outline-none focus:border-(--color-input-focus)
+                                  transition-colors" />
+              </div>
+              <p id="sell-price-hint" className="text-xs text-(--color-text-muted)">
+                {item.market_value > 0
+                  ? `Market floor: $${Number(item.market_value).toLocaleString()}`
+                  : 'No market price available — set your own price'}
+              </p>
+            </div>
+ 
+            <div className="flex gap-2 justify-end">
+              <Button variant="secondary" size="md" onClick={onClose} disabled={phase === 'loading'}>
+                Cancel
+              </Button>
+              <Button variant="primary"   size="md" loading={phase === 'loading'}
+                      disabled={!validPrice} onClick={handleList}>
+                List for sale
+              </Button>
+            </div>
+          </>
+        )}
+ 
+      </Card>
+    </div>
+  );
 }
 
 export default function PortfolioTable() {
