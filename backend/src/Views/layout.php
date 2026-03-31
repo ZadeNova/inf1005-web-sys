@@ -90,7 +90,7 @@ if (isset($_SESSION['user_id'])) {
     <?php endif; ?>
 </head>
 
-<body class="vft-bg vft-text min-h-screen flex flex-col">
+<body class="vft-bg vft-text min-h-screen flex flex-col overflow-x-hidden">
 
     <a href="#main-content"
        class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4
@@ -235,11 +235,11 @@ if (isset($_SESSION['user_id'])) {
                         Sign In
                     </a>
                     <a href="/register"
-                       class="inline-flex px-3 py-1.5 rounded-md text-xs font-semibold
-                              text-white bg-(--color-accent)
-                              hover:bg-(--color-accent-hover) transition-colors
-                              focus-visible:outline-2 focus-visible:outline-(--color-accent)
-                              focus-visible:outline-offset-2">
+                    class="hidden sm:inline-flex px-3 py-1.5 rounded-md text-xs font-semibold
+                            text-white bg-(--color-accent)
+                            hover:bg-(--color-accent-hover) transition-colors
+                            focus-visible:outline-2 focus-visible:outline-(--color-accent)
+                            focus-visible:outline-offset-2">
                         Register
                     </a>
 
@@ -269,9 +269,9 @@ if (isset($_SESSION['user_id'])) {
         </nav>
 
         <?php /* ── Mobile menu drawer ───────────────────────────────── */ ?>
-        <div id="mobile-menu" role="navigation" aria-label="Mobile navigation"
-             class="hidden md:hidden border-t border-(--color-border)
-                    bg-(--color-surface) px-4 py-3">
+            <div id="mobile-menu" role="navigation" aria-label="Mobile navigation"
+            class="hidden md:hidden border-t border-(--color-border)
+            bg-(--color-surface) px-4 py-3 max-h-[calc(100vh-3.5rem)] overflow-y-auto">
             <ul class="flex flex-col gap-1">
                 <?php foreach ($navLinks as $link):
                     $isActive = ($link['href'] === '/')
@@ -308,14 +308,9 @@ if (isset($_SESSION['user_id'])) {
                 </li>
                 <?php if ($navWalletBalance !== null): ?>
                 <li>
-                    <div class="px-3 py-2 flex items-center gap-2 text-sm">
-                        <svg class="w-4 h-4 text-(--color-accent)" viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <rect x="2" y="5" width="20" height="14" rx="2"/>
-                            <path d="M16 12h2"/><path d="M2 10h20"/>
-                        </svg>
-                        <span class="text-(--color-text-muted)">Wallet:</span>
-                        <span class="font-bold text-(--color-accent) tabular-nums">
+                <div class="px-3 py-2 flex items-center gap-2 text-sm min-w-0">
+                    <span class="text-(--color-text-muted) shrink-0">Wallet:</span>
+                    <span class="font-bold text-(--color-accent) tabular-nums truncate">
                             $<?= number_format((float) $navWalletBalance, 2) ?> VPR
                         </span>
                     </div>
@@ -329,13 +324,13 @@ if (isset($_SESSION['user_id'])) {
                         Sign In
                     </a>
                 </li>
-                <li>
-                    <a href="/register"
-                       class="block px-3 py-2 rounded-md text-sm font-semibold
-                              text-white bg-(--color-accent) hover:bg-(--color-accent-hover) transition-colors">
-                        Register
-                    </a>
-                </li>
+                    <li>
+                        <a href="/register"
+                        class="block px-3 py-2 rounded-md text-sm text-(--color-text-secondary)
+                                hover:text-(--color-text-primary) hover:bg-(--color-surface-2) transition-colors">
+                            Register
+                        </a>
+                    </li>
                 <?php endif; ?>
 
                 <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
@@ -357,7 +352,7 @@ if (isset($_SESSION['user_id'])) {
 
     <footer aria-label="Site footer" class="border-t border-(--color-border) vft-surface mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8
-                    flex flex-col sm:flex-row items-center justify-between gap-4">
+            flex flex-col md:flex-row flex-wrap items-center justify-between gap-6 md:gap-4">
             <div class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-(--color-accent)" viewBox="0 0 24 24"
                      fill="currentColor" aria-hidden="true">
