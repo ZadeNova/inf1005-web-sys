@@ -222,8 +222,9 @@ export default function AdminListingsManager({ csrfToken = '' }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-(--color-border)">
-            {paginated.map((listing) => {
-              const status = (listing.status ?? '').toLowerCase();
+            {paginated.filter(Boolean).map((listing) => {
+				if (!listing || listing.id == null) return null;
+				const status = (listing.status ?? '').toLowerCase();
               return (
                 <tr
                   key={listing.id}
@@ -238,8 +239,8 @@ export default function AdminListingsManager({ csrfToken = '' }) {
                   </td>
                   {/* FIX: parseFloat because MySQL DECIMAL comes as string */}
                   <td className="px-4 py-3 text-right font-mono">
-                    ${parseFloat(listing.price ?? 0).toFixed(2)}
-                  </td>
+					${(parseFloat(listing.price) || 0).toFixed(2)}
+				  </td>
                   <td className="px-4 py-3">
                     <span
                       className={`text-xs font-medium px-2 py-0.5 rounded-full ${
