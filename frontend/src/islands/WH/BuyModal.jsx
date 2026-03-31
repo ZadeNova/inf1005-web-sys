@@ -155,14 +155,15 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
                 border border-(--color-border)
                 flex items-center justify-center shrink-0 overflow-hidden"
                 aria-hidden="true">
-                {(listing.asset?.imageUrl ?? listing.asset?.image_url ?? listing.image_url)
-                  ? <img
-                    src={listing.asset?.imageUrl ?? listing.asset?.image_url ?? listing.image_url}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                  : <span className="text-xs text-(--color-text-muted)">IMG</span>
-                }
+                {(() => {
+                  const imgSrc = listing.imageUrl          // flat shape (ListingsGrid)
+                    ?? listing.asset?.imageUrl   // nested camelCase (ListingDetail)
+                    ?? listing.asset?.image_url  // nested snake_case fallback
+                    ?? listing.image_url;        // flat snake_case fallback
+                  return imgSrc
+                    ? <img src={imgSrc} alt="" className="w-full h-full object-cover" />
+                    : <span className="text-xs text-(--color-text-muted)">IMG</span>;
+                })()}
               </div>
               <div className="flex flex-col gap-1 min-w-0">
                 <p className="text-sm font-bold text-(--color-text-primary) truncate">
