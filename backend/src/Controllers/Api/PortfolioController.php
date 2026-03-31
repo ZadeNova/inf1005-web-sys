@@ -381,6 +381,15 @@ class PortfolioController
             }
         }
 
+        $stmt = $this->db->prepare(
+            "UPDATE users SET username = :username, bio = :bio WHERE id = :id"
+        );
+        $stmt->execute([
+            ':username' => $displayName ?: $currentUser['username'],
+            ':bio'      => $bio,
+            ':id'       => $userId,
+        ]);
+
         return $this->json($response, ['success' => true, 'message' => 'Profile updated successfully.']);
     }
 
