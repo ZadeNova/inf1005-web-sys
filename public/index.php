@@ -143,7 +143,9 @@ $app->addBodyParsingMiddleware();
 
 //hide error details in production but show in development
 $isProduction = ($appEnv === 'production');
-$app->addErrorMiddleware(!$isProduction, true, true);
+
+//assign custom error handler to handle 404s and other exceptions
+$errorMiddleware = $app->addErrorMiddleware(!$isProduction, true, true);
 
 //Custom 404 handler to return JSON for API routes and redirect for others
 $errorMiddleware->setErrorHandler(
