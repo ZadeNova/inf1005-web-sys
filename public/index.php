@@ -1,4 +1,12 @@
 <?php
+//Session Hardening
+ini_set('session.cookie_httponly', '1');   // Blocks JS from reading the cookie
+ini_set('session.cookie_samesite', 'Lax'); // Prevents CSRF via cross-site requests
+
+$appEnv = $_ENV['APP_ENV'] ?? getenv('APP_ENV') ?? 'development';
+if ($appEnv === 'production') {
+    ini_set('session.cookie_secure', '1'); // HTTPS-only cookie in production
+}
 
 session_start();
 
@@ -41,7 +49,12 @@ $builder->addDefinitions([
             $c->get(PDO::class)
         );
     },
-
+    
+    //── Security Headers ────────────────────────────────────────────────────
+    App\Middleware\SecurityHeadersMiddleware::class => function () {
+    return new App\Middleware\SecurityHeadersMiddleware();
+    },
+    
     // ── Middleware ────────────────────────────────────────────────────────
     App\Middleware\AuthMiddleware::class => function ($c) {
         return new App\Middleware\AuthMiddleware(
@@ -121,6 +134,9 @@ AppFactory::setContainer($container);
 // ─────────────────────────────────────────────────────────────────────────────
 
 $app = AppFactory::create();
+
+// Security headers run on EVERY response — register first
+$app->add($container->get(App\Middleware\SecurityHeadersMiddleware::class));
 
 $app->addRoutingMiddleware();
 $app->addBodyParsingMiddleware();
