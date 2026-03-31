@@ -157,7 +157,10 @@ export default function ProfileCard({ userId, currentUserId }) {
         setLiveDisplayName(displayName);
         setLiveBio(bio);
         setProfileSaved(true);
-        setTimeout(() => setProfileSaved(false), 3000);
+      ssetTimeout(() => {
+        setProfileSaved(false);
+        window.location.reload(); // reload so navbar + dashboard reflect new username
+      }, 1500); // short delay
 
     } catch (err) {
         setPasswordMsg('Network error. Please try again.');
