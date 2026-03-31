@@ -502,7 +502,7 @@ export default function ListingsGrid({ userId }) {
 								className="flex items-center gap-4 p-4 rounded-lg
                               bg-(--color-surface) border border-(--color-border)"
 							>
-								{asset.imageUrl ? (
+								{asset.imageUrl || asset.image_url ? (
 									<img
 										src={asset.imageUrl}
 										alt={asset.name}
