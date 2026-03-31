@@ -27,10 +27,15 @@ class MarketService
             'rarity'    => $queryParams['rarity']    ?? '',
             'condition' => $queryParams['condition'] ?? '',
         ];
-        $sort = $queryParams['sort'] ?? 'newest';
-        $page = max(1, (int) ($queryParams['page'] ?? 1));
+        $sort  = $queryParams['sort'] ?? 'newest';
+        $page  = max(1, (int) ($queryParams['page'] ?? 1));
 
-        return $this->listings->findActive($filters, $sort, $page);
+        return [
+            'listings' => $this->listings->findActive($filters, $sort, $page),
+            'total'    => $this->listings->findActiveCount($filters),
+            'perPage'  => 20,
+            'page'     => $page,
+        ];
     }
 
     /**

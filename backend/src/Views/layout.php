@@ -183,24 +183,8 @@ if (isset($_SESSION['user_id'])) {
                 <?php if (isset($_SESSION['user_id'])): ?>
 
                     <?php /* ── Wallet balance pill ──────────────────── */ ?>
-                    <?php if ($navWalletBalance !== null): ?>
-                    <a href="/dashboard"
-                       aria-label="Wallet balance: $<?= number_format((float) $navWalletBalance, 2) ?> VPR"
-                       class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5
-                              rounded-full text-xs font-bold tabular-nums
-                              bg-(--color-accent-subtle) border border-(--color-accent)
-                              text-(--color-accent) hover:bg-(--color-accent)
-                              hover:text-white transition-colors
-                              focus-visible:outline-2 focus-visible:outline-(--color-accent)
-                              focus-visible:outline-offset-2">
-                        <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <rect x="2" y="5" width="20" height="14" rx="2"/>
-                            <path d="M16 12h2"/><path d="M2 10h20"/>
-                        </svg>
-                        $<?= number_format((float) $navWalletBalance, 2) ?>
-                        <span class="font-normal opacity-70">VPR</span>
-                    </a>
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                    <div id="nav-wallet-root" data-props="{}"></div>
                     <?php endif; ?>
 
                     <?php /* ── Profile link ─────────────────────────── */ ?>

@@ -74,6 +74,31 @@ class ListingRepository
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function findActiveCount(array $filters = []): int
+    {
+        $where  = ['l.status = :status'];
+        $params = [':status' => 'active'];
+
+        if (!empty($filters['search'])) {
+            $where[]           = 'a.name LIKE :search';
+            $params[':search'] = '%' . $filters['search'] . '%';
+        }
+        if (!empty($filters['rarity'])) {
+            $where[]           = 'a.rarity = :rarity';
+            $params[':rarity'] = $filters['rarity'];
+        }
+        if (!empty($filters['condition'])) {
+            $where[]              = 'a.condition_state = :condition';
+            $params[':condition'] = $filters['condition'];
+        }
+
+        $sql  = "SELECT COUNT(*) FROM listings l JOIN assets a ON a.id = l.asset_id WHERE "
+            . implode(' AND ', $where);
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
+    }
+
     /**
      * Find a single listing by ID, regardless of status.
      * Used by executePurchase to lock the row.
@@ -99,6 +124,8 @@ public function findById(int $id): array|false
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
+
+
 
     /**
      * Find all listings belonging to a user (any status).

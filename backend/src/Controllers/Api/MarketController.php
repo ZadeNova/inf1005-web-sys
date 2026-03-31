@@ -43,14 +43,17 @@ class MarketController
      */
     public function index(Request $request, Response $response): Response
     {
-        // getQueryParams() reads everything after the ? in the URL
-        $params   = $request->getQueryParams();
-        $listings = $this->market->getListings($params);
+        $params = $request->getQueryParams();
+        $result = $this->market->getListings($params);
 
         return $this->json($response, [
             'success'  => true,
-            'listings' => $listings,
-            'count'    => count($listings),
+            'listings' => $result['listings'],
+            'count'    => count($result['listings']),
+            'total'    => $result['total'],
+            'page'     => $result['page'],
+            'perPage'  => $result['perPage'],
+            'pages'    => (int) ceil($result['total'] / $result['perPage']),
         ]);
     }
 

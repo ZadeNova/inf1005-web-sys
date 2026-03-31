@@ -89,12 +89,29 @@ class PageController
         ->query("SELECT COALESCE(MIN(price), 0) FROM listings WHERE status = 'active'")
         ->fetchColumn();
 
+    $stmt = $this->db->query("
+        SELECT 
+            COALESCE(SUM(CASE WHEN completed_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN price ELSE 0 END), 0) AS vol_7d,
+            COALESCE(SUM(CASE WHEN completed_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) 
+                            AND completed_at <  DATE_SUB(NOW(), INTERVAL 7 DAY)  THEN price ELSE 0 END), 0) AS vol_prev_7d
+        FROM transactions
+    ");
+    $row       = $stmt->fetch(\PDO::FETCH_ASSOC);
+    $vol7d     = (float) $row['vol_7d'];
+    $volPrev7d = (float) $row['vol_prev_7d'];
+
+    $change7d = match(true) {
+        $volPrev7d > 0 => sprintf('%+.1f%%', (($vol7d - $volPrev7d) / $volPrev7d) * 100),
+        $vol7d > 0     => '+100.0%',
+        default        => '0.0%',
+    };
+
     $stats = [
         ['label' => 'Total Volume',     'value' => '$' . number_format($totalVolume, 2),   'sub' => 'All time'],
         ['label' => 'Active Listings',  'value' => number_format($activeListings),          'sub' => 'Right now'],
         ['label' => 'Registered Users', 'value' => number_format($totalUsers),              'sub' => 'And growing'],
         ['label' => 'Floor Price',      'value' => '$' . number_format($floorPrice, 2),     'sub' => 'Lowest listing'],
-        ['label' => '7-Day Change',     'value' => '+24.5%', 'sub' => 'Market trend', 'positive' => true],
+        ['label' => '7-Day Change', 'value' => $change7d, 'sub' => 'Market trend', 'positive' => $vol7d >= $volPrev7d],
     ];
 
     // ── Featured listings (3 most recent active) ──────────────────────

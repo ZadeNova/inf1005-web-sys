@@ -367,12 +367,19 @@ class PortfolioController
             return $this->json($response, ['success' => false, 'message' => 'Bio must be 150 characters or fewer.'], 422);
         }
 
-        $stmt = $this->db->prepare("UPDATE users SET username = :username, bio = :bio WHERE id = :id");
-        $stmt->execute([
-            ':username' => $displayName ?: $currentUser['username'],
-            ':bio'      => $bio ?: null,
-            ':id'       => $userId,
-        ]);
+        // After length validation, before the UPDATE:
+        if ($displayName && $displayName !== $currentUser['username']) {
+            $check = $this->db->prepare(
+                "SELECT id FROM users WHERE username = :username AND id != :id LIMIT 1"
+            );
+            $check->execute([':username' => $displayName, ':id' => $userId]);
+            if ($check->fetch()) {
+                return $this->json($response, [
+                    'success' => false,
+                    'message' => 'This username is already taken.',
+                ], 409);
+            }
+        }
 
         return $this->json($response, ['success' => true, 'message' => 'Profile updated successfully.']);
     }
