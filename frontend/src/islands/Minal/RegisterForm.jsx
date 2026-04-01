@@ -4,7 +4,6 @@
  * Mounts via: mountIsland('register-form-root', RegisterForm)
  * PHP view: backend/src/Views/register.php → <div id="register-form-root" data-props="{}"></div>
  *
- * API endpoint (when USE_MOCK = false):
  *   POST /api/v1/auth/register
  *   Body: { username, email, password, confirm_password }
  *   Success: { redirect }
@@ -16,8 +15,6 @@ import Button from '../../shared/atoms/Button.jsx';
 import Input  from '../../shared/atoms/Input.jsx';
 import Card   from '../../shared/atoms/Card.jsx';
 import { usePost } from '../../shared/hooks/useApi.js';
-
-const USE_AUTH_MOCK = false;
 
 export default function RegisterForm() {
   const [form, setForm] = useState({
@@ -57,13 +54,6 @@ export default function RegisterForm() {
 
   async function handleSubmit() {
     if (!validate()) return;
-
-    if (USE_AUTH_MOCK) {
-      console.log('[RegisterForm] MOCK submit', form);
-      window.location.href = '/login';
-      return;
-    }
-
     try {
       const result = await register({
         username:         form.username,

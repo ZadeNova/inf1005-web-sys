@@ -26,12 +26,7 @@ import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import Button from "../../shared/atoms/Button.jsx";
 import BuyModal from "./BuyModal.jsx";
 import { useApi } from "../../shared/hooks/useApi.js";
-import {
-	mockAssets,
-	RARITY,
-	CONDITION,
-	USE_MOCK,
-} from "../../shared/mockAssets.js";
+import { RARITY, CONDITION } from '../../shared/constants.js';
 
 const PER_PAGE = 4;
 const SERVER_PAGE_SIZE = 20; // must match ListingRepository::$perPage
@@ -57,7 +52,7 @@ function highlight(text, query) {
    AssetCard expects:    name,       condition,        seller.username
    ─────────────────────────────────────────────────────────────────────── */
 function normaliseListingFromApi(raw) {
-	if (raw.name) return raw; // already mock shape
+	if (raw.name) return raw; 
 	return {
 		id: raw.id,
 		name: raw.asset_name ?? "",
@@ -97,28 +92,22 @@ export default function ListingsGrid({ userId }) {
 	const searchRef = useRef(null);
 
 	/* ── Data fetching ─────────────────────────────────────────────── */
-	const listingsUrl = USE_MOCK
-		? null
-		: `/api/v1/market/listings?search=${encodeURIComponent(search)}&rarity=${rarity}&condition=${condition}&sort=${sort}&page=${serverPage}`;
+	const listingsUrl = `/api/v1/market/listings?search=${encodeURIComponent(search)}&rarity=${rarity}&condition=${condition}&sort=${sort}&page=${serverPage}`;
 
 	const {
 		data,
 		loading,
 		error,
 		refetch: refetchListings,
-	} = useApi(listingsUrl, { auto: !USE_MOCK });
+	} = useApi(listingsUrl);
 
 	const { data: walletData, refetch: refetchWallet } = useApi(
-		USE_MOCK || !userId ? null : "/api/v1/user/wallet",
-		{ auto: !USE_MOCK && !!userId },
+    !userId ? null : "/api/v1/user/wallet",
+    { auto: !!userId },
 	);
-	const walletBalance = USE_MOCK
-		? 2847.0
-		: (walletData?.wallet?.balance ?? null);
+	const walletBalance = (walletData?.wallet?.balance ?? null);
 
-	const allAssets = USE_MOCK
-		? mockAssets
-		: (data?.listings ?? []).map(normaliseListingFromApi);
+	const allAssets = (data?.listings ?? []).map(normaliseListingFromApi);
 
 	/* ── Sync maxPrice to absoluteMax on first load ────────────────── */
 	const absoluteMax = useMemo(
@@ -177,7 +166,7 @@ export default function ListingsGrid({ userId }) {
      canGoPrev: true when not on page 1.
      ─────────────────────────────────────────────────────────────────── */
 	const totalClientPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
-	const serverHasMore = !USE_MOCK && allAssets.length >= SERVER_PAGE_SIZE;
+	const serverHasMore = allAssets.length >= SERVER_PAGE_SIZE;
 	const canGoNext = clientPage < totalClientPages || serverHasMore;
 	const canGoPrev = clientPage > 1;
 

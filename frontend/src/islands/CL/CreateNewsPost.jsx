@@ -7,7 +7,6 @@
  * Admin composer for publishing news articles to /blog.
  * Distinct from the old CreatePost — this has title, category, and full body.
  *
- * API endpoint (when USE_MOCK = false):
  *   POST /api/v1/admin/news
  *   Body:    { title, category, body }
  *   Returns: { post }
@@ -16,7 +15,6 @@
 import { useState } from 'react';
 import Card         from '../../shared/atoms/Card.jsx';
 import Button       from '../../shared/atoms/Button.jsx';
-import { USE_MOCK } from '../../shared/mockAssets.js';
 
 const CATEGORIES = ['Market Update', 'Drop Announcement', 'Platform News', 'Maintenance'];
 const MAX_BODY   = 2000;
@@ -38,18 +36,6 @@ export default function CreateNewsPost({ onPublished }) {
     if (!canSubmit) return;
     setLoading(true);
     setError(null);
-
-    if (USE_MOCK) {
-      console.log('[CreateNewsPost] MOCK publish:', { title, category, body });
-      await new Promise(r => setTimeout(r, 600));
-      setTitle('');
-      setBody('');
-      setSuccess(true);
-      setLoading(false);
-      setTimeout(() => setSuccess(false), 3000);
-      onPublished?.();
-      return;
-    }
 
     try {
       const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -77,7 +63,6 @@ export default function CreateNewsPost({ onPublished }) {
     <Card variant="default" padding="md">
       <div className="flex flex-col gap-4">
 
-        {/* Title */}
         <div>
           <label htmlFor="news-title"
                  className="block text-sm font-medium text-(--color-text-secondary) mb-1">
@@ -100,7 +85,6 @@ export default function CreateNewsPost({ onPublished }) {
           />
         </div>
 
-        {/* Category */}
         <div>
           <label htmlFor="news-category"
                  className="block text-sm font-medium text-(--color-text-secondary) mb-1">
@@ -124,7 +108,6 @@ export default function CreateNewsPost({ onPublished }) {
           </select>
         </div>
 
-        {/* Body */}
         <div>
           <label htmlFor="news-body"
                  className="block text-sm font-medium text-(--color-text-secondary) mb-1">
@@ -158,7 +141,6 @@ export default function CreateNewsPost({ onPublished }) {
           </p>
         </div>
 
-        {/* Feedback */}
         {error && (
           <p role="alert" className="text-sm text-(--color-danger)">
             {error}
@@ -170,7 +152,6 @@ export default function CreateNewsPost({ onPublished }) {
           </p>
         )}
 
-        {/* Submit */}
         <div className="flex justify-end">
           <Button
             variant="primary"

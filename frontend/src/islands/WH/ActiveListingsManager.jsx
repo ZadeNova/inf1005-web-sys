@@ -17,16 +17,7 @@ import Button from "../../shared/atoms/Button.jsx";
 import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import { RarityBadge } from "../../shared/atoms/Badge.jsx";
 import { useApi } from "../../shared/hooks/useApi.js";
-import { mockAssets, USE_MOCK } from "../../shared/mockAssets.js";
 import { useToast } from "../../shared/context/ToastContext.jsx";
-
-/* ── Mock data ────────────────────────────────────────────────────────── */
-const MOCK_LISTINGS = [
-	{ id: "lst-001", asset: mockAssets[0], listedAt: "2025-03-01" },
-	{ id: "lst-002", asset: mockAssets[2], listedAt: "2025-03-08" },
-	{ id: "lst-003", asset: mockAssets[4], listedAt: "2025-03-11" },
-];
-const MOCK_STATS = { totalSales: 142, itemsOwned: 37 };
 
 /* ── Edit Price Modal ─────────────────────────────────────────────────── */
 function EditPriceModal({ listing, onClose, onSuccess }) {
@@ -42,16 +33,6 @@ function EditPriceModal({ listing, onClose, onSuccess }) {
 		if (!valid) return;
 		setSaving(true);
 		setError(null);
-
-		if (USE_MOCK) {
-			await new Promise((r) => setTimeout(r, 600));
-			toast.listing(
-				"Price updated",
-				`${listing.asset?.name} now listed for $${parsed.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-			);
-			onSuccess(listing.id, parsed);
-			return;
-		}
 
 		try {
 			const csrf =
@@ -237,15 +218,12 @@ function ListedBadgeFixed({ price }) {
 export default function ActiveListingsManager() {
 	const toast = useToast();
 
-	const { data, loading, error, refetch } = useApi(
-		USE_MOCK ? null : "/api/v1/market/listings/mine",
-		{ auto: !USE_MOCK },
-	);
+	const { data, loading, error, refetch } = useApi("/api/v1/market/listings/mine");
 
 	const [localListings, setLocalListings] = useState(null);
 	const rawListings =
-		localListings ?? (USE_MOCK ? MOCK_LISTINGS : (data?.listings ?? []));
-	const stats = USE_MOCK ? MOCK_STATS : (data?.stats ?? {});
+		localListings ?? (data?.listings ?? []);
+	const stats = data?.stats ?? {};
 
 	const [cancellingId, setCancellingId] = useState(null);
 	const [cancelError, setCancelError] = useState(null);
@@ -254,18 +232,6 @@ export default function ActiveListingsManager() {
 	/* ── Cancel ─────────────────────────────────────────────────────────── */
 	async function handleCancel(listingId) {
 		setCancelError(null);
-
-		if (USE_MOCK) {
-			setLocalListings((prev) =>
-				(prev ?? rawListings).filter((l) => l.id !== listingId),
-			);
-			const removed = rawListings.find((l) => l.id === listingId);
-			toast.cancel(
-				"Listing cancelled",
-				`${removed?.asset?.name ?? "Asset"} removed from market`,
-			);
-			return;
-		}
 
 		setCancellingId(listingId);
 		try {

@@ -7,7 +7,6 @@
  * Renders a Chart.js line chart showing collection floor price history.
  * Uses Chart.js via CDN-safe import pattern.
  *
- * API endpoint (when USE_MOCK = false):
  *   GET /api/v1/market/price-history
  *   Returns: { labels: string[], datasets: [{ label, data: number[] }] }
  */
@@ -16,9 +15,7 @@ import { useEffect, useRef, useState } from 'react';
 import Card     from '../../shared/atoms/Card.jsx';
 import Skeleton from '../../shared/atoms/Skeleton.jsx';
 import { useApi }              from '../../shared/hooks/useApi.js';
-import { mockPriceChartData, USE_MOCK } from '../../shared/mockAssets.js';
 
-/* Chart.js must be installed: npm install chart.js */
 import {
   Chart,
   LineElement,
@@ -48,18 +45,13 @@ export default function PriceChart() {
   const chartRef    = useRef(null);
   const [range, setRange] = useState('1M');
 
-  const { data, loading, error } = useApi(
-    USE_MOCK ? null : `/api/v1/market/price-history?range=${range}`,
-    { auto: !USE_MOCK }
-  );
+  const { data, loading, error } = useApi(`/api/v1/market/price-history?range=${range}`);
 
-  const chartData = USE_MOCK ? mockPriceChartData : data;
+  const chartData = data;
 
-  /* Build / rebuild chart when data or range changes */
   useEffect(() => {
     if (!chartData || !canvasRef.current) return;
 
-    /* Destroy previous instance to avoid canvas reuse error */
     if (chartRef.current) {
       chartRef.current.destroy();
       chartRef.current = null;
@@ -145,13 +137,11 @@ export default function PriceChart() {
 
   return (
     <Card variant="default" padding="md" className="flex flex-col gap-4">
-      {/* Header row */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-(--color-text-primary)">
           Collection Floor Prices
         </h3>
 
-        {/* Time range selector */}
         <div className="flex gap-1">
           {TIME_RANGES.map(r => (
             <button
@@ -172,8 +162,7 @@ export default function PriceChart() {
           ))}
         </div>
       </div>
-
-      {/* Canvas */}
+      
       <div style={{ height: 240 }}>
         <canvas ref={canvasRef} aria-label="Collection floor price chart" role="img" />
       </div>

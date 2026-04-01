@@ -3,16 +3,12 @@
  * Owner: WH (Dev 2)
  * Mounts via: mountIsland('rarity-donut-chart-root', RarityDonutChart)
  * PHP view: backend/src/Views/dashboard.php
- *
- * FIX: RARITY_COLORS now covers all DB Title Case values AND
- * SCREAMING_SNAKE_CASE mock values. All lookups normalised.
  */
 
 import { useEffect, useRef, useMemo } from 'react';
 import Card     from '../../shared/atoms/Card.jsx';
 import Skeleton from '../../shared/atoms/Skeleton.jsx';
 import { useApi }   from '../../shared/hooks/useApi.js';
-import { mockAssets, USE_MOCK } from '../../shared/mockAssets.js';
 
 import {
   Chart,
@@ -61,17 +57,9 @@ export default function RarityDonutChart() {
   const canvasRef = useRef(null);
   const chartRef  = useRef(null);
 
-  const { data, loading, error } = useApi(
-    USE_MOCK ? null : '/api/v1/user/portfolio',
-    { auto: !USE_MOCK }
-  );
-
-  // FIX: normalise rarity keys before counting so DB and mock values
-  // both resolve to the same bucket
+  const { data, loading, error } = useApi('/api/v1/user/portfolio');
   const rarityCounts = useMemo(() => {
-    const source = USE_MOCK
-      ? mockAssets
-      : (data?.portfolio ?? []);
+    const source = (data?.portfolio ?? []);
 
     return source.reduce((acc, a) => {
       const key = normaliseRarity(a.rarity);

@@ -152,7 +152,6 @@ class MarketController
     /**
      * GET /api/v1/market/listings/mine
      * Protected — returns the logged-in user's active listings only.
-     * Shapes response to match ActiveListingsManager.jsx mock structure.
      */
     public function mine(Request $request, Response $response): Response
     {

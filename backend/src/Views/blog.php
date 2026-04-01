@@ -30,7 +30,7 @@ ob_start();
     <?php /*
         Island: BlogFeed
         Mount:  #blog-feed-root
-        API:    GET /api/v1/blog/posts (when USE_MOCK = false)
+        API:    GET /api/v1/blog/posts
         Handles its own loading / error / success states internally.
     */ ?>
     <div id="blog-feed-root"

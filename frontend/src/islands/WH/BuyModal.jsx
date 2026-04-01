@@ -22,8 +22,7 @@ import { useState } from 'react';
 import Card from '../../shared/atoms/Card.jsx';
 import Button from '../../shared/atoms/Button.jsx';
 import { RarityBadge, ConditionBadge } from '../../shared/atoms/Badge.jsx';
-import { usePost } from '../../shared/hooks/useApi.js';
-import { USE_MOCK } from '../../shared/mockAssets.js';
+import { usePost } from '../../shared/hooks/useApi.js';``
 import { useToast } from '../../shared/context/ToastContext.jsx';
 
 /* ── Icons ─────────────────────────────────────────────────────────────── */
@@ -65,15 +64,6 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
   async function handleConfirm() {
     setPhase('loading');
     setMessage('');
-
-    if (USE_MOCK) {
-      await new Promise(r => setTimeout(r, 900));
-      setPhase('success');
-      setMessage(`You now own ${assetName}.`);
-      toast.success('Purchase successful', `${assetName} is now in your portfolio`);
-      onSuccess?.({ assetName, price: listing.price });
-      return;
-    }
 
     try {
       const result = await postBuy({ listingId: listing.id });

@@ -7,8 +7,6 @@
  * Displays:
  *   - Current balance (with show/hide toggle)
  *   - Last 5 ledger entries (type, amount, reason, running balance)
- *
- * API endpoint (when USE_MOCK = false):
  *   GET /api/v1/user/wallet
  *   Returns: { wallet: { balance, ledger: [{ type, amount, reason,
  *              balance_after, created_at }] } }
@@ -18,56 +16,7 @@ import { useState } from "react";
 import Card from "../../shared/atoms/Card.jsx";
 import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import { useApi } from "../../shared/hooks/useApi.js";
-import { USE_MOCK } from "../../shared/mockAssets.js";
 import { useEffect, useCallback } from "react";
-
-/* ── Mock data ──────────────────────────────────────────────────────────── */
-const MOCK_WALLET = {
-	balance: 2847.0,
-	currency: "VPR",
-	ledger: [
-		{
-			id: 1,
-			type: "debit",
-			amount: 249.99,
-			reason: "purchase:Dark Sorcerer Supreme",
-			balance_after: 2847.0,
-			created_at: "2025-03-13T10:22:00Z",
-		},
-		{
-			id: 2,
-			type: "credit",
-			amount: 2.5,
-			reason: "sale:Neon Wraith",
-			balance_after: 3096.99,
-			created_at: "2025-03-12T15:44:00Z",
-		},
-		{
-			id: 3,
-			type: "debit",
-			amount: 89.5,
-			reason: "purchase:Void Architect #003",
-			balance_after: 3094.49,
-			created_at: "2025-03-11T09:01:00Z",
-		},
-		{
-			id: 4,
-			type: "credit",
-			amount: 1100.0,
-			reason: "sale:Ancient Phoenix",
-			balance_after: 3183.99,
-			created_at: "2025-03-10T18:30:00Z",
-		},
-		{
-			id: 5,
-			type: "credit",
-			amount: 100.0,
-			reason: "signup_bonus",
-			balance_after: 2083.99,
-			created_at: "2025-01-15T00:00:00Z",
-		},
-	],
-};
 
 /* ── Icons ─────────────────────────────────────────────────────────────── */
 const EyeIcon = () => (
@@ -158,13 +107,12 @@ export default function WalletBalance() {
 	}, []);
 
 	useEffect(() => {
-		if (USE_MOCK) return;
 		fetchBalance();
 		const interval = setInterval(fetchBalance, 10000); // poll every 10s
 		return () => clearInterval(interval);
 	}, [fetchBalance]);
 
-	const wallet = USE_MOCK ? MOCK_WALLET : (data?.wallet ?? null);
+	const wallet = (data?.wallet ?? null);
 	const balance = wallet?.balance ?? 0;
 	const currency = wallet?.currency ?? "VPR";
 	const ledger = (wallet?.ledger ?? []).slice(0, 5);

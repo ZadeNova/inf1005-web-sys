@@ -22,81 +22,13 @@ import Badge from "../../shared/atoms/Badge.jsx";
 import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import { RarityBadge, ConditionBadge } from "../../shared/atoms/Badge.jsx";
 import { useApi } from "../../shared/hooks/useApi.js";
-import {
-	mockAssets,
-	RARITY,
-	CONDITION,
-	USE_MOCK,
-} from "../../shared/mockAssets.js";
+import { RARITY, CONDITION } from '../../shared/constants.js';
 
 /* ── Constants ───────────────────────────────────────────────────────── */
 const TABS = ["Owned Assets", "Transaction History"];
 const PER_PAGE = 6;
 const ALL_RARITIES = Object.values(RARITY);
 const ALL_CONDITIONS = Object.values(CONDITION);
-
-const MOCK_TRANSACTIONS = [
-	{
-		id: "tx-001",
-		type: "buy",
-		asset: "Shadowfall Genesis #001",
-		rarity: RARITY.SECRET_RARE,
-		condition: "Mint",
-		price: 4200.0,
-		date: "2025-03-01",
-		counterparty: "NeonTrader",
-	},
-	{
-		id: "tx-002",
-		type: "sell",
-		asset: "Ancient Phoenix",
-		rarity: RARITY.SECRET_RARE,
-		condition: "Mint",
-		price: 1299.0,
-		date: "2025-03-05",
-		counterparty: "ShadowHawk",
-	},
-	{
-		id: "tx-003",
-		type: "buy",
-		asset: "Dark Sorcerer Supreme",
-		rarity: RARITY.ULTRA_RARE,
-		condition: "Near Mint",
-		price: 249.99,
-		date: "2025-03-08",
-		counterparty: "CelestialX",
-	},
-	{
-		id: "tx-004",
-		type: "sell",
-		asset: "Forest Guardian",
-		rarity: RARITY.UNCOMMON,
-		condition: "Lightly Played",
-		price: 12.99,
-		date: "2025-03-10",
-		counterparty: "VaultKeeper",
-	},
-	{
-		id: "tx-005",
-		type: "buy",
-		asset: "Void Architect #003",
-		rarity: RARITY.RARE,
-		condition: "Mint",
-		price: 89.5,
-		date: "2025-03-11",
-		counterparty: "0xVault",
-	},
-	{
-		id: "tx-006",
-		type: "sell",
-		asset: "Neon Wraith",
-		rarity: RARITY.COMMON,
-		condition: "Moderately Played",
-		price: 2.5,
-		date: "2025-03-12",
-		counterparty: "NeonTrader",
-	},
-];
 
 /* ── Icons ────────────────────────────────────────────────────────────── */
 const PenIcon = () => (
@@ -193,23 +125,13 @@ function normaliseTransaction(t) {
    ════════════════════════════════════════════════════════════════════════ */
 export default function ProfileCollections() {
 	/* ── API ─────────────────────────────────────────────────────────── */
-	const { data: portfolioData, loading: portfolioLoading } = useApi(
-		USE_MOCK ? null : "/api/v1/user/portfolio",
-		{ auto: !USE_MOCK },
-	);
-	const { data: txData, loading: txLoading } = useApi(
-		USE_MOCK ? null : "/api/v1/user/transactions",
-		{ auto: !USE_MOCK },
-	);
+	const { data: portfolioData, loading: portfolioLoading } = useApi("/api/v1/user/portfolio");
+	const { data: txData, loading: txLoading } = useApi("/api/v1/user/transactions");
 
 	// FIX: normalise API shapes so all downstream code uses consistent field names
-	const ownedAssets = USE_MOCK
-		? mockAssets.map(normaliseAsset)
-		: (portfolioData?.portfolio ?? []).map(normaliseAsset);
+	const ownedAssets = (portfolioData?.portfolio ?? []).map(normaliseAsset);
 
-	const transactions = USE_MOCK
-		? MOCK_TRANSACTIONS.map(normaliseTransaction)
-		: (txData?.transactions ?? []).map(normaliseTransaction);
+	const transactions = (txData?.transactions ?? []).map(normaliseTransaction);
 
 	/* ── State ───────────────────────────────────────────────────────── */
 	const [activeTab, setActiveTab] = useState("Owned Assets");

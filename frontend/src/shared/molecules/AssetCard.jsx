@@ -66,7 +66,7 @@ function AssetImagePlaceholder() {
 }
 
 /**
- * @param {object} asset         - from mockAssets or API response
+ * @param {object} asset         - from API response
  * @param {function} onAddToCart - called with asset.id
  * @param {boolean} compact      - reduced padding for grid views
  * @param {boolean} showSeller   - show seller username below collection

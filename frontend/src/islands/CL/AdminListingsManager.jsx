@@ -1,8 +1,6 @@
 /**
  * AdminListingsManager.jsx — Lead Island
  *
- * FIX (deploy): USE_MOCK is now always false — this island only runs
- * on /admin which is AdminMiddleware protected. No mock path needed.
  * FIX (deploy): csrfToken now read from props (passed via data-props
  * in admin.php) instead of querying the meta tag, which can fail if
  * the meta tag hasn't hydrated yet on the deployed server.
@@ -37,21 +35,18 @@ export default function AdminListingsManager({ csrfToken = '' }) {
   const [sellerFilter, setSellerFilter] = useState("");
   const [page,         setPage]         = useState(1);
 
-  // Sync local state when API data arrives
   useEffect(() => {
     if (data?.listings) {
       setLocalListings(data.listings);
     }
   }, [data]);
 
-  // Resolve CSRF: prefer prop (injected by PHP), fall back to meta tag
   function getCsrf() {
     return csrfToken
       || document.querySelector('meta[name="csrf-token"]')?.content
       || '';
   }
 
-  // AdminController returns lowercase status from DB ENUM
   const filtered = useMemo(() => {
     setPage(1);
     return localListings.filter((l) => {
@@ -67,7 +62,7 @@ export default function AdminListingsManager({ csrfToken = '' }) {
         return false;
       return true;
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [localListings, statusFilter, rarityFilter, sellerFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));

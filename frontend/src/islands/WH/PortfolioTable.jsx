@@ -15,7 +15,7 @@ import Button from "../../shared/atoms/Button.jsx";
 import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import { RarityBadge, ConditionBadge } from "../../shared/atoms/Badge.jsx";
 import { useApi, usePost } from "../../shared/hooks/useApi.js";
-import { mockAssets, RARITY, USE_MOCK } from "../../shared/mockAssets.js";
+import { RARITY } from '../../shared/constants.js';
 import { useToast } from "../../shared/context/ToastContext.jsx";
 
 const RARITY_OPTIONS = [
@@ -34,20 +34,6 @@ const RARITY_LABELS = {
 	[RARITY.ULTRA_RARE]: "Ultra Rare",
 	[RARITY.SECRET_RARE]: "Secret Rare",
 };
-
-const MOCK_PORTFOLIO = mockAssets.slice(0, 6).map((a, i) => ({
-	inventory_id: `inv-00${i + 1}`,
-	asset_id: a.id,
-	asset_name: a.name,
-	rarity: a.rarity,
-	condition_state: a.condition,
-	collection: a.collection,
-	image_url: a.imageUrl,
-	market_value: a.price,
-	acquired_at: "2025-03-01T00:00:00Z",
-}));
-
-const MOCK_LISTINGS = [{ asset: { id: mockAssets[0].id, price: 249.99 } }];
 
 /* ── Listed badge ────────────────────────────────────────────────────────── */
 function ListedBadge({ price }) {
@@ -94,17 +80,6 @@ function SellModal({ item, onClose, onSuccess }) {
 	async function handleList() {
 		if (!validPrice) return;
 		setPhase("loading");
-
-		if (USE_MOCK) {
-			await new Promise((r) => setTimeout(r, 700));
-			toast.listing(
-				"Listing created",
-				`${item.asset_name} listed for $${parsedPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-			);
-			onSuccess?.({ assetId: item.asset_id, price: parsedPrice });
-			onClose();
-			return;
-		}
 
 		try {
 			const result = await createListing({
@@ -305,27 +280,20 @@ export default function PortfolioTable() {
 		loading: portfolioLoading,
 		error: portfolioError,
 		refetch: refetchPortfolio,
-	} = useApi(USE_MOCK ? null : "/api/v1/user/portfolio", { auto: !USE_MOCK });
+	} = useApi("/api/v1/user/portfolio");
 
-	const { data: listingsData, refetch: refetchListings } = useApi(
-		USE_MOCK ? null : "/api/v1/market/listings/mine",
-		{ auto: !USE_MOCK },
-	);
+	const { data: listingsData, refetch: refetchListings } = useApi("/api/v1/market/listings/mine");
 
-	const rawItems = USE_MOCK ? MOCK_PORTFOLIO : (portfolioData?.portfolio ?? []);
+	const rawItems = (portfolioData?.portfolio ?? []);
 
 	const activeListingMap = useMemo(() => {
-		const map = {};
-		if (USE_MOCK) {
-			MOCK_LISTINGS.forEach((l) => {
-				map[String(l.asset.id)] = l.asset.price;
-			});
-		} else {
-			(listingsData?.listings ?? []).forEach((l) => {
-				if (l.asset?.id != null) map[String(l.asset.id)] = l.asset.price;
-			});
-		}
-		return map;
+        const map = {};
+        (listingsData?.listings ?? []).forEach((l) => {
+            if (l.asset?.id != null) {
+                map[String(l.asset.id)] = l.asset.price;
+            }
+        });
+        return map;
 	}, [listingsData]);
 
 	const filtered = useMemo(() => {

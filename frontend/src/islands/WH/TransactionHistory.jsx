@@ -8,11 +8,6 @@
  * Shows: asset name, role (buy/sell), price, counterparty, timestamp.
  * Filters: type (buy/sell), rarity.
  * Show/hide toggle for privacy.
- *
- * API endpoint (when USE_MOCK = false):
- *   GET /api/v1/user/transactions
- *   Returns: { transactions: [{ id, asset_name, rarity, price,
- *               buyer_username, seller_username, role, completed_at }] }
  */
 
 import { useState, useMemo } from 'react';
@@ -21,17 +16,8 @@ import Button   from '../../shared/atoms/Button.jsx';
 import Skeleton from '../../shared/atoms/Skeleton.jsx';
 import { RarityBadge } from '../../shared/atoms/Badge.jsx';
 import { useApi }              from '../../shared/hooks/useApi.js';
-import { RARITY, USE_MOCK }    from '../../shared/mockAssets.js';
+import { RARITY } from '../../shared/constants.js';
 
-/* ── Mock data ──────────────────────────────────────────────────────────── */
-const MOCK_TRANSACTIONS = [
-  { id: 'tx-001', asset_name: 'Shadowfall Genesis #001', rarity: RARITY.SECRET_RARE, price: 4200.00, role: 'buy',  buyer_username: '0xVault',    seller_username: 'NeonTrader',  completed_at: '2025-03-01T10:00:00Z' },
-  { id: 'tx-002', asset_name: 'Ancient Phoenix',         rarity: RARITY.SECRET_RARE, price: 1299.00, role: 'sell', buyer_username: 'ShadowHawk',  seller_username: '0xVault',     completed_at: '2025-03-05T14:22:00Z' },
-  { id: 'tx-003', asset_name: 'Dark Sorcerer Supreme',   rarity: RARITY.ULTRA_RARE,  price: 249.99,  role: 'buy',  buyer_username: '0xVault',    seller_username: 'CelestialX',  completed_at: '2025-03-08T09:10:00Z' },
-  { id: 'tx-004', asset_name: 'Forest Guardian',         rarity: RARITY.UNCOMMON,    price: 12.99,   role: 'sell', buyer_username: 'VaultKeeper', seller_username: '0xVault',     completed_at: '2025-03-10T17:45:00Z' },
-  { id: 'tx-005', asset_name: 'Void Architect #003',     rarity: RARITY.RARE,        price: 89.50,   role: 'buy',  buyer_username: '0xVault',    seller_username: 'NeonTrader',  completed_at: '2025-03-11T11:00:00Z' },
-  { id: 'tx-006', asset_name: 'Neon Wraith',             rarity: RARITY.COMMON,      price: 2.50,    role: 'sell', buyer_username: 'NeonTrader',  seller_username: '0xVault',     completed_at: '2025-03-12T08:30:00Z' },
-];
 
 /* ── Icons ─────────────────────────────────────────────────────────────── */
 const EyeIcon = () => (
@@ -65,12 +51,9 @@ export default function TransactionHistory() {
   const [typeFilter,  setTypeFilter]  = useState('');    // '' | 'buy' | 'sell'
   const [rarityFilter,setRarityFilter]= useState('');
 
-  const { data, loading, error } = useApi(
-    USE_MOCK ? null : '/api/v1/user/transactions',
-    { auto: !USE_MOCK }
-  );
+  const { data, loading, error } = useApi('/api/v1/user/transactions');
 
-  const raw = USE_MOCK ? MOCK_TRANSACTIONS : (data?.transactions ?? []);
+  const raw = (data?.transactions ?? []);
 
   const filtered = useMemo(() => raw.filter(tx => {
     if (typeFilter  && tx.role   !== typeFilter)  return false;

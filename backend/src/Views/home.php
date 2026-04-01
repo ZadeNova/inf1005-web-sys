@@ -1,10 +1,4 @@
 <?php
-/**
- * TODO (integration phase):
- *   - PageController::home() should inject $stats from DB query
- *   - PageController::home() should inject $featured (3 active listings) from DB
- *   - Flip USE_MOCK = false in PriceChart.jsx once /api/v1/market/price-history is live
- */
 
 ob_start();
 

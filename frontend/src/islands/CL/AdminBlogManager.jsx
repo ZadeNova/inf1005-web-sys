@@ -1,8 +1,6 @@
 /**
  * AdminBlogManager.jsx — Lead Island
  *
- * FIX (deploy): USE_MOCK removed entirely — this island only runs on
- * /admin which AdminMiddleware protects, so mock mode is unnecessary.
  * FIX (deploy): csrfToken now read from props first, meta tag as fallback.
  *   On GCP the meta tag can be missing until PHP finishes rendering, so
  *   passing it explicitly through data-props is the reliable approach.

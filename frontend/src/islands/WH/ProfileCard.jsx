@@ -4,13 +4,6 @@
  * Mounts via: mountIsland('profile-card-root', ProfileCard)
  * PHP view: backend/src/Views/profile.php
  * data-props: { userId }
- *
- * API endpoint (when USE_MOCK = false):
- *   GET /api/v1/users/:userId/profile
- *   Returns: { user, stats, recentListings }
- *
- * IMPORTANT: Profile has soft-delete (deleted_at timestamp).
- * If user.deletedAt is set, show grace period banner, not full profile.
  */
 
 import { useState } from 'react';
@@ -19,15 +12,6 @@ import Badge    from '../../shared/atoms/Badge.jsx';
 import Button   from '../../shared/atoms/Button.jsx';
 import Skeleton from '../../shared/atoms/Skeleton.jsx';
 import { useApi }              from '../../shared/hooks/useApi.js';
-import { mockUsers, USE_MOCK } from '../../shared/mockAssets.js';
-
-const MOCK_PROFILE = {
-  user:   { ...mockUsers[0], bio: 'Trading rare digital assets since Core Drop 2024.' },
-  stats:  { totalSales: 142, totalVolume: '$28,400', itemsOwned: 37, joinedAt: '2024-01-15' },
-  wallet: { balance: 2847.00, currency: 'VPR' },
-  bank:   { bankName: 'DBS Bank', accountNumber: '****-****-1234', holderName: '0xVault' },
-  recentListings: [],
-};
 
 const NAME_MAX = 30;
 const BIO_MAX  = 150;
@@ -76,12 +60,9 @@ const WalletIcon = () => (
 );
 
 export default function ProfileCard({ userId, currentUserId }) {
-  const { data, loading, error } = useApi(
-    USE_MOCK ? null : `/api/v1/users/${userId}/profile`,
-    { auto: !USE_MOCK }
-  );
+  const { data, loading, error } = useApi(`/api/v1/users/${userId}/profile`);
 
-  const profile = USE_MOCK ? MOCK_PROFILE : data;
+  const profile = data;
 
   const [activeSection, setActiveSection]     = useState('view');
   const [displayName, setDisplayName]         = useState('');

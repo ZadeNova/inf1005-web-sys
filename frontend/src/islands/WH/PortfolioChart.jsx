@@ -16,7 +16,6 @@ import { useEffect, useRef, useState } from 'react';
 import Card     from '../../shared/atoms/Card.jsx';
 import Skeleton from '../../shared/atoms/Skeleton.jsx';
 import { useApi }   from '../../shared/hooks/useApi.js';
-import { USE_MOCK } from '../../shared/mockAssets.js';
 
 import {
   Chart,
@@ -37,23 +36,15 @@ function cssVar(name) {
 
 const TIME_RANGES = ['1W', '1M', '3M'];
 
-const MOCK_DATA = {
-  '1W': { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], values: [2600, 2650, 2700, 2680, 2750, 2800, 2847] },
-  '1M': { labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],        values: [1200, 1850, 1600, 2400, 2100, 2847] },
-  '3M': { labels: ['Jan', 'Feb', 'Mar'],                              values: [2400, 2100, 2847] },
-};
 
 export default function PortfolioChart() {
   const canvasRef         = useRef(null);
   const chartRef          = useRef(null);
   const [range, setRange] = useState('1M');
 
-  const { data, loading, error } = useApi(
-    USE_MOCK ? null : `/api/v1/dashboard/portfolio-history?range=${range}`,
-    { auto: !USE_MOCK }
-  );
+  const { data, loading, error } = useApi(`/api/v1/dashboard/portfolio-history?range=${range}`);
 
-  const chartData = USE_MOCK ? MOCK_DATA[range] : data;
+  const chartData = data;
 
   // Current value = last data point in the series
   const currentValue = chartData?.values?.length

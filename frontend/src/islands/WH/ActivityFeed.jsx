@@ -7,24 +7,12 @@
  *
  * Shows recent transaction activity for the logged-in user.
  * Each row is a buy, sell, offer received, or offer sent event.
- *
- * RULES:
- *   ✅ Import atoms from '../../shared/atoms/'
- *   ✅ USE_MOCK flag respected
- *   ✅ loading / error / success states required
- *   ❌ No hardcoded hex values
- *   ❌ No raw <button> tags
- *
- * API endpoint (when USE_MOCK = false):
- *   GET /api/v1/dashboard/activity
- *   Returns: { activities: [{ id, type, assetName, amount, counterparty, createdAt }] }
  */
 
 import Card     from '../../shared/atoms/Card.jsx';
 import Badge    from '../../shared/atoms/Badge.jsx';
 import Skeleton from '../../shared/atoms/Skeleton.jsx';
 import { useApi }   from '../../shared/hooks/useApi.js';
-import { USE_MOCK } from '../../shared/mockAssets.js';
 
 /* Activity type config — colour + label */
 const ACTIVITY_CONFIG = {
@@ -37,14 +25,6 @@ const ACTIVITY_CONFIG = {
   listing:       { label: 'Listed',        colour: 'muted'   },
   delisted:      { label: 'Delisted',      colour: 'muted'   },
 };
-
-const MOCK_ACTIVITIES = [
-  { id: 'act-001', type: 'buy',            assetName: 'Dark Sorcerer Supreme',  amount: 249.99,  counterparty: 'ShadowHawk',  createdAt: '2025-03-13T08:00:00Z' },
-  { id: 'act-002', type: 'sell',           assetName: 'Neon Wraith',            amount: 2.50,    counterparty: 'NeonTrader',  createdAt: '2025-03-12T15:00:00Z' },
-  { id: 'act-003', type: 'offer_received', assetName: 'Ancient Phoenix',        amount: 1100.00, counterparty: 'CelestialX',  createdAt: '2025-03-12T10:00:00Z' },
-  { id: 'act-004', type: 'listing',        assetName: 'Void Architect #003',    amount: 89.50,   counterparty: null,          createdAt: '2025-03-11T11:00:00Z' },
-  { id: 'act-005', type: 'offer_rejected', assetName: 'Forest Guardian',        amount: 10.00,   counterparty: 'VaultKeeper', createdAt: '2025-03-10T09:00:00Z' },
-];
 
 function TimeAgo({ isoString }) {
   const diff = Math.floor((Date.now() - new Date(isoString)) / 1000);
@@ -90,12 +70,9 @@ function ActivityRow({ activity }) {
 }
 
 export default function ActivityFeed() {
-  const { data, loading, error } = useApi(
-    USE_MOCK ? null : '/api/v1/dashboard/activity',
-    { auto: !USE_MOCK }
-  );
+  const { data, loading, error } = useApi('/api/v1/dashboard/activity');
 
-  const activities = USE_MOCK ? MOCK_ACTIVITIES : (data?.activities ?? []);
+  const activities = data?.activities ?? [];
 
   if (loading) {
     return (
@@ -137,7 +114,6 @@ export default function ActivityFeed() {
       {activities.map(activity => (
         <ActivityRow key={activity.id} activity={activity} />
       ))}
-      {/* TODO Dev 2: add "Load more" button for pagination */}
     </Card>
   );
 }

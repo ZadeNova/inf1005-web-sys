@@ -4,7 +4,6 @@
  * Mounts via: mountIsland('login-form-root', LoginForm)
  * PHP view: backend/src/Views/login.php → <div id="login-form-root" data-props="{}"></div>
  *
- * API endpoint (when USE_MOCK = false):
  *   POST /api/v1/auth/login
  *   Body: { email, password }
  *   Success: { token, redirect }
@@ -17,7 +16,6 @@ import Input  from '../../shared/atoms/Input.jsx';
 import Card   from '../../shared/atoms/Card.jsx';
 import { usePost }    from '../../shared/hooks/useApi.js';
 
-const USE_AUTH_MOCK = false;
 
 export default function LoginForm() {
   const [email,    setEmail]    = useState('');
@@ -38,17 +36,10 @@ export default function LoginForm() {
   async function handleSubmit() {
     if (!validate()) return;
 
-    if (USE_AUTH_MOCK) {
-      console.log('[LoginForm] MOCK submit', { email, password });
-      window.location.href = '/dashboard';
-      return;
-    }
-
     try {
       const result = await login({ email, password });
       window.location.href = result.redirect ?? '/dashboard';
     } catch (err) {
-      // FIX: surface field-level errors from backend if present
       if (err.errors) {
         setErrors(err.errors);
       } else {

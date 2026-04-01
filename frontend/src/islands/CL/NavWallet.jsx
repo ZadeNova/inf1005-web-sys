@@ -12,7 +12,6 @@ export default function NavWallet() {
 			const json = await res.json();
 			setBalance(json?.wallet?.balance ?? null);
 		} catch (e) {
-			// Network error — silently skip, balance stays at last known value
 		}
 	}, []);
 
