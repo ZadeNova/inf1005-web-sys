@@ -85,6 +85,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ .
 COPY public/ /public/
+COPY backend/src/Views/ /backend/src/Views
 RUN npm run build
 
 # ── Stage 3: Apache + PHP runtime ────────────────────────────
