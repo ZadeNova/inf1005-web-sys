@@ -7,7 +7,8 @@ echo "📥 Pulling latest changes..."
 git pull
 
 echo "🐳 Rebuilding containers..."
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml build --no-cache
+docker compose -f docker-compose.prod.yml up -d
 
 echo "🧹 Cleaning up old images..."
 docker image prune -f
