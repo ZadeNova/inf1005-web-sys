@@ -17,4 +17,4 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: ~/deploy.sh
+          script: cd ~/inf1005-web-sys && bash deploy.sh
