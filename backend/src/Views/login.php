@@ -20,7 +20,7 @@ ob_start();
             min-h-[calc(100vh-4rem)]">
 
     <div class="w-full max-w-md flex flex-col items-center gap-8">
-
+        <h1 class="sr-only">Sign In</h1>
         <?php /* ── Brand header ──────────────────────────────────── */ ?>
         <div class="text-center">
             <a href="/" aria-label="Vapour FT — home">
