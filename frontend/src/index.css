@@ -30,87 +30,10 @@
 }
 
 /* =============================================================
-   DARK MODE (default — applied to :root)
-   Background #0a0a0f · Surface #111118 · Accent indigo #6366f1
-   ============================================================= */
-:root,
-:root[data-theme="dark"] {
-	color-scheme: dark;
-
-	/* Backgrounds */
-	--color-bg: #0a0a0f;
-	--color-surface: #111118;
-	--color-surface-2: #1a1a24;
-	--color-surface-3: #22222e;
-
-	/* Borders */
-	--color-border: #1e1e2e;
-	--color-border-subtle: #2a2a3a;
-
-	/* Text */
-	--color-text-primary: #f1f5f9;
-	--color-text-secondary: #94a3b8;
-	--color-text-muted: #475569;
-	--color-text-inverse: #0f172a;
-
-	/* Accent — Electric Indigo */
-	--color-accent: #6366f1;
-	--color-accent-hover: #818cf8;
-	--color-accent-subtle: rgba(99, 102, 241, 0.15);
-	--color-accent-glow: rgba(99, 102, 241, 0.35);
-
-	/* Semantic */
-	--color-success: #22c55e;
-	--color-success-subtle: rgba(34, 197, 94, 0.15);
-	--color-danger: #ef4444;
-	--color-danger-hover: #dc2626;
-	--color-danger-subtle: rgba(239, 68, 68, 0.15);
-	--color-warning: #f59e0b;
-	--color-warning-subtle: rgba(245, 158, 11, 0.15);
-
-	/* Rarity — Dark mode palette */
-	--color-rarity-common: #6b7280;
-	--color-rarity-common-bg: rgba(107, 114, 128, 0.15);
-	--color-rarity-common-text: #9ca3af;
-
-	--color-rarity-uncommon: #22c55e;
-	--color-rarity-uncommon-bg: rgba(34, 197, 94, 0.15);
-	--color-rarity-uncommon-text: #4ade80;
-
-	--color-rarity-rare: #6366f1;
-	--color-rarity-rare-bg: rgba(99, 102, 241, 0.2);
-	--color-rarity-rare-text: #818cf8;
-
-	--color-rarity-ultrarare: #a855f7;
-	--color-rarity-ultrarare-bg: rgba(168, 85, 247, 0.2);
-	--color-rarity-ultrarare-text: #c084fc;
-
-	--color-rarity-secretrare: #f59e0b;
-	--color-rarity-secretrare-bg: rgba(245, 158, 11, 0.2);
-	--color-rarity-secretrare-text: #fbbf24;
-
-	/* Condition */
-	--color-condition-mint: #22c55e;
-	--color-condition-nearmint: #84cc16;
-	--color-condition-lightlyplayed: #f59e0b;
-	--color-condition-moderatelyplayed: #f97316;
-	--color-condition-heavilyplayed: #ef4444;
-
-	/* Input */
-	--color-input-bg: #1a1a24;
-	--color-input-border: #2a2a3a;
-	--color-input-focus: #6366f1;
-	--color-input-error: #ef4444;
-	--color-input-placeholder: #475569;
-
-	/* Scrollbar */
-	scrollbar-color: #2a2a3a #0a0a0f;
-}
-
-/* =============================================================
    LIGHT MODE
    Background #f9fafb · Surface #ffffff · Accent deep indigo #4f46e5
    ============================================================= */
+:root,
 :root[data-theme="light"] {
 	color-scheme: light;
 

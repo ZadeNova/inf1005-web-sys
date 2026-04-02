@@ -13,7 +13,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-const THEMES   = ['dark', 'light', 'colorblind'];
+const THEMES   = ['light', 'colorblind'];
 const STORAGE_KEY = 'vft-theme';
 
 function getInitialTheme() {
@@ -23,8 +23,7 @@ function getInitialTheme() {
   } catch (_) { /* storage blocked */ }
 
   // Respect OS preference on first visit
-  if (window.matchMedia?.('(prefers-color-scheme: light)').matches) return 'light';
-  return 'dark'; // default
+  return 'light';
 }
 
 function applyTheme(theme) {
@@ -35,7 +34,7 @@ function applyTheme(theme) {
 export function useTheme() {
   const [theme, setThemeState] = useState(() => {
     // SSR guard
-    if (typeof window === 'undefined') return 'dark';
+    if (typeof window === 'undefined') return 'light';
     return getInitialTheme();
   });
 

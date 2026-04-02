@@ -33,9 +33,9 @@ function viteCss(string $entry): string
 }
 
 // ── Theme resolution ──────────────────────────────────────────────────────
-$validThemes = ['dark', 'light', 'colorblind'];
-$cookieTheme = $_COOKIE['vft-theme'] ?? 'dark';
-$activeTheme = in_array($cookieTheme, $validThemes, true) ? $cookieTheme : 'dark';
+$validThemes = ['light', 'colorblind'];
+$cookieTheme = $_COOKIE['vft-theme'] ?? 'light';
+$activeTheme = in_array($cookieTheme, $validThemes, true) ? $cookieTheme : 'light';
 
 // ── Nav links ─────────────────────────────────────────────────────────────
 $currentPath = $currentPath ?? strtok($_SERVER['REQUEST_URI'] ?? '/', '?');
