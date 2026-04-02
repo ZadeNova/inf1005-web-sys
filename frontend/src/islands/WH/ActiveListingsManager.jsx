@@ -9,14 +9,17 @@
  * FIX 2 — Edit price modal rendered and wired.
  * FIX 3 — ListedBadgeFixed with fixed w/h so 5-digit prices don't overflow.
  * FIX 4 — Responsive layout: Actions drop below asset info on mobile (sm and below).
+ * FIX 5 — Removed fetchListings() from handleCancel to prevent race condition
+ *          where the server re-fetch returned the deleted listing before it settled,
+ *          causing it to reappear. Also normalised ID comparisons to String() to
+ *          guard against number/string type mismatches from the API.
  */
 
-import { useState } from "react";
 import Card from "../../shared/atoms/Card.jsx";
 import Button from "../../shared/atoms/Button.jsx";
 import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import { RarityBadge } from "../../shared/atoms/Badge.jsx";
-import { useApi } from "../../shared/hooks/useApi.js";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "../../shared/context/ToastContext.jsx";
 
 /* ── Edit Price Modal ─────────────────────────────────────────────────── */
@@ -216,101 +219,106 @@ function ListedBadgeFixed({ price }) {
 
 /* ── Main export ──────────────────────────────────────────────────────── */
 export default function ActiveListingsManager() {
-    const toast = useToast();
+	const toast = useToast();
 
-    const [localListings, setLocalListings] = useState(null);
-    const [cancellingId, setCancellingId] = useState(null);
-    const [cancelError, setCancelError] = useState(null);
-    const [editingListing, setEditingListing] = useState(null);
-    const [stats, setStats] = useState({});
+	const [localListings, setLocalListings] = useState(null);
+	const [cancellingId, setCancellingId] = useState(null);
+	const [cancelError, setCancelError] = useState(null);
+	const [editingListing, setEditingListing] = useState(null);
+	const [stats, setStats] = useState({});
 
-    // Replace useApi with a manual fetch + polling so it refreshes
-    // automatically when PortfolioTable creates a new listing
-    const fetchListings = useCallback(async () => {
-        try {
-            const res = await fetch("/api/v1/market/listings/mine", {
-                headers: { "Accept": "application/json" },
-                credentials: "same-origin",
-            });
-            if (!res.ok) return;
-            const json = await res.json();
-            setLocalListings(json.listings ?? []);
-            setStats(json.stats ?? {});
-        } catch (_) {
-            // silently ignore — stale data is fine
-        }
-    }, []);
+	// Replace useApi with a manual fetch + polling so it refreshes
+	// automatically when PortfolioTable creates a new listing
+	const fetchListings = useCallback(async () => {
+		try {
+			const res = await fetch("/api/v1/market/listings/mine", {
+				headers: { Accept: "application/json" },
+				credentials: "same-origin",
+			});
+			if (!res.ok) return;
+			const json = await res.json();
+			setLocalListings(json.listings ?? []);
+			setStats(json.stats ?? {});
+		} catch (err) {
+			// silently ignore — stale data is fine
+		}
+	}, []);
 
-    useEffect(() => {
-        fetchListings();
-        // Poll every 8 seconds — picks up new listings from PortfolioTable sell
-        const interval = setInterval(fetchListings, 8000);
-        return () => clearInterval(interval);
-    }, [fetchListings]);
+	useEffect(() => {
+		fetchListings();
+		// Poll every 8 seconds — picks up new listings from PortfolioTable sell
+		const interval = setInterval(fetchListings, 8000);
+		return () => clearInterval(interval);
+	}, [fetchListings]);
 
-    const rawListings = localListings ?? [];
-    const loading = localListings === null;
-    const error = null; // errors are silent in polling mode
+	const rawListings = localListings ?? [];
+	const loading = localListings === null;
+	const error = null; // errors are silent in polling mode
 
-    /* ── Cancel ──────────────────────────────────────────────────────────── */
-    async function handleCancel(listingId) {
-        setCancelError(null);
-        setCancellingId(listingId);
-        try {
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
-            const numericId = parseInt(listingId, 10);
-            if (isNaN(numericId) || numericId <= 0)
-                throw new Error("Invalid listing ID.");
+	/* ── Cancel ──────────────────────────────────────────────────────────── */
+	async function handleCancel(listingId) {
+		setCancelError(null);
+		setCancellingId(listingId);
+		try {
+			const csrf =
+				document.querySelector('meta[name="csrf-token"]')?.content ?? "";
+			const numericId = parseInt(listingId, 10);
+			if (isNaN(numericId) || numericId <= 0)
+				throw new Error("Invalid listing ID.");
 
-            const res = await fetch(`/api/v1/market/listings/${numericId}`, {
-                method: "DELETE",
-                headers: {
-                    "X-CSRF-Token": csrf,
-                    "Accept": "application/json",
-                },
-            });
+			const res = await fetch(`/api/v1/market/listings/${numericId}`, {
+				method: "DELETE",
+				headers: {
+					"X-CSRF-Token": csrf,
+					Accept: "application/json",
+				},
+			});
 
-            if (!res.ok) {
-                const err = await res
-                    .json()
-                    .catch(() => ({ message: "Failed to cancel listing." }));
-                throw new Error(err.message ?? "Failed to cancel listing.");
-            }
+			if (!res.ok) {
+				const err = await res
+					.json()
+					.catch(() => ({ message: "Failed to cancel listing." }));
+				throw new Error(err.message ?? "Failed to cancel listing.");
+			}
 
-            // Immediately remove from local state — no refetch race
-            const removed = rawListings.find((l) => l.id === listingId);
-            setLocalListings((prev) =>
-                (prev ?? []).filter((l) => l.id !== listingId),
-            );
-            toast.cancel(
-                "Listing cancelled",
-                `${removed?.asset?.name ?? "Asset"} removed from market`,
-            );
+			// FIX 5: Normalise to String() to guard against number/string mismatch
+			const removed = rawListings.find(
+				(l) => String(l.id) === String(listingId),
+			);
+			setLocalListings((prev) =>
+				(prev ?? []).filter((l) => String(l.id) !== String(listingId)),
+			);
+			toast.cancel(
+				"Listing cancelled",
+				`${removed?.asset?.name ?? "Asset"} removed from market`,
+			);
 
-            // Then sync from server in background to get updated stats
-            fetchListings();
+			// FIX 5: Do NOT call fetchListings() here — doing so caused a race
+			// condition where the server hadn't settled the DELETE yet, so the
+			// re-fetch returned the listing again and it reappeared in the UI.
+			// The 8-second poll will sync stats naturally.
+		} catch (err) {
+			const msg = err.message ?? "Network error. Please try again.";
+			setCancelError(msg);
+			toast.error("Cancel failed", msg);
+		} finally {
+			setCancellingId(null);
+		}
+	}
 
-        } catch (err) {
-            const msg = err.message ?? "Network error. Please try again.";
-            setCancelError(msg);
-            toast.error("Cancel failed", msg);
-        } finally {
-            setCancellingId(null);
-        }
-    }
-
-    /* ── Edit price success ───────────────────────────────────────────────── */
-    function handlePriceUpdated(listingId, newPrice) {
-        setLocalListings((prev) =>
-            (prev ?? []).map((l) =>
-                l.id === listingId
-                    ? { ...l, asset: { ...l.asset, price: newPrice } }
-                    : l,
-            ),
-        );
-        setEditingListing(null);
-        fetchListings();
-    }
+	/* ── Edit price success ───────────────────────────────────────────────── */
+	function handlePriceUpdated(listingId, newPrice) {
+		setLocalListings((prev) =>
+			(prev ?? []).map((l) =>
+				String(l.id) === String(listingId)
+					? { ...l, asset: { ...l.asset, price: newPrice } }
+					: l,
+			),
+		);
+		setEditingListing(null);
+		// Small delay so server has time to commit before we re-fetch
+		setTimeout(fetchListings, 500);
+	}
 
 	/* ── Loading ─────────────────────────────────────────────────────────── */
 	if (loading) {
