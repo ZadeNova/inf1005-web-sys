@@ -51,19 +51,6 @@ ob_start();
                 </div>
             </noscript>
         </div>
-
-        <?php /* ── Register crosslink ───────────────────────────── */ ?>
-        <p class="text-sm text-(--color-text-muted)">
-            Don't have an account?
-            <a href="/register"
-               class="text-(--color-accent) hover:text-(--color-accent-hover)
-                      font-medium transition-colors
-                      focus-visible:outline-2 focus-visible:outline-(--color-accent)
-                      focus-visible:outline-offset-2 rounded-sm">
-                Create one
-            </a>
-        </p>
-
     </div>
 </div>
 
