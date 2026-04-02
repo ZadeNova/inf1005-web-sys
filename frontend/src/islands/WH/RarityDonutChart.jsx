@@ -35,8 +35,6 @@ const RARITY_COLORS = {
   RARE:        '#60a5fa',
   ULTRA_RARE:  '#c084fc',
   SECRET_RARE: '#f59e0b',
-  // DB also uses 'Legendary' as a legacy value in the ENUM — map it too
-  LEGENDARY:   '#f59e0b',
 };
 
 // Human-readable labels for the legend
@@ -46,7 +44,6 @@ const RARITY_LABELS = {
   RARE:        'Rare',
   ULTRA_RARE:  'Ultra Rare',
   SECRET_RARE: 'Secret Rare',
-  LEGENDARY:   'Legendary',
 };
 
 function cssVar(name) {
