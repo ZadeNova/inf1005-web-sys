@@ -89,6 +89,6 @@ return function (App $app) {
             ->add(AdminMiddleware::class);
     }); // <-- important semicolon here
 
-    // $app->add(CsrfMiddleware::class); // optional global middleware
+    $app->add(CsrfMiddleware::class); // optional global middleware
 
 };
