@@ -75,6 +75,7 @@ export default function ListingsGrid({ userId, isAdmin = false }) {
 	const [maxPrice, setMaxPrice] = useState(Infinity);
 	const [buyTarget, setBuyTarget] = useState(null);
 	const [maxPriceInitialised, setMaxPriceInitialised] = useState(false);
+	const [focusedSuggestion, setFocusedSuggestion] = useState(-1);
 
 	const searchRef = useRef(null);
 
@@ -125,11 +126,17 @@ export default function ListingsGrid({ userId, isAdmin = false }) {
 		function handler(e) {
 			if (searchRef.current && !searchRef.current.contains(e.target)) {
 				setShowDropdown(false);
+				setFocusedSuggestion(-1);
 			}
 		}
 		document.addEventListener("mousedown", handler);
 		return () => document.removeEventListener("mousedown", handler);
 	}, []);
+
+	// Reset keyboard focus when the suggestion list changes
+	useEffect(() => {
+		setFocusedSuggestion(-1);
+	}, [suggestions]);
 
 	/* ── Client-side filter + sort ─────────────────────────────────── */
 	const filtered = allAssets.filter((a) => {
@@ -253,44 +260,68 @@ export default function ListingsGrid({ userId, isAdmin = false }) {
 						className="relative"
 					>
 						<div className="flex gap-2">
-							{/* Teammate's accessible combobox wrapper */}
-							<div
-								className="relative flex-1"
-								role="combobox"
-								aria-expanded={showDropdown && suggestions.length > 0}
-								aria-haspopup="listbox"
-							>
+							{/* ARIA 1.2 combobox: role + expanded state live on the input itself */}
+							<div className="relative flex-1">
 								<input
 									type="search"
+									role="combobox"
 									value={query}
 									onChange={(e) => {
 										setQuery(e.target.value);
 										setShowDropdown(true);
+										setFocusedSuggestion(-1);
 										if (!e.target.value) {
 											setSearch("");
 											setClientPage(1);
 										}
 									}}
 									onFocus={() => query && setShowDropdown(true)}
+									onKeyDown={(e) => {
+										if (!showDropdown || !suggestions.length) return;
+										if (e.key === "ArrowDown") {
+											e.preventDefault();
+											setFocusedSuggestion(i => Math.min(i + 1, suggestions.length - 1));
+										} else if (e.key === "ArrowUp") {
+											e.preventDefault();
+											setFocusedSuggestion(i => Math.max(i - 1, -1));
+										} else if (e.key === "Enter" && focusedSuggestion >= 0) {
+											e.preventDefault();
+											handleSelectSuggestion(suggestions[focusedSuggestion].name);
+											setFocusedSuggestion(-1);
+										} else if (e.key === "Escape") {
+											setShowDropdown(false);
+											setFocusedSuggestion(-1);
+										}
+									}}
 									placeholder="Search listings..."
 									className="bg-(--color-surface-2) border border-(--color-border)
 										text-(--color-text-primary) placeholder:text-(--color-input-placeholder)
 										text-sm rounded-full px-4 py-2 w-full"
 									aria-label="Search listings"
 									aria-autocomplete="list"
+									aria-expanded={showDropdown && suggestions.length > 0}
+									aria-haspopup="listbox"
+									aria-controls={showDropdown && suggestions.length > 0 ? "search-suggestions" : undefined}
+									aria-activedescendant={
+										focusedSuggestion >= 0 && suggestions[focusedSuggestion]
+											? `suggestion-${suggestions[focusedSuggestion].id}`
+											: undefined
+									}
 								/>
 								{showDropdown && suggestions.length > 0 && (
 									<ul
+										id="search-suggestions"
 										role="listbox"
 										className="absolute top-full left-0 right-0 z-50 mt-1
 											bg-(--color-surface) border border-(--color-border)
 											rounded-md shadow-lg overflow-hidden"
 									>
-										{suggestions.map((asset) => (
+										{suggestions.map((asset, idx) => (
 											<li
 												key={asset.id}
+												id={`suggestion-${asset.id}`}
 												role="option"
-												aria-selected="false"
+												aria-selected={focusedSuggestion === idx}
 												onMouseDown={() => handleSelectSuggestion(asset.name)}
 												className="px-3 py-2 text-sm text-(--color-text-primary)
 													hover:bg-(--color-surface-2) cursor-pointer

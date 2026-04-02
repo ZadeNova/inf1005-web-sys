@@ -28,10 +28,12 @@ const ACTIVITY_CONFIG = {
 
 function TimeAgo({ isoString }) {
   const diff = Math.floor((Date.now() - new Date(isoString)) / 1000);
-  if (diff < 60)    return <span>{diff}s ago</span>;
-  if (diff < 3600)  return <span>{Math.floor(diff / 60)}m ago</span>;
-  if (diff < 86400) return <span>{Math.floor(diff / 3600)}h ago</span>;
-  return <span>{Math.floor(diff / 86400)}d ago</span>;
+  let label;
+  if (diff < 60)    label = `${diff}s ago`;
+  else if (diff < 3600)  label = `${Math.floor(diff / 60)}m ago`;
+  else if (diff < 86400) label = `${Math.floor(diff / 3600)}h ago`;
+  else               label = `${Math.floor(diff / 86400)}d ago`;
+  return <time dateTime={isoString}>{label}</time>;
 }
 
 function ActivityRow({ activity }) {
