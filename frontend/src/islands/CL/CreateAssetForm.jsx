@@ -213,9 +213,9 @@ export default function CreateAssetForm({ csrfToken = '' }) {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.success) {
-        setServerError(data.message ?? `Server error ${res.status}. Please try again.`);
+        setServerError(data.message || `Unexpected error (HTTP ${res.status}). Please try again.`);
         return;
-      }
+        }
 
       // Success — record result, then wipe the form
       setSuccess({ name: data.asset.name, listingId: data.asset.listingId });

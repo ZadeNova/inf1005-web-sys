@@ -219,6 +219,12 @@ class AdminController
      */
     public function createAsset(Request $request, Response $response): Response
     {
+            if (empty($_FILES)) {
+        return $this->json($response, [
+            'success' => false,
+            'message' => 'DEBUG: $_FILES is empty. multipart stream was consumed upstream.',
+        ], 422);
+}
         // ── 1. Parse text fields from multipart body ──────────────────────
         $data = $request->getParsedBody() ?? [];
 
