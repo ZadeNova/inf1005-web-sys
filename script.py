@@ -42,7 +42,7 @@ PUBLIC_PATHS = [
     "/login",
     "/register",
     "/listings",
-    "/listings/2"
+    "/listings/2",
     "/blog",
     "/blog/1"
 ]

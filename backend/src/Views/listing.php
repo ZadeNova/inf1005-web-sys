@@ -21,7 +21,7 @@ ob_start();
          data-props='<?= json_encode([
              "listingId" => (int)$listingId,
              "isAdmin"   => ($_SESSION["user_role"] ?? "") === "admin",
-         ], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'
+         ], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
     </div>
 
 </div>
