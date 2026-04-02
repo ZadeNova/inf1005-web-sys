@@ -62,6 +62,13 @@ function emptyForm() {
   };
 }
 
+function formatPriceDisplay(val) {
+  const n = parseFloat(val);
+  if (isNaN(n)) return '';
+  // If it has decimals, show exactly 2; if whole number, show no decimals
+  return n % 1 === 0 ? String(Math.round(n)) : n.toFixed(2);
+}
+
 // ── Upload icon ───────────────────────────────────────────────────────────────
 const UploadIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}
@@ -206,9 +213,9 @@ export default function CreateAssetForm({ csrfToken = '' }) {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.success) {
-        setServerError(data.message ?? `Server error ${res.status}. Please try again.`);
+        setServerError(data.message || `Unexpected error (HTTP ${res.status}). Please try again.`);
         return;
-      }
+        }
 
       // Success — record result, then wipe the form
       setSuccess({ name: data.asset.name, listingId: data.asset.listingId });
@@ -368,15 +375,22 @@ export default function CreateAssetForm({ csrfToken = '' }) {
                 type="number"
                 min="0.01"
                 max="999999.99"
-                step="0.01"
+                step="1"       
                 value={form.price}
                 onChange={update('price')}
-                placeholder="0.00"
+                onBlur={() => {
+                    const n = parseFloat(form.price);
+                    if (!isNaN(n) && n > 0) {
+                    const formatted = n % 1 === 0 ? String(Math.round(n)) : n.toFixed(2);
+                    setForm(prev => ({ ...prev, price: formatted }));
+                    }
+                }}
+                placeholder="0"
                 aria-required="true"
                 aria-describedby={fieldErrors.price ? 'asset-price-error' : 'asset-price-hint'}
                 aria-invalid={!!fieldErrors.price}
                 className={`${inputClass} pl-7`}
-              />
+                />
             </div>
             {fieldErrors.price ? (
               <p id="asset-price-error" role="alert" className="text-xs text-(--color-danger)">
