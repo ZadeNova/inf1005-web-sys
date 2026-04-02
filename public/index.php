@@ -139,10 +139,7 @@ $app = AppFactory::create();
 $app->add($container->get(App\Middleware\SecurityHeadersMiddleware::class));
 
 $app->addRoutingMiddleware();
-$app->addBodyParsingMiddleware([
-    'application/json'                  => null,
-    'application/x-www-form-urlencoded' => null,
-]);
+$app->addBodyParsingMiddleware();
 
 //hide error details in production but show in development
 $isProduction = ($appEnv === 'production');
