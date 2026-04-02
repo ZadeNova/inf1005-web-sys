@@ -6,6 +6,7 @@ use Slim\App;
 use App\Controllers\PageController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\AdminMiddleware;
+use App\Middleware\AdminBlockMiddleware;
 
 return function (App $app) {
 
@@ -20,8 +21,10 @@ return function (App $app) {
 
     // Protected Routes (AuthMiddleware added later)
     $app->get('/dashboard', [PageController::class, 'dashboard'])
+        ->add(AdminBlockMiddleware::class)
         ->add(AuthMiddleware::class);
     $app->get('/profile', [PageController::class, 'profile'])
+        ->add(AdminBlockMiddleware::class)
         ->add(AuthMiddleware::class);
     
     // Admin Routes (AdminMiddleware added later)

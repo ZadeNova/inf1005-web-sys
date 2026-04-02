@@ -62,7 +62,7 @@ function normaliseListingFromApi(raw) {
 /* ════════════════════════════════════════════════════════════════════════
    MAIN EXPORT
    ════════════════════════════════════════════════════════════════════════ */
-export default function ListingsGrid({ userId }) {
+export default function ListingsGrid({ userId, isAdmin = false }) {
 	const [query, setQuery] = useState("");
 	const [search, setSearch] = useState("");
 	const [showDropdown, setShowDropdown] = useState(false);
@@ -448,7 +448,7 @@ export default function ListingsGrid({ userId }) {
 				</div>
 
 				{/* ── Dynamic Content Area (Anchored to prevent layout shifts) ── */}
-				<div className="min-h-[400px] flex flex-col">
+				<div className="min-h-100 flex flex-col">
 					{loading ? (
 						<div
 							className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
@@ -491,7 +491,7 @@ export default function ListingsGrid({ userId }) {
 										<AssetCard
 											key={asset.id}
 											asset={asset}
-											onAddToCart={handleBuy}
+											onAddToCart={isAdmin ? null : handleBuy}
 											showSeller
 										/>
 									))}
@@ -565,6 +565,7 @@ export default function ListingsGrid({ userId }) {
 												<p className="text-sm font-bold text-(--color-text-primary)">
 													${asset.price.toLocaleString()}
 												</p>
+												{!isAdmin && (
 												<Button
 													variant="primary"
 													size="sm"
@@ -577,6 +578,7 @@ export default function ListingsGrid({ userId }) {
 												>
 													Buy
 												</Button>
+												)}
 											</div>
 										</a>
 									))}

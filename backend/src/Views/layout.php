@@ -141,7 +141,7 @@ if (isset($_SESSION['user_id'])) {
                 </li>
                 <?php endforeach; ?>
 
-                <?php if (isset($_SESSION['user_id'])): ?>
+                <?php if (isset($_SESSION['user_id']) && ($_SESSION['user_role'] ?? '') !== 'admin'): ?>
                 <li>
                     <a href="/dashboard"
                        <?= str_starts_with($currentPath, '/dashboard') ? 'aria-current="page"' : '' ?>
@@ -183,11 +183,13 @@ if (isset($_SESSION['user_id'])) {
                 <?php if (isset($_SESSION['user_id'])): ?>
 
                     <?php /* ── Wallet balance pill ──────────────────── */ ?>
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                    <div id="nav-wallet-root" data-props="{}"></div>
+                    <?php if (($_SESSION['user_role'] ?? '') !== 'admin'): ?>
+                    <div id="nav-wallet-root" data-props='<?= json_encode(["isAdmin" => ($_SESSION["user_role"] ?? "") === "admin"],
+                    JSON_HEX_APOS | JSON_HEX_QUOT) ?>'></div>
                     <?php endif; ?>
 
                     <?php /* ── Profile link ─────────────────────────── */ ?>
+                    <?php if (($_SESSION['user_role'] ?? '') !== 'admin'): ?>
                     <a href="/profile"
                        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5
                               rounded-md text-xs font-semibold
@@ -202,6 +204,7 @@ if (isset($_SESSION['user_id'])) {
                         </svg>
                         <?= htmlspecialchars($_SESSION['username'] ?? 'Profile') ?>
                     </a>
+                    <?php endif; ?>
 
                     <?php /* ── Sign out ─────────────────────────────── */ ?>
                     <button type="button" id="logout-btn"
@@ -291,7 +294,7 @@ if (isset($_SESSION['user_id'])) {
                 </li>
                 <?php endforeach; ?>
 
-                <?php if (isset($_SESSION['user_id'])): ?>
+                <?php if (isset($_SESSION['user_id']) && ($_SESSION['user_role'] ?? '') !== 'admin'): ?>
                 <li>
                     <a href="/dashboard"
                        class="block px-3 py-2 rounded-md text-sm text-(--color-text-secondary)

@@ -18,7 +18,10 @@ ob_start();
 
     <?php /* Listing detail island — two-column layout (image+info | buy panel) */ ?>
     <div id="listing-detail-root"
-         data-props='<?= json_encode(["listingId" => (int)$listingId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
+         data-props='<?= json_encode([
+             "listingId" => (int)$listingId,
+             "isAdmin"   => ($_SESSION["user_role"] ?? "") === "admin",
+         ], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'
     </div>
 
 </div>

@@ -71,6 +71,7 @@ ob_start();
              data-props='<?= json_encode([
                  "userId"    => $_SESSION["user_id"] ?? null,
                  "csrfToken" => $_SESSION["csrf_token"] ?? "",
+                 "isAdmin"   => ($_SESSION["user_role"] ?? "") === "admin",
              ], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
 
             <?php /* Skeleton grid — matches the 4-col grid in ListingsGrid.jsx */ ?>

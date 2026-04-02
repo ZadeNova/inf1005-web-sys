@@ -15,7 +15,7 @@ import { RarityBadge, ConditionBadge } from '../../shared/atoms/Badge.jsx';
 import BuyModal from './BuyModal.jsx';
 import { useApi } from '../../shared/hooks/useApi.js';
 
-export default function ListingDetail({ listingId }) {
+export default function ListingDetail({ listingId, isAdmin = false  }) {
   const [buyTarget, setBuyTarget] = useState(null);
 
   const { data, loading, error } = useApi(
@@ -110,6 +110,7 @@ export default function ListingDetail({ listingId }) {
             </span>
           </div>
 
+      {!isAdmin && (
           <Button
             variant="primary"
             size="lg"
@@ -119,6 +120,7 @@ export default function ListingDetail({ listingId }) {
           >
             {isActive ? 'Buy Now' : 'Unavailable'}
           </Button>
+        )}
         </Card>
       </div>
 

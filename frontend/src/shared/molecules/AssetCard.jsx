@@ -146,6 +146,7 @@ export default function AssetCard({
 							{formattedPrice}
 						</p>
 					</div>
+					{onAddToCart && (
 					<Button
 						variant="primary"
 						size={compact ? "sm" : "md"}
@@ -158,6 +159,7 @@ export default function AssetCard({
 					>
 						Add
 					</Button>
+					)}
 				</div>
 			</Card>
 		</a>

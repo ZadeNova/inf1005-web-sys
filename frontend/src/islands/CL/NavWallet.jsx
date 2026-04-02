@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 
-export default function NavWallet() {
-	const [balance, setBalance] = useState(null);
-
+export default function NavWallet({ isAdmin = false }) {
+    const [balance, setBalance] = useState(null);
+	if (isAdmin) return null;
+	
 	const fetchBalance = useCallback(async () => {
 		try {
 			const res = await fetch("/api/v1/user/wallet", {
