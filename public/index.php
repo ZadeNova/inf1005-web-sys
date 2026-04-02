@@ -8,6 +8,9 @@ if ($appEnv === 'production') {
     ini_set('session.cookie_secure', '1'); // HTTPS-only cookie in production
 }
 
+ini_set('session.gc_maxlifetime', 3600); // 1 hour
+session_set_cookie_params(3600);
+
 session_start();
 
 // Generate CSRF token if one doesn't exist

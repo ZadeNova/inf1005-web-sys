@@ -2,7 +2,7 @@
 =======================================================
   Vapour FT — W3C Validation Audit
   Target : http://35.212.199.144
-  Time   : 2026-04-03 02:46:27
+  Time   : 2026-04-03 02:57:37
 =======================================================
 
 ───────────────────────────────────────────────────────
@@ -19,13 +19,7 @@
 
   [v] PASS — http://35.212.199.144/listings
 
-  [x] FAIL  (6 error(s)) — http://35.212.199.144/listings/2
-        [ERROR] Line 189: Saw “<” when expecting an attribute name. Probable cause: Missing “>” immediately before.
-        [ERROR] Line 189: A slash was not immediately followed by “>”.
-        [ERROR] Line 189: Attribute “<” not allowed on element “div” at this point.
-        [ERROR] Line 189: Attribute “div” not allowed on element “div” at this point.
-        [ERROR] Line 193: End tag “main” seen, but there were open elements.
-        [ERROR] Line 174: Unclosed element “div”.
+  [v] PASS — http://35.212.199.144/listings/2
 
   [v] PASS — http://35.212.199.144/blog
 
@@ -34,7 +28,7 @@
         [ERROR] Line ?: Element “head” is missing a required instance of child element “title”.
         [WARN]  Line ?: Consider adding a “lang” attribute to the “html” start tag to declare the language of this document.
 
-  Section total: 8 error(s), 1 warning(s)
+  Section total: 2 error(s), 1 warning(s)
 
   To check a regular user routes, paste your PHPSESSID cookie.
   Steps:
@@ -42,7 +36,17 @@
     2. DevTools (F12) -> Application -> Cookies -> http://35.212.199.144
     3. Copy the value of PHPSESSID
 
-  PHPSESSID (or press Enter to skip):   Skipping — no session provided.
+  PHPSESSID (or press Enter to skip): 
+───────────────────────────────────────────────────────
+  AUTHENTICATED ROUTES  (user)
+───────────────────────────────────────────────────────
+
+  [v] PASS — http://35.212.199.144/dashboard
+
+  [x] FAIL  (1 error(s)) — http://35.212.199.144/profile
+        [ERROR] Line —: Redirected to /login — session may be invalid or expired.
+
+  Section total: 1 error(s), 0 warning(s)
 
   Use the same session for admin routes? (y/n): 
   To check an admin user routes, paste your PHPSESSID cookie.
@@ -51,7 +55,14 @@
     2. DevTools (F12) -> Application -> Cookies -> http://35.212.199.144
     3. Copy the value of PHPSESSID
 
-  PHPSESSID (or press Enter to skip):   Skipping — no session provided.
+  PHPSESSID (or press Enter to skip): 
+───────────────────────────────────────────────────────
+  ADMIN ROUTES
+───────────────────────────────────────────────────────
+
+  [v] PASS — http://35.212.199.144/admin
+
+  Section total: 0 error(s), 0 warning(s)
 
 =======================================================
   Audit complete.

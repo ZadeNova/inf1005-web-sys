@@ -44,7 +44,7 @@ PUBLIC_PATHS = [
     "/listings",
     "/listings/2",
     "/blog",
-    "/blog/1"
+    "/blog/2"
 ]
 
 # ── Authenticated routes — requires a valid PHPSESSID ─────────────────
