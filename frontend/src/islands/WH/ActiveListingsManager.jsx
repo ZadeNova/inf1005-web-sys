@@ -263,8 +263,10 @@ export default function ActiveListingsManager() {
             `${removed?.asset?.name ?? "Asset"} removed from market`,
         );
 
-        await refetch();
-        setLocalListings(null);
+        const fresh = await refetch();
+        if (fresh?.listings) {
+            setLocalListings(fresh.listings);
+        }
 
     } catch (err) {
         const msg = err.message ?? "Network error. Please try again.";
