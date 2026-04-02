@@ -2,68 +2,17 @@
 =======================================================
   Vapour FT — W3C Validation Audit
   Target : http://35.212.199.144
-  Time   : 2026-04-01 01:29:45
+  Time   : 2026-04-03 01:58:21
 =======================================================
 
 ───────────────────────────────────────────────────────
   PUBLIC ROUTES
 ───────────────────────────────────────────────────────
 
-  [x] FAIL  (3 error(s)) — http://35.212.199.144/
-        [ERROR] Line 400: Bad value “/images/assets/shotgun/SpaceShooter X/Mint.png” for attribute “src” on element “img”: Illegal character in path segment. Space is not allowed.
-        [ERROR] Line 467: Bad value “/images/assets/smg/Rustfang MAC-10/Mint.png” for attribute “src” on element “img”: Illegal character in path segment. Space is not allowed.
-        [ERROR] Line 534: Bad value “/images/assets/sniper_rifle/Glacial Trace AWP/Mint.png” for attribute “src” on element “img”: Illegal character in path segment. Space is not allowed.
-
-  [v] PASS — http://35.212.199.144/about
-
-  [v] PASS — http://35.212.199.144/login
-
-  [v] PASS — http://35.212.199.144/register
-
-  [v] PASS — http://35.212.199.144/listings
-
-  [x] FAIL  (3 error(s)) — http://35.212.199.144/listings/2/blog
-        [ERROR] Line 400: Bad value “/images/assets/shotgun/SpaceShooter X/Mint.png” for attribute “src” on element “img”: Illegal character in path segment. Space is not allowed.
-        [ERROR] Line 467: Bad value “/images/assets/smg/Rustfang MAC-10/Mint.png” for attribute “src” on element “img”: Illegal character in path segment. Space is not allowed.
-        [ERROR] Line 534: Bad value “/images/assets/sniper_rifle/Glacial Trace AWP/Mint.png” for attribute “src” on element “img”: Illegal character in path segment. Space is not allowed.
-
-  [x] FAIL  (2 error(s)) — http://35.212.199.144/blog/1
-        [ERROR] Line ?: End of file seen without seeing a doctype first. Expected “<!DOCTYPE html>”.
-        [ERROR] Line ?: Element “head” is missing a required instance of child element “title”.
-        [WARN]  Line ?: Consider adding a “lang” attribute to the “html” start tag to declare the language of this document.
-
-  Section total: 8 error(s), 1 warning(s)
-
-  To check a regular user routes, paste your PHPSESSID cookie.
-  Steps:
-    1. Log in as a regular user in your browser
-    2. DevTools (F12) -> Application -> Cookies -> http://35.212.199.144
-    3. Copy the value of PHPSESSID
-
-  PHPSESSID (or press Enter to skip): 
-───────────────────────────────────────────────────────
-  AUTHENTICATED ROUTES  (user)
-───────────────────────────────────────────────────────
-
-  [v] PASS — http://35.212.199.144/dashboard
-
-  [v] PASS — http://35.212.199.144/profile
-
-  Section total: 0 error(s), 0 warning(s)
-
-  Use the same session for admin routes? (y/n): 
-───────────────────────────────────────────────────────
-  ADMIN ROUTES
-───────────────────────────────────────────────────────
-
-  [x] FAIL  (3 error(s)) — http://35.212.199.144/admin
-        [ERROR] Line 400: Bad value “/images/assets/shotgun/SpaceShooter X/Mint.png” for attribute “src” on element “img”: Illegal character in path segment. Space is not allowed.
-        [ERROR] Line 467: Bad value “/images/assets/smg/Rustfang MAC-10/Mint.png” for attribute “src” on element “img”: Illegal character in path segment. Space is not allowed.
-        [ERROR] Line 534: Bad value “/images/assets/sniper_rifle/Glacial Trace AWP/Mint.png” for attribute “src” on element “img”: Illegal character in path segment. Space is not allowed.
-
-  Section total: 3 error(s), 0 warning(s)
-
-=======================================================
-  Audit complete.
-=======================================================
-
+  [x] FAIL  (6 error(s)) — http://35.212.199.144/
+        [ERROR] Line 381: Bad value “/images/assets/rifle/Shadow Sharpshooter SS/Mint.png” for attribute “src” on element “img”: Illegal character in path segment. Space is not allowed.
+        [ERROR] Line 416: Stray end tag “a”.
+        [ERROR] Line 447: Bad value “/images/assets/smg/Infinite Striker SS/Mint.png” for attribute “src” on element “img”: Illegal character in path segment. Space is not allowed.
+        [ERROR] Line 482: Stray end tag “a”.
+        [ERROR] Line 513: Bad value “/images/assets/pistol/Death Cross X-9/Mint.png” for attribute “src” on element “img”: Illegal character in path segment. Space is not allowed.
+        [ERROR] Line 548: Stray end tag “a”.

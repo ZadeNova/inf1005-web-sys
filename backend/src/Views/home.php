@@ -234,6 +234,7 @@ $featured = $featured ?? [
             </div>
 
             <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+<ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 <?php foreach ($featured as $asset): ?>
                 <li class="bg-(--color-surface) border border-(--color-border)
                             rounded-lg p-4 flex flex-col gap-3
@@ -242,7 +243,7 @@ $featured = $featured ?? [
 
                     <?php /* Asset image */ ?>
                     <?php if (!empty($asset['image_url'])): ?>
-                    <img src="<?= htmlspecialchars($asset['image_url']) ?>"
+                    <img src="<?= htmlspecialchars(str_replace(' ', '%20', $asset['image_url'])) ?>"
                          alt="<?= htmlspecialchars($asset['name']) ?>"
                          class="w-full aspect-square object-cover rounded-md border border-(--color-border)"
                          loading="lazy">
@@ -298,9 +299,10 @@ $featured = $featured ?? [
                         </p>
                         <p class="text-[11px] text-(--color-text-muted)">
                             Listed by
-                            class="text-(--color-accent) underline underline-offset-2 hover:no-underline
-                            focus-visible:outline-2 focus-visible:outline-(--color-accent)
-                            focus-visible:outline-offset-1 rounded-sm"
+                            <a href="/seller/<?= rawurlencode($asset['seller']) ?>" 
+                               class="text-(--color-accent) underline underline-offset-2 hover:no-underline
+                                      focus-visible:outline-2 focus-visible:outline-(--color-accent)
+                                      focus-visible:outline-offset-1 rounded-sm">
                                 <?= htmlspecialchars($asset['seller']) ?>
                             </a>
                         </p>
