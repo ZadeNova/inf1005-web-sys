@@ -259,76 +259,47 @@ class AdminController
         }
 
         // ── 3. Validate and handle image upload ───────────────────────────
-        $uploadedFiles = $request->getUploadedFiles();
-        $uploadedImage = $uploadedFiles['image'] ?? null;
-
-        // Also check the raw $_FILES superglobal as a fallback — Slim's
-        // getUploadedFiles() can miss files if the Content-Type boundary
-        // is not parsed cleanly on some server configs.
-        if (!$uploadedImage && !empty($_FILES['image']['tmp_name'])) {
-            // Fall through to raw $_FILES handling below
-            $uploadedImage = null;
-            $useRawFiles   = true;
-        } else {
-            $useRawFiles = false;
-        }
-
         $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
         $uploadDir        = '/var/www/public/images/assets/uploads/';
-        $movedFilePath    = null; // track for rollback cleanup
 
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
 
-        if ($useRawFiles) {
-            // Raw $_FILES path
-            if (empty($_FILES['image']['tmp_name']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
-                return $this->json($response, ['success' => false, 'message' => 'Image upload failed or was not provided.'], 422);
-            }
-            $tmpPath  = $_FILES['image']['tmp_name'];
-            $mimeType = mime_content_type($tmpPath);
-
-            if (!in_array($mimeType, $allowedMimeTypes, true)) {
-                return $this->json($response, [
-                    'success' => false,
-                    'message' => 'Invalid image type. Only JPEG, PNG, and WebP are allowed.',
-                ], 422);
-            }
-
-            $filename      = uniqid('asset_', true) . '_' . basename($_FILES['image']['name']);
-            $filename      = preg_replace('/[^a-zA-Z0-9_.\-]/', '_', $filename);
-            $destPath      = $uploadDir . $filename;
-
-            if (!move_uploaded_file($tmpPath, $destPath)) {
-                return $this->json($response, ['success' => false, 'message' => 'Failed to save uploaded image.'], 500);
-            }
-
-            $movedFilePath = $destPath;
-            $imageUrl      = '/images/assets/uploads/' . $filename;
-
-        } else {
-            // PSR-7 UploadedFile path
-            if (!$uploadedImage || $uploadedImage->getError() !== UPLOAD_ERR_OK) {
-                return $this->json($response, ['success' => false, 'message' => 'Image upload failed or was not provided.'], 422);
-            }
-
-            $mimeType = $uploadedImage->getClientMediaType();
-            if (!in_array($mimeType, $allowedMimeTypes, true)) {
-                return $this->json($response, [
-                    'success' => false,
-                    'message' => 'Invalid image type. Only JPEG, PNG, and WebP are allowed.',
-                ], 422);
-            }
-
-            $filename = uniqid('asset_', true) . '_' . basename($uploadedImage->getClientFilename());
-            $filename = preg_replace('/[^a-zA-Z0-9_.\-]/', '_', $filename);
-            $destPath = $uploadDir . $filename;
-
-            $uploadedImage->moveTo($destPath);
-            $movedFilePath = $destPath;
-            $imageUrl      = '/images/assets/uploads/' . $filename;
+        // Always read from $_FILES — Slim's body parsing middleware can consume
+        // the multipart stream before getUploadedFiles() sees it.
+        if (empty($_FILES['image']['tmp_name']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+            return $this->json($response, [
+                'success' => false,
+                'message' => 'Image upload failed or was not provided. Error code: ' . ($_FILES['image']['error'] ?? 'none'),
+            ], 422);
         }
+
+        $tmpPath  = $_FILES['image']['tmp_name'];
+        $mimeType = mime_content_type($tmpPath);
+
+        if (!in_array($mimeType, $allowedMimeTypes, true)) {
+            return $this->json($response, [
+                'success' => false,
+                'message' => 'Invalid image type. Only JPEG, PNG, and WebP are allowed.',
+            ], 422);
+        }
+
+        $originalName  = basename($_FILES['image']['name'] ?? 'upload');
+        $filename      = uniqid('asset_', true) . '_' . $originalName;
+        $filename      = preg_replace('/[^a-zA-Z0-9_.\-]/', '_', $filename);
+        $destPath      = $uploadDir . $filename;
+        $movedFilePath = null;
+
+        if (!move_uploaded_file($tmpPath, $destPath)) {
+            return $this->json($response, [
+                'success' => false,
+                'message' => 'Failed to save uploaded image. Check directory permissions.',
+            ], 500);
+        }
+
+        $movedFilePath = $destPath;
+        $imageUrl      = '/images/assets/uploads/' . $filename;
 
         // ── 4. Transactional DB writes ────────────────────────────────────
         $sellerId = (int) $_SESSION['user_id'];
