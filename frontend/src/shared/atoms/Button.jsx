@@ -17,7 +17,7 @@ const VARIANT_STYLES = {
   primary: {
     base: `
       bg-(--color-accent)
-      text-white
+      text-(--color-accent-text)
       border border-transparent
       hover:bg-(--color-accent-hover)
       active:scale-[0.98]

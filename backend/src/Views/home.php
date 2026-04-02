@@ -114,11 +114,11 @@ $featured = $featured ?? [
             <?php /* CTA buttons */ ?>
             <div class="flex flex-wrap items-center justify-center gap-3 mt-2">
                 <a href="/listings"
-                   class="inline-flex items-center gap-2 px-6 py-3 rounded-md
-                          text-sm font-semibold text-white bg-(--color-accent)
-                          hover:bg-(--color-accent-hover) transition-colors
-                          focus-visible:outline-2 focus-visible:outline-(--color-accent)
-                          focus-visible:outline-offset-2">
+                  class="inline-flex items-center gap-2 px-6 py-2.5 rounded-md
+                    text-sm font-semibold text-(--color-accent-text) bg-(--color-accent)
+                    hover:bg-(--color-accent-hover) transition-colors
+                    focus-visible:outline-2 focus-visible:outline-(--color-accent)
+                    focus-visible:outline-offset-2">
                     Browse Market
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -314,11 +314,11 @@ $featured = $featured ?? [
                         </p>
                         <a href="/listings/<?= (int) $asset['id'] ?>"
                            class="inline-flex items-center gap-1.5 px-3 py-1.5
-                                  rounded-md text-xs font-semibold text-white
-                                  bg-(--color-accent) hover:bg-(--color-accent-hover)
-                                  transition-colors focus-visible:outline-2
-                                  focus-visible:outline-(--color-accent)
-                                  focus-visible:outline-offset-2">
+                                rounded-md text-xs font-semibold text-(--color-text-inverse)
+                                bg-(--color-accent) hover:bg-(--color-accent-hover)
+                                transition-colors focus-visible:outline-2
+                                focus-visible:outline-(--color-accent)
+                                focus-visible:outline-offset-2">
                             View
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
                                  stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -358,13 +358,13 @@ $featured = $featured ?? [
                     </p>
                     <div class="flex flex-wrap justify-center gap-3 mt-2">
                         <a href="/register"
-                           class="inline-flex items-center gap-2 px-6 py-3
-                                  rounded-md text-sm font-semibold text-white
-                                  bg-(--color-accent) hover:bg-(--color-accent-hover)
-                                  transition-colors focus-visible:outline-2
-                                  focus-visible:outline-(--color-accent)
-                                  focus-visible:outline-offset-2">
-                            Get Started Free
+                            class="inline-flex items-center gap-2 px-6 py-3 rounded-md
+                                text-sm font-semibold text-(--color-accent-text) bg-(--color-accent)
+                                hover:bg-(--color-accent-hover) transition-colors
+                                focus-visible:outline-2 focus-visible:outline-(--color-accent)
+                                focus-visible:outline-offset-2"
+                            style="color: var(--color-accent-text);">
+                                Get Started Free
                         </a>
                         <a href="/listings"
                            class="inline-flex items-center gap-2 px-6 py-3

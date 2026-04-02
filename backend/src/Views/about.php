@@ -408,12 +408,11 @@ $stack = [
                         in under a minute.
                     </p>
                     <div class="flex flex-wrap gap-3 justify-center mt-2">
-                        <a href="/listings"
-                           class="inline-flex items-center gap-2 px-6 py-2.5 rounded-md
-                                  text-sm font-semibold text-white bg-(--color-accent)
-                                  hover:bg-(--color-accent-hover) transition-colors
-                                  focus-visible:outline-2 focus-visible:outline-(--color-accent)
-                                  focus-visible:outline-offset-2">
+                        <a href="/listings" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-md
+                           text-sm font-semibold text-(--color-accent-text) bg-(--color-accent)
+                           hover:bg-(--color-accent-hover) transition-colors
+                           focus-visible:outline-2 focus-visible:outline-(--color-accent)
+                           focus-visible:outline-offset-2">
                             Browse Market
                         </a>
                         <?php if (!isset($_SESSION['user_id'])): ?>

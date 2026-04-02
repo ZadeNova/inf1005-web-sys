@@ -437,6 +437,15 @@ export default function CreateAssetForm({ csrfToken = '' }) {
           <div className="flex flex-col sm:flex-row gap-4 items-start">
 
             {/* Drop zone */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileInputChange}
+              className="sr-only"
+              aria-hidden="true"
+              tabIndex={-1}
+            />
             <div
               role="button"
               tabIndex={0}
@@ -445,27 +454,12 @@ export default function CreateAssetForm({ csrfToken = '' }) {
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
-              className="flex-1 min-h-28 flex flex-col items-center justify-center gap-2
-                         rounded-lg border-2 border-dashed border-(--color-border)
-                         bg-(--color-surface-2) cursor-pointer
-                         hover:border-(--color-accent) hover:bg-(--color-accent-subtle)
-                         transition-colors focus-visible:outline-2
-                         focus-visible:outline-(--color-accent) focus-visible:outline-offset-2"
+              className="flex-1 min-h-28 ..."
             >
               <UploadIcon />
               <p className="text-xs text-(--color-text-muted) text-center px-2">
                 Click or drag & drop · JPEG, PNG, WebP · Max 5 MB
               </p>
-              {/* Hidden native file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleFileInputChange}
-                className="sr-only"
-                aria-hidden="true"
-                tabIndex={-1}
-              />
             </div>
 
             {/* Live preview thumbnail (max 200×200) */}

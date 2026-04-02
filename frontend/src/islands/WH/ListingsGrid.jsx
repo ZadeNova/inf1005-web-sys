@@ -392,7 +392,7 @@ export default function ListingsGrid({ userId, isAdmin = false }) {
 									className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors
 										${
 											view === "grid"
-												? "bg-(--color-accent) text-white"
+												? "bg-(--color-accent) text-(--color-accent-text)"
 												: "text-(--color-text-muted) hover:text-(--color-text-primary)"
 										}`}
 								>
@@ -406,7 +406,7 @@ export default function ListingsGrid({ userId, isAdmin = false }) {
 									className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors
 										${
 											view === "list"
-												? "bg-(--color-accent) text-white"
+												? "bg-(--color-accent) text-(--color-accent-text)"
 												: "text-(--color-text-muted) hover:text-(--color-text-primary)"
 										}`}
 								>

@@ -239,10 +239,10 @@ if (isset($_SESSION['user_id'])) {
                     </a>
                     <a href="/register"
                     class="hidden sm:inline-flex px-3 py-1.5 rounded-md text-xs font-semibold
-                            text-white bg-(--color-accent)
-                            hover:bg-(--color-accent-hover) transition-colors
-                            focus-visible:outline-2 focus-visible:outline-(--color-accent)
-                            focus-visible:outline-offset-2">
+                        text-(--color-accent-text) bg-(--color-accent)
+                        hover:bg-(--color-accent-hover) transition-colors
+                        focus-visible:outline-2 focus-visible:outline-(--color-accent)
+                        focus-visible:outline-offset-2">
                         Register
                     </a>
 

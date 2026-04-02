@@ -73,9 +73,9 @@ export default function ThemeToggle() {
               transition-all duration-(--transition-base)
               focus-visible:outline-2 focus-visible:outline-(--color-accent) focus-visible:outline-offset-1
               ${
-								isActive
-									? "bg-(--color-accent) text-white shadow-sm"
-									: "text-(--color-text-secondary) hover:text-(--color-text-primary) hover:bg-(--color-surface-3)"
+							isActive
+								? "bg-(--color-accent) text-(--color-text-inverse) shadow-sm"
+								: "text-(--color-text-secondary) hover:text-(--color-text-primary) hover:bg-(--color-surface-3)"
 							}
             `
 							.replace(/\s+/g, " ")

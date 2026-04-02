@@ -36,7 +36,7 @@
 :root,
 :root[data-theme="light"] {
 	color-scheme: light;
-
+	--color-accent-text: #ffffff;
 	--color-bg: #f9fafb;
 	--color-surface: #ffffff;
 	--color-surface-2: #f3f4f6;
@@ -106,7 +106,7 @@
    ============================================================= */
 :root[data-theme="colorblind"] {
 	color-scheme: dark;
-
+	--color-accent-text: #0a0a0f;
 	--color-bg: #0a0a0f;
 	--color-surface: #111118;
 	--color-surface-2: #1a1a24;
@@ -125,7 +125,6 @@
 	--color-accent-hover: #aaddff;
 	--color-accent-subtle: rgba(136, 204, 238, 0.15);
 	--color-accent-glow: rgba(136, 204, 238, 0.3);
-
 	--color-success: #44bb99; /* Tol teal */
 	--color-success-subtle: rgba(68, 187, 153, 0.15);
 	--color-danger: #ee3377; /* Tol rose */

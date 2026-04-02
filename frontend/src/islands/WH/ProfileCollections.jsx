@@ -281,7 +281,7 @@ export default function ProfileCollections() {
 										aria-pressed={view === "grid"}
 										aria-label="Grid view"
 										className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors
-                            ${view === "grid" ? "bg-(--color-accent) text-white" : "text-(--color-text-muted) hover:text-(--color-text-primary)"}`}
+       									 ${view === "grid" ? "bg-(--color-accent) text-(--color-accent-text)" : "text-(--color-text-muted) hover:text-(--color-text-primary)"}`}
 									>
 										Grid
 									</button>
@@ -291,7 +291,7 @@ export default function ProfileCollections() {
 										aria-pressed={view === "list"}
 										aria-label="List view"
 										className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors
-                            ${view === "list" ? "bg-(--color-accent) text-white" : "text-(--color-text-muted) hover:text-(--color-text-primary)"}`}
+       										${view === "list" ? "bg-(--color-accent) text-(--color-accent-text)" : "text-(--color-text-muted) hover:text-(--color-text-primary)"}`}
 									>
 										List
 									</button>
@@ -592,7 +592,7 @@ export default function ProfileCollections() {
 										{/* FIX: badge colour and label driven by lowercase tx.type */}
 										<span
 											className={`text-xs font-bold px-2 py-1 rounded-full border shrink-0
-  												${tx.type === "buy"
+  										${tx.type === "buy"
 													? "border-(--color-success) text-(--color-success)"
 													: "border-(--color-danger) text-(--color-danger)"
 												}`}
