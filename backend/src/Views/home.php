@@ -87,13 +87,8 @@ $featured = $featured ?? [
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28
                     flex flex-col items-center text-center gap-6">
 
-            <?php /* Live listings pill */ ?>
-            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full
-                        bg-(--color-accent-subtle) border border-(--color-accent)
-                        text-xs font-semibold text-(--color-accent)">
-                
-                
-            </div>
+          
+
 
             <h1 id="hero-heading"
                 class="text-4xl sm:text-5xl lg:text-6xl font-bold
