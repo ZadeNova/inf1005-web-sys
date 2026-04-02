@@ -2,7 +2,7 @@
 =======================================================
   Vapour FT — W3C Validation Audit
   Target : http://35.212.199.144
-  Time   : 2026-04-03 02:57:37
+  Time   : 2026-04-03 03:10:02
 =======================================================
 
 ───────────────────────────────────────────────────────
@@ -23,12 +23,9 @@
 
   [v] PASS — http://35.212.199.144/blog
 
-  [x] FAIL  (2 error(s)) — http://35.212.199.144/blog/1
-        [ERROR] Line ?: End of file seen without seeing a doctype first. Expected “<!DOCTYPE html>”.
-        [ERROR] Line ?: Element “head” is missing a required instance of child element “title”.
-        [WARN]  Line ?: Consider adding a “lang” attribute to the “html” start tag to declare the language of this document.
+  [v] PASS — http://35.212.199.144/blog/2
 
-  Section total: 2 error(s), 1 warning(s)
+  Section total: 0 error(s), 0 warning(s)
 
   To check a regular user routes, paste your PHPSESSID cookie.
   Steps:
