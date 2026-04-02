@@ -19,7 +19,32 @@ import Card from "../../shared/atoms/Card.jsx";
 import Button from "../../shared/atoms/Button.jsx";
 import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import { RarityBadge } from "../../shared/atoms/Badge.jsx";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+function useFocusTrap(dialogRef, onClose) {
+  useEffect(() => {
+    const el = dialogRef.current;
+    if (!el) return;
+    const prev = document.activeElement;
+    el.querySelector(FOCUSABLE)?.focus();
+    function onKey(e) {
+      if (e.key === 'Escape') { e.stopPropagation(); onClose(); return; }
+      if (e.key !== 'Tab') return;
+      const nodes = [...el.querySelectorAll(FOCUSABLE)];
+      if (!nodes.length) { e.preventDefault(); return; }
+      if (e.shiftKey) {
+        if (document.activeElement === nodes[0]) { e.preventDefault(); nodes[nodes.length - 1].focus(); }
+      } else {
+        if (document.activeElement === nodes[nodes.length - 1]) { e.preventDefault(); nodes[0].focus(); }
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('keydown', onKey); prev?.focus(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dialogRef]);
+}
 import { useToast } from "../../shared/context/ToastContext.jsx";
 
 /* ── Edit Price Modal ─────────────────────────────────────────────────── */
@@ -28,6 +53,8 @@ function EditPriceModal({ listing, onClose, onSuccess }) {
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState(null);
 	const toast = useToast();
+	const dialogRef = useRef(null);
+	useFocusTrap(dialogRef, onClose);
 
 	const parsed = parseFloat(price);
 	const valid = !isNaN(parsed) && parsed > 0 && parsed <= 999999.99;
@@ -65,6 +92,7 @@ function EditPriceModal({ listing, onClose, onSuccess }) {
 
 	return (
 		<div
+			ref={dialogRef}
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="edit-price-title"

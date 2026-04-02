@@ -9,7 +9,32 @@
  * to prevent text truncation.
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
+
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+function useFocusTrap(dialogRef, onClose) {
+  useEffect(() => {
+    const el = dialogRef.current;
+    if (!el) return;
+    const prev = document.activeElement;
+    el.querySelector(FOCUSABLE)?.focus();
+    function onKey(e) {
+      if (e.key === 'Escape') { e.stopPropagation(); onClose(); return; }
+      if (e.key !== 'Tab') return;
+      const nodes = [...el.querySelectorAll(FOCUSABLE)];
+      if (!nodes.length) { e.preventDefault(); return; }
+      if (e.shiftKey) {
+        if (document.activeElement === nodes[0]) { e.preventDefault(); nodes[nodes.length - 1].focus(); }
+      } else {
+        if (document.activeElement === nodes[nodes.length - 1]) { e.preventDefault(); nodes[0].focus(); }
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('keydown', onKey); prev?.focus(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dialogRef]);
+}
 import Card from "../../shared/atoms/Card.jsx";
 import Button from "../../shared/atoms/Button.jsx";
 import Skeleton from "../../shared/atoms/Skeleton.jsx";
@@ -70,6 +95,8 @@ function SellModal({ item, onClose, onSuccess }) {
 	const [phase, setPhase] = useState("idle");
 	const [message, setMessage] = useState("");
 	const toast = useToast();
+	const dialogRef = useRef(null);
+	useFocusTrap(dialogRef, onClose);
 
 	const { execute: createListing } = usePost("/api/v1/market/listings");
 
@@ -102,6 +129,7 @@ function SellModal({ item, onClose, onSuccess }) {
 
 	return (
 		<div
+			ref={dialogRef}
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="sell-modal-title"

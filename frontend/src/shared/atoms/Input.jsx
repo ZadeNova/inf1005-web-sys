@@ -34,7 +34,7 @@ export default function Input({
         >
           {label}
           {required && (
-            <span className="text-(--color-danger)1" aria-hidden="true">*</span>
+            <span className="text-(--color-danger)" aria-hidden="true">*</span>
           )}
         </label>
       )}
