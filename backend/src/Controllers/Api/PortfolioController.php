@@ -282,8 +282,11 @@ class PortfolioController
     }
 
     /**
-     * GET /api/v1/users/{userId}/profile
-     */
+ * GET /api/v1/users/{userId}/profile
+ *
+ * Public fields: user, stats
+ * Owner-only fields: wallet, bank
+ */
     public function profile(Request $request, Response $response, array $args): Response
     {
         $userId = (int) ($args['userId'] ?? 0);
@@ -292,9 +295,15 @@ class PortfolioController
             return $this->json($response, ['success' => false, 'message' => 'Invalid user ID.'], 422);
         }
 
+        // ── 1. User + wallet (single query) ──────────────────────────────────
         $stmt = $this->db->prepare("
-            SELECT u.id, u.username, u.verified, u.registered_at, u.bio,
-                   COALESCE(w.balance, 0.00) AS balance
+            SELECT
+                u.id,
+                u.username,
+                u.verified,
+                u.registered_at,
+                u.bio,
+                COALESCE(w.balance, 0.00) AS balance
             FROM users u
             LEFT JOIN wallets w ON w.user_id = u.id
             WHERE u.id = :id
@@ -307,21 +316,50 @@ class PortfolioController
             return $this->json($response, ['success' => false, 'message' => 'User not found.'], 404);
         }
 
+        // ── 2. Stats ──────────────────────────────────────────────────────────
         $stmt = $this->db->prepare("
             SELECT
-                COUNT(CASE WHEN seller_id = :uid  THEN 1 END)               AS totalSales,
-                COALESCE(SUM(CASE WHEN seller_id = :uid2 THEN price END), 0) AS totalVolume,
-                (SELECT COUNT(*) FROM inventory WHERE user_id = :uid3)       AS itemsOwned
+                COUNT(CASE WHEN seller_id = :uid1 THEN 1 END)                AS totalSales,
+                COUNT(CASE WHEN buyer_id  = :uid2 THEN 1 END)                AS totalPurchases,
+                COALESCE(SUM(CASE WHEN seller_id = :uid3 THEN price END), 0) AS totalVolume,
+                (SELECT COUNT(*) FROM inventory WHERE user_id = :uid4)       AS itemsOwned
             FROM transactions
-            WHERE buyer_id = :uid4 OR seller_id = :uid5
+            WHERE buyer_id = :uid5 OR seller_id = :uid6
         ");
         $stmt->execute([
-            ':uid'  => $userId, ':uid2' => $userId, ':uid3' => $userId,
-            ':uid4' => $userId, ':uid5' => $userId,
+            ':uid1' => $userId, ':uid2' => $userId, ':uid3' => $userId,
+            ':uid4' => $userId, ':uid5' => $userId, ':uid6' => $userId,
         ]);
         $stats = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        return $this->json($response, [
+        // ── 3. Bank account (owner-only) ──────────────────────────────────────
+        $currentUser   = $this->auth->getCurrentUser();
+        $currentUserId = $currentUser ? (int) $currentUser['id'] : 0;
+        $isOwner       = ($currentUserId === $userId);
+
+        $bank = null;
+        if ($isOwner) {
+            $stmt = $this->db->prepare("
+                SELECT bank_name, account_number, holder_name
+                FROM bank_accounts
+                WHERE user_id = :uid
+                LIMIT 1
+            ");
+            $stmt->execute([':uid' => $userId]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if ($row) {
+                $bank = [
+                    'bankName'      => $row['bank_name'],
+                    // Mask all but last 4 digits for security
+                    'accountNumber' => '****-' . substr($row['account_number'], -4),
+                    'holderName'    => $row['holder_name'],
+                ];
+            }
+        }
+
+        // ── 4. Build response ─────────────────────────────────────────────────
+        $payload = [
             'success' => true,
             'user'    => [
                 'id'         => (int)  $user['id'],
@@ -330,17 +368,25 @@ class PortfolioController
                 'bio'        =>        $user['bio'] ?? null,
                 'joinedAt'   =>        $user['registered_at'],
             ],
-            'stats' => [
-                'totalSales'  => (int)   $stats['totalSales'],
-                'totalVolume' => '$' . number_format((float) $stats['totalVolume'], 2),
-                'itemsOwned'  => (int)   $stats['itemsOwned'],
-                'joinedAt'    =>         $user['registered_at'],
+            'stats'   => [
+                'totalSales'     => (int)   $stats['totalSales'],
+                'totalPurchases' => (int)   $stats['totalPurchases'],
+                'totalVolume'    => '$' . number_format((float) $stats['totalVolume'], 2),
+                'itemsOwned'     => (int)   $stats['itemsOwned'],
+                'joinedAt'       =>         $user['registered_at'],
             ],
-            'wallet' => [
+        ];
+
+        // Wallet + bank only returned to the account owner
+        if ($isOwner) {
+            $payload['wallet'] = [
                 'balance'  => (float) $user['balance'],
                 'currency' => 'VPR',
-            ],
-        ]);
+            ];
+            $payload['bank'] = $bank; // null if no bank account saved yet
+        }
+
+        return $this->json($response, $payload);
     }
 
     /**
@@ -398,5 +444,82 @@ class PortfolioController
     {
         $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
         return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
+    }
+
+
+    public function upsertBank(Request $request, Response $response, array $args): Response
+    {
+        $userId      = (int) ($args['userId'] ?? 0);
+        $currentUser = $this->auth->getCurrentUser();
+
+        if ($userId !== (int) $currentUser['id']) {
+            return $this->json($response, ['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        $data       = $request->getParsedBody() ?? [];
+        $bankName   = trim($data['bankName']       ?? '');
+        $accountNum = trim($data['accountNumber']  ?? '');
+        $holderName = trim($data['holderName']     ?? '');
+
+        if (!$bankName || !$accountNum || !$holderName) {
+            return $this->json($response, ['success' => false, 'message' => 'All fields required.'], 422);
+        }
+
+        $stmt = $this->db->prepare("
+            INSERT INTO bank_accounts (user_id, bank_name, account_number, holder_name)
+            VALUES (:uid, :bank, :acct, :holder)
+            ON DUPLICATE KEY UPDATE
+                bank_name      = VALUES(bank_name),
+                account_number = VALUES(account_number),
+                holder_name    = VALUES(holder_name)
+        ");
+        $stmt->execute([
+            ':uid'    => $userId,
+            ':bank'   => $bankName,
+            ':acct'   => $accountNum,
+            ':holder' => $holderName,
+        ]);
+
+        return $this->json($response, ['success' => true, 'message' => 'Bank account saved.']);
+    }
+
+
+
+    // PortfolioController
+    public function deposit(Request $request, Response $response): Response
+    {
+        $user   = $this->auth->getCurrentUser();
+        $userId = (int) $user['id'];
+        $data   = $request->getParsedBody() ?? [];
+        $amount = round((float) ($data['amount'] ?? 0), 2);
+
+        if ($amount <= 0 || $amount > 10000) {
+            return $this->json($response, ['success' => false, 'message' => 'Amount must be between $0.01 and $10,000.'], 422);
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            $stmt = $this->db->prepare("SELECT balance FROM wallets WHERE user_id = :uid FOR UPDATE");
+            $stmt->execute([':uid' => $userId]);
+            $wallet = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $before = (float) $wallet['balance'];
+            
+            $this->wallet->credit(
+                $userId, $amount, 'wallet_topup',
+                'TOPUP-' . $userId . '-' . time(),
+                $before
+            );
+
+            $this->db->commit();
+            return $this->json($response, [
+                'success'     => true,
+                'message'     => 'Funds added.',
+                'newBalance'  => round($before + $amount, 2),
+            ]);
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            return $this->json($response, ['success' => false, 'message' => 'Deposit failed.'], 500);
+        }
     }
 }

@@ -57,6 +57,14 @@ return function (App $app) {
         $group->patch('/users/{userId}/profile', [PortfolioController::class, 'updateProfile'])
             ->add(AuthMiddleware::class);
 
+        $group->get('/users/{userId}/bank',   [PortfolioController::class, 'getBank'])
+            ->add(AuthMiddleware::class);
+        $group->put('/users/{userId}/bank',   [PortfolioController::class, 'upsertBank'])
+            ->add(AuthMiddleware::class);
+        // api.php
+        $group->post('/user/wallet/deposit', [PortfolioController::class, 'deposit'])
+            ->add(AuthMiddleware::class);
+
         // ── Blog (GET public, POST protected) ─────────────────────────────
         $group->get('/blog/posts',  [BlogController::class, 'index']);
         $group->post('/blog/posts', [BlogController::class, 'store'])
