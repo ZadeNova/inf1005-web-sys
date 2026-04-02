@@ -71,7 +71,6 @@ import PortfolioTable        from './islands/WH/PortfolioTable.jsx';
 import TransactionHistory    from './islands/WH/TransactionHistory.jsx';
 import ListingDetail         from './islands/WH/ListingDetail.jsx';
 mountIsland('listing-detail-root',         ListingDetail);
-mountIsland('listing-price-chart-root',    ListingPriceChart);
 mountIsland('listings-grid-root',          ListingsGrid);
 mountIsland('profile-card-root',           ProfileCard);
 mountIsland('portfolio-chart-root',        PortfolioChart);
