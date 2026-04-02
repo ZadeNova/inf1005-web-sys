@@ -231,47 +231,52 @@ export default function ActiveListingsManager() {
 
 	/* ── Cancel ─────────────────────────────────────────────────────────── */
 	async function handleCancel(listingId) {
-		setCancelError(null);
+    setCancelError(null);
+    setCancellingId(listingId);
+    try {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
+        const numericId = parseInt(listingId, 10);
+        if (isNaN(numericId) || numericId <= 0)
+            throw new Error("Invalid listing ID.");
 
-		setCancellingId(listingId);
-		try {
-			const csrf =
-				document.querySelector('meta[name="csrf-token"]')?.content ?? "";
-			/* FIX 1: parseInt so the URL path is always a clean integer */
-			const numericId = parseInt(listingId, 10);
-			if (isNaN(numericId) || numericId <= 0)
-				throw new Error("Invalid listing ID.");
+        const res = await fetch(`/api/v1/market/listings/${numericId}`, {
+            method: "DELETE",
+            headers: {
+                "X-CSRF-Token": csrf,
+                "Accept": "application/json", 
+            },
+        });
 
-			const res = await fetch(`/api/v1/market/listings/${numericId}`, {
-				method: "DELETE",
-				headers: { "X-CSRF-Token": csrf },
-			});
+        const contentType = res.headers.get("content-type") ?? "";
+        if (!contentType.includes("application/json")) {
+            throw new Error("Session expired. Please refresh and try again.");
+        }
 
-			if (!res.ok) {
-				const err = await res
-					.json()
-					.catch(() => ({ message: "Failed to cancel listing." }));
-				throw new Error(err.message ?? "Failed to cancel listing.");
-			}
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: "Failed to cancel listing." }));
+            throw new Error(err.message ?? "Failed to cancel listing.");
+        }
 
-			const removed = rawListings.find((l) => l.id === listingId);
-			/* Optimistic removal */
-			setLocalListings((prev) =>
-				(prev ?? rawListings).filter((l) => l.id !== listingId),
-			);
-			toast.cancel(
-				"Listing cancelled",
-				`${removed?.asset?.name ?? "Asset"} removed from market`,
-			);
-			refetch();
-		} catch (err) {
-			const msg = err.message ?? "Network error. Please try again.";
-			setCancelError(msg);
-			toast.error("Cancel failed", msg);
-		} finally {
-			setCancellingId(null);
-		}
-	}
+        const removed = rawListings.find((l) => l.id === listingId);
+        setLocalListings((prev) =>
+            (prev ?? rawListings).filter((l) => l.id !== listingId),
+        );
+        toast.cancel(
+            "Listing cancelled",
+            `${removed?.asset?.name ?? "Asset"} removed from market`,
+        );
+
+        await refetch();
+        setLocalListings(null);
+
+    } catch (err) {
+        const msg = err.message ?? "Network error. Please try again.";
+        setCancelError(msg);
+        toast.error("Cancel failed", msg);
+    } finally {
+        setCancellingId(null);
+    }
+}
 
 	/* ── Edit price success ──────────────────────────────────────────────── */
 	function handlePriceUpdated(listingId, newPrice) {
