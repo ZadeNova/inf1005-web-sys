@@ -91,10 +91,8 @@ $featured = $featured ?? [
             <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full
                         bg-(--color-accent-subtle) border border-(--color-accent)
                         text-xs font-semibold text-(--color-accent)">
-                <span class="w-1.5 h-1.5 rounded-full bg-(--color-accent)"
-                      aria-hidden="true"
-                      style="animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite;"></span>
-                Live Market — 14,823 Active Listings
+                
+                
             </div>
 
             <h1 id="hero-heading"
