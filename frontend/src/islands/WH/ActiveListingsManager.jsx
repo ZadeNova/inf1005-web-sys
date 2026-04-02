@@ -243,17 +243,14 @@ export default function ActiveListingsManager() {
             method: "DELETE",
             headers: {
                 "X-CSRF-Token": csrf,
-                "Accept": "application/json", 
+                "Accept": "application/json",
             },
         });
 
-        const contentType = res.headers.get("content-type") ?? "";
-        if (!contentType.includes("application/json")) {
-            throw new Error("Session expired. Please refresh and try again.");
-        }
-
         if (!res.ok) {
-            const err = await res.json().catch(() => ({ message: "Failed to cancel listing." }));
+            const err = await res
+                .json()
+                .catch(() => ({ message: "Failed to cancel listing." }));
             throw new Error(err.message ?? "Failed to cancel listing.");
         }
 
