@@ -182,10 +182,10 @@ export default function TransactionHistory() {
                     ${idx < filtered.length - 1 ? 'border-b border-(--color-border)' : ''}`}>
 
                 {/* Type badge */}
-                <span className={`text-xs font-bold px-2 py-1 rounded shrink-0
+                <span className={`text-xs font-bold px-2 py-1 rounded-full border shrink-0
                   ${tx.role === 'buy'
-                    ? 'bg-(--color-success-subtle) text-(--color-success)'
-                    : 'bg-(--color-danger-subtle)  text-(--color-danger)'}`}>
+                    ? 'border-(--color-success) text-(--color-success)'
+                    : 'border-(--color-danger) text-(--color-danger)'}`}>
                   {tx.role.toUpperCase()}
                 </span>
 

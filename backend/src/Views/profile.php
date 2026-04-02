@@ -13,6 +13,9 @@ ob_start();
 ?>
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6">
+    <h1 class="text-2xl font-bold text-(--color-text-primary)">
+        My Profile
+    </h1>
 
     <?php /* ── ProfileCard island ─────────────────────────────────── */ ?>
     <div id="profile-card-root"

@@ -17,6 +17,7 @@
  *          - If server returns a full page (20 items), Next can load more
  *            from the server.
  *
+ *   FIX-2: aria-expanded moved from <input> to wrapper <div role="combobox">.
  *   All previous fixes (shape normalisation, maxPrice, etc.) preserved.
  */
 
@@ -26,7 +27,7 @@ import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import Button from "../../shared/atoms/Button.jsx";
 import BuyModal from "./BuyModal.jsx";
 import { useApi } from "../../shared/hooks/useApi.js";
-import { RARITY, CONDITION } from '../../shared/constants.js';
+import { RARITY, CONDITION } from "../../shared/constants.js";
 
 const PER_PAGE = 4;
 const SERVER_PAGE_SIZE = 20; // must match ListingRepository::$perPage
@@ -52,7 +53,7 @@ function highlight(text, query) {
    AssetCard expects:    name,       condition,        seller.username
    ─────────────────────────────────────────────────────────────────────── */
 function normaliseListingFromApi(raw) {
-	if (raw.name) return raw; 
+	if (raw.name) return raw;
 	return {
 		id: raw.id,
 		name: raw.asset_name ?? "",
@@ -81,9 +82,7 @@ export default function ListingsGrid({ userId }) {
 	const [condition, setCondition] = useState("");
 	const [sort, setSort] = useState("newest");
 	const [view, setView] = useState("grid");
-	// clientPage: which page of the locally-filtered results we're showing
 	const [clientPage, setClientPage] = useState(1);
-	// serverPage: which page we last asked the backend for
 	const [serverPage, setServerPage] = useState(1);
 	const [maxPrice, setMaxPrice] = useState(Infinity);
 	const [buyTarget, setBuyTarget] = useState(null);
@@ -102,10 +101,10 @@ export default function ListingsGrid({ userId }) {
 	} = useApi(listingsUrl);
 
 	const { data: walletData, refetch: refetchWallet } = useApi(
-    !userId ? null : "/api/v1/user/wallet",
-    { auto: !!userId },
+		!userId ? null : "/api/v1/user/wallet",
+		{ auto: !!userId },
 	);
-	const walletBalance = (walletData?.wallet?.balance ?? null);
+	const walletBalance = walletData?.wallet?.balance ?? null;
 
 	const allAssets = (data?.listings ?? []).map(normaliseListingFromApi);
 
@@ -159,12 +158,7 @@ export default function ListingsGrid({ userId }) {
 		return new Date(b.listedAt ?? 0) - new Date(a.listedAt ?? 0);
 	});
 
-	/* ── FIX-1: Pagination logic ───────────────────────────────────────
-     totalClientPages: pages within the currently loaded result set.
-     canGoNext: true only if there's a next client page OR the server
-       may have more data (it returned a full page of SERVER_PAGE_SIZE).
-     canGoPrev: true when not on page 1.
-     ─────────────────────────────────────────────────────────────────── */
+	/* ── Pagination logic ──────────────────────────────────────────── */
 	const totalClientPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
 	const serverHasMore = allAssets.length >= SERVER_PAGE_SIZE;
 	const canGoNext = clientPage < totalClientPages || serverHasMore;
@@ -177,10 +171,8 @@ export default function ListingsGrid({ userId }) {
 
 	function handleNext() {
 		if (clientPage < totalClientPages) {
-			// Still more pages in the current server batch — just move forward
 			setClientPage((p) => p + 1);
 		} else if (serverHasMore) {
-			// Exhausted client pages but server may have more — fetch next server page
 			setServerPage((p) => p + 1);
 			setClientPage(1);
 		}
@@ -225,17 +217,18 @@ export default function ListingsGrid({ userId }) {
 		setServerPage(1);
 	}
 
-	// Reset to page 1 when filters change
 	function handleRarityChange(e) {
 		setRarity(e.target.value);
 		setClientPage(1);
 		setServerPage(1);
 	}
+
 	function handleConditionChange(e) {
 		setCondition(e.target.value);
 		setClientPage(1);
 		setServerPage(1);
 	}
+
 	function handleSortChange(e) {
 		setSort(e.target.value);
 		setClientPage(1);
@@ -281,6 +274,7 @@ export default function ListingsGrid({ userId }) {
 	return (
 		<>
 			<div className="flex flex-col gap-6">
+
 				{/* ── Search ─────────────────────────────────────────── */}
 				<div className="flex flex-col gap-3">
 					<form
@@ -289,7 +283,13 @@ export default function ListingsGrid({ userId }) {
 						className="relative"
 					>
 						<div className="flex gap-2">
-							<div className="relative flex-1">
+							{/* FIX-2: aria-expanded moved to wrapper div with role="combobox" */}
+							<div
+								className="relative flex-1"
+								role="combobox"
+								aria-expanded={showDropdown && suggestions.length > 0}
+								aria-haspopup="listbox"
+							>
 								<input
 									type="search"
 									value={query}
@@ -304,17 +304,17 @@ export default function ListingsGrid({ userId }) {
 									onFocus={() => query && setShowDropdown(true)}
 									placeholder="Search listings..."
 									className="bg-(--color-surface-2) border border-(--color-border)
-                             text-(--color-text-primary) text-sm rounded-full px-4 py-2 w-full"
+										text-(--color-text-primary) placeholder:text-(--color-input-placeholder)
+										text-sm rounded-full px-4 py-2 w-full"
 									aria-label="Search listings"
 									aria-autocomplete="list"
-									aria-expanded={showDropdown && suggestions.length > 0}
 								/>
 								{showDropdown && suggestions.length > 0 && (
 									<ul
 										role="listbox"
 										className="absolute top-full left-0 right-0 z-50 mt-1
-                                 bg-(--color-surface) border border-(--color-border)
-                                 rounded-md shadow-lg overflow-hidden"
+											bg-(--color-surface) border border-(--color-border)
+											rounded-md shadow-lg overflow-hidden"
 									>
 										{suggestions.map((asset) => (
 											<li
@@ -323,8 +323,8 @@ export default function ListingsGrid({ userId }) {
 												aria-selected="false"
 												onMouseDown={() => handleSelectSuggestion(asset.name)}
 												className="px-3 py-2 text-sm text-(--color-text-primary)
-                                     hover:bg-(--color-surface-2) cursor-pointer
-                                     flex items-center justify-between gap-2"
+													hover:bg-(--color-surface-2) cursor-pointer
+													flex items-center justify-between gap-2"
 											>
 												<span>{highlight(asset.name, query)}</span>
 												<span className="text-xs text-(--color-text-muted) shrink-0">
@@ -361,7 +361,8 @@ export default function ListingsGrid({ userId }) {
 							<select
 								value={rarity}
 								onChange={handleRarityChange}
-								className="bg-(--color-surface-2) border border-(--color-border) text-(--color-text-primary) text-sm rounded-md px-3 py-2"
+								className="bg-(--color-surface-2) border border-(--color-border)
+									text-(--color-text-primary) text-sm rounded-md px-3 py-2"
 								aria-label="Filter by rarity"
 							>
 								<option value="">All Rarities</option>
@@ -375,7 +376,8 @@ export default function ListingsGrid({ userId }) {
 							<select
 								value={condition}
 								onChange={handleConditionChange}
-								className="bg-(--color-surface-2) border border-(--color-border) text-(--color-text-primary) text-sm rounded-md px-3 py-2"
+								className="bg-(--color-surface-2) border border-(--color-border)
+									text-(--color-text-primary) text-sm rounded-md px-3 py-2"
 								aria-label="Filter by condition"
 							>
 								<option value="">All Conditions</option>
@@ -389,7 +391,8 @@ export default function ListingsGrid({ userId }) {
 							<select
 								value={sort}
 								onChange={handleSortChange}
-								className="bg-(--color-surface-2) border border-(--color-border) text-(--color-text-primary) text-sm rounded-md px-3 py-2"
+								className="bg-(--color-surface-2) border border-(--color-border)
+									text-(--color-text-primary) text-sm rounded-md px-3 py-2"
 								aria-label="Sort listings"
 							>
 								<option value="newest">Newest</option>
@@ -417,7 +420,10 @@ export default function ListingsGrid({ userId }) {
 									aria-label="Grid view"
 									aria-pressed={view === "grid"}
 									className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors
-                          ${view === "grid" ? "bg-(--color-accent) text-white" : "text-(--color-text-muted) hover:text-(--color-text-primary)"}`}
+										${view === "grid"
+											? "bg-(--color-accent) text-white"
+											: "text-(--color-text-muted) hover:text-(--color-text-primary)"
+										}`}
 								>
 									Grid
 								</button>
@@ -427,7 +433,10 @@ export default function ListingsGrid({ userId }) {
 									aria-label="List view"
 									aria-pressed={view === "list"}
 									className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors
-                          ${view === "list" ? "bg-(--color-accent) text-white" : "text-(--color-text-muted) hover:text-(--color-text-primary)"}`}
+										${view === "list"
+											? "bg-(--color-accent) text-white"
+											: "text-(--color-text-muted) hover:text-(--color-text-primary)"
+										}`}
 								>
 									List
 								</button>
@@ -435,7 +444,7 @@ export default function ListingsGrid({ userId }) {
 						</div>
 					</div>
 
-					{/* Price range slider */}
+					{/* ── Price range slider ───────────────────────────── */}
 					{absoluteMax > 0 && (
 						<div className="flex items-center gap-3">
 							<label
@@ -459,8 +468,7 @@ export default function ListingsGrid({ userId }) {
 								aria-label={`Maximum price: $${isFinite(maxPrice) ? maxPrice : absoluteMax}`}
 							/>
 							<span className="text-sm font-semibold text-(--color-text-primary) w-28">
-								Up to $
-								{(isFinite(maxPrice) ? maxPrice : absoluteMax).toLocaleString()}
+								Up to ${(isFinite(maxPrice) ? maxPrice : absoluteMax).toLocaleString()}
 							</span>
 						</div>
 					)}
@@ -488,19 +496,17 @@ export default function ListingsGrid({ userId }) {
 				)}
 
 				{/* ── List view ───────────────────────────────────────── */}
-				{/* ── List view ───────────────────────────────────────── */}
-				{/* ── List view ───────────────────────────────────────── */}
 				{view === "list" && pageAssets.length > 0 && (
 					<div className="flex flex-col gap-3">
 						{pageAssets.map((asset) => (
 							<a
 								key={asset.id}
-								href={`/listings/${asset.id}`} /* Adjust this route to match your actual asset detail page */
+								href={`/listings/${asset.id}`}
 								className="flex items-center gap-4 p-4 rounded-lg
-                                           bg-(--color-surface) border border-(--color-border)
-                                           hover:border-(--color-accent) transition-colors cursor-pointer group text-left"
+									bg-(--color-surface) border border-(--color-border)
+									hover:border-(--color-accent) transition-colors cursor-pointer group text-left"
 							>
-								{/* ── Image ── */}
+								{/* Image */}
 								{asset.imageUrl || asset.image_url ? (
 									<img
 										src={asset.imageUrl}
@@ -511,16 +517,14 @@ export default function ListingsGrid({ userId }) {
 								) : (
 									<div
 										className="w-16 h-16 rounded-md bg-(--color-surface-2) border border-(--color-border)
-                                      shrink-0 flex items-center justify-center"
+											shrink-0 flex items-center justify-center"
 										aria-hidden="true"
 									>
-										<span className="text-xs text-(--color-text-muted)">
-											IMG
-										</span>
+										<span className="text-xs text-(--color-text-muted)">IMG</span>
 									</div>
 								)}
 
-								{/* ── Text Info (with Seller) ── */}
+								{/* Text info */}
 								<div className="flex-1 min-w-0">
 									<p className="text-sm font-semibold text-(--color-text-primary) truncate">
 										{highlight(asset.name, search)}
@@ -551,7 +555,7 @@ export default function ListingsGrid({ userId }) {
 									</div>
 								</div>
 
-								{/* ── Action ── */}
+								{/* Action */}
 								<div className="flex items-center gap-3 shrink-0">
 									<p className="text-sm font-bold text-(--color-text-primary)">
 										${asset.price.toLocaleString()}
@@ -560,7 +564,7 @@ export default function ListingsGrid({ userId }) {
 										variant="primary"
 										size="sm"
 										onClick={(e) => {
-											e.preventDefault(); // Stops the <a> tag from navigating when Buy is clicked
+											e.preventDefault();
 											handleBuy(asset.id);
 										}}
 										aria-label={`Buy ${asset.name}`}
@@ -574,10 +578,7 @@ export default function ListingsGrid({ userId }) {
 					</div>
 				)}
 
-				{/* ── FIX-1: Pagination ───────────────────────────────────
-             Prev disabled on page 1.
-             Next disabled when on the last client page AND the server
-             has no more data. This prevents the empty-page bug. */}
+				{/* ── Pagination ──────────────────────────────────────── */}
 				{(canGoPrev || canGoNext) && (
 					<div
 						className="flex justify-center items-center gap-2 pt-4"
@@ -593,12 +594,10 @@ export default function ListingsGrid({ userId }) {
 						>
 							← Prev
 						</Button>
-
 						<span className="text-sm text-(--color-text-muted) px-2">
 							Page {clientPage}
 							{totalClientPages > 1 ? ` of ${totalClientPages}` : ""}
 						</span>
-
 						<Button
 							variant="secondary"
 							size="sm"

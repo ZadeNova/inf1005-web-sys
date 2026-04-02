@@ -298,10 +298,9 @@ $featured = $featured ?? [
                         </p>
                         <p class="text-[11px] text-(--color-text-muted)">
                             Listed by
-                            <a href="/profile?user=<?= urlencode($asset['seller']) ?>"
-                               class="text-(--color-accent) hover:underline
-                                      focus-visible:outline-2 focus-visible:outline-(--color-accent)
-                                      focus-visible:outline-offset-1 rounded-sm">
+                            class="text-(--color-accent) underline underline-offset-2 hover:no-underline
+                            focus-visible:outline-2 focus-visible:outline-(--color-accent)
+                            focus-visible:outline-offset-1 rounded-sm"
                                 <?= htmlspecialchars($asset['seller']) ?>
                             </a>
                         </p>

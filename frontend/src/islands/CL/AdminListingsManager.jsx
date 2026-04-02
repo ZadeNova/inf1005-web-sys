@@ -215,9 +215,9 @@ export default function AdminListingsManager({ csrfToken = '' }) {
 				  </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full border ${
                         status === "active"
-                          ? "bg-(--color-success-subtle) text-(--color-success)"
+                          ? "bg-(--color-success) text-(--color-success)"
                           : status === "sold"
                           ? "bg-(--color-accent-subtle) text-(--color-accent)"
                           : "bg-(--color-surface-3) text-(--color-text-muted)"

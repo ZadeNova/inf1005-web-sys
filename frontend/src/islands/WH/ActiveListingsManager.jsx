@@ -188,8 +188,8 @@ function ListedBadgeFixed({ price }) {
 	return (
 		<div
 			className="inline-flex items-center gap-2 px-3 rounded-lg
-                    bg-(--color-success-subtle) border border-(--color-success)
-                    w-30 h-13 shrink-0"
+            border border-(--color-success)
+            w-30 h-13 shrink-0"
 			role="status"
 			aria-label={`Listed for sale at ${formatted}`}
 		>
@@ -206,7 +206,7 @@ function ListedBadgeFixed({ price }) {
 			</svg>
 			<div className="flex flex-col leading-tight min-w-0">
 				<span className="text-xs font-bold text-(--color-success)">Listed</span>
-				<span className="text-[11px] font-semibold text-(--color-success) opacity-80 whitespace-nowrap">
+				<span className="text-[11px] font-semibold text-(--color-success) whitespace-nowrap">
 					{formatted}
 				</span>
 			</div>

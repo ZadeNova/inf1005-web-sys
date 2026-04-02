@@ -2,15 +2,7 @@
 ob_start();
 ?>
 
-<a href="#main-content"
-   class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4
-          focus:z-9999 focus:px-4 focus:py-2 focus:rounded-md
-          focus:bg-(--color-accent) focus:text-white focus:font-semibold
-          focus:text-sm focus:shadow-lg focus:outline-none">
-    Skip to main content
-</a>
-
-<main id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 py-10 flex flex-col gap-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-10 flex flex-col gap-8">
 
     <?php /* Back link */ ?>
     <a href="/listings"
@@ -26,10 +18,10 @@ ob_start();
 
     <?php /* Listing detail island — two-column layout (image+info | buy panel) */ ?>
     <div id="listing-detail-root"
-     data-props='<?= json_encode(["listingId" => (int)$listingId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
+         data-props='<?= json_encode(["listingId" => (int)$listingId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
     </div>
 
-</main>
+</div>
 
 <?php
 $content = ob_get_clean();

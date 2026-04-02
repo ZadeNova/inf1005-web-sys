@@ -48,7 +48,7 @@ export default function NavWallet() {
 				<path d="M2 10h20" />
 			</svg>
 			${Number(balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-			<span className="font-normal opacity-70">VPR</span>
+			<span className="font-normal text-(--color-accent) opacity-90">VPR</span>
 		</a>
 	);
 }

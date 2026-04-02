@@ -40,7 +40,7 @@ function ListedBadge({ price }) {
 	return (
 		<div
 			className="flex w-full justify-center items-center gap-1 sm:gap-2 px-1 py-1.5 sm:px-3 sm:py-2 rounded-lg
-                    bg-(--color-success-subtle) border border-(--color-success)"
+            border border-(--color-success)"
 			role="status"
 			aria-label={`Listed for sale at $${Number(price).toLocaleString()}`}
 		>
@@ -56,7 +56,7 @@ function ListedBadge({ price }) {
 			</svg>
 			<div className="flex flex-col leading-tight">
 				<span className="text-xs font-bold text-(--color-success)">Listed</span>
-				<span className="text-[11px] font-semibold text-(--color-success) opacity-80">
+				<span className="text-[11px] font-semibold text-(--color-success)">
 					${Number(price).toLocaleString()}
 				</span>
 			</div>

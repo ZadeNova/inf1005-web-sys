@@ -591,12 +591,11 @@ export default function ProfileCollections() {
 									>
 										{/* FIX: badge colour and label driven by lowercase tx.type */}
 										<span
-											className={`text-xs font-bold px-2 py-1 rounded shrink-0
-                      ${
-												tx.type === "buy"
-													? "bg-(--color-success-subtle) text-(--color-success)"
-													: "bg-(--color-danger-subtle) text-(--color-danger)"
-											}`}
+											className={`text-xs font-bold px-2 py-1 rounded-full border shrink-0
+  												${tx.type === "buy"
+													? "border-(--color-success) text-(--color-success)"
+													: "border-(--color-danger) text-(--color-danger)"
+												}`}
 										>
 											{tx.type.toUpperCase()}
 										</span>

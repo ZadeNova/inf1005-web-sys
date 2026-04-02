@@ -95,18 +95,17 @@ export default function ListingDetail({ listingId }) {
 
           <div>
             <p className="text-xs text-(--color-text-muted)">Sold by</p>
-            <p className="text-sm font-semibold text-(--color-accent)">
+            <a href={`/profile?user=${seller?.username}`} className="text-sm font-semibold text-(--color-accent) underline underline-offset-2">
               {seller?.username ?? '—'}
-            </p>
+            </a>
           </div>
 
           <div>
             <p className="text-xs text-(--color-text-muted) mb-1">Status</p>
-            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-              isActive
-                ? 'bg-(--color-success-subtle) text-(--color-success)'
-                : 'bg-(--color-surface-3) text-(--color-text-muted)'
-            }`}>
+            <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${isActive
+                ? 'border-(--color-success) text-(--color-success)'
+                : 'border-(--color-border) text-(--color-text-muted)'
+              }`}>
               {status}
             </span>
           </div>

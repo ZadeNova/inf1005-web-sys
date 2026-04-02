@@ -117,14 +117,14 @@ export function ConditionBadge({ condition, size = 'md' }) {
    ----------------------------------------------------------- */
 const GENERIC_COLOUR_MAP = {
   success: {
-    bg:     'var(--color-success-subtle)',
+    bg: 'transparent',
     border: 'var(--color-success)',
-    text:   'var(--color-success)',
+    text: 'var(--color-success)',
   },
   danger: {
-    bg:     'var(--color-danger-subtle)',
+    bg: 'transparent',
     border: 'var(--color-danger)',
-    text:   'var(--color-danger)',
+    text: 'var(--color-danger)',
   },
   warning: {
     bg:     'var(--color-warning-subtle)',

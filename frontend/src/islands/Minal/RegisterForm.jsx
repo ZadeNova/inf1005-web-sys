@@ -142,8 +142,7 @@ export default function RegisterForm() {
 
         <p className="text-sm text-center text-(--color-text-muted)">
           Already have an account?{' '}
-          <a href="/login"
-             className="text-(--color-accent) hover:text-(--color-accent-hover) font-medium">
+          <a href="/login" className="text-(--color-accent) hover:text-(--color-accent-hover) font-medium underline underline-offset-2">
             Sign in
           </a>
         </p>
