@@ -4,54 +4,55 @@
  * Mounts via: mountIsland('profile-card-root', ProfileCard)
  * PHP view: backend/src/Views/profile.php
  * data-props: { userId }
+ *
+ * MERGE: Combined badge/interest/favourite removal (your changes) with
+ * top-up flow, liveBalance, and persisted handleBankSave (teammate's changes).
  */
 
 import { useState } from 'react';
-import Card     from '../../shared/atoms/Card.jsx';
-import Badge    from '../../shared/atoms/Badge.jsx';
-import Button   from '../../shared/atoms/Button.jsx';
+import Card from '../../shared/atoms/Card.jsx';
+import Badge from '../../shared/atoms/Badge.jsx';
+import Button from '../../shared/atoms/Button.jsx';
 import Skeleton from '../../shared/atoms/Skeleton.jsx';
-import { useApi }              from '../../shared/hooks/useApi.js';
+import { useApi } from '../../shared/hooks/useApi.js';
 
 const NAME_MAX = 30;
-const BIO_MAX  = 150;
-
-
+const BIO_MAX = 150;
 
 const PenIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4" aria-hidden="true">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
   </svg>
 );
 
 const CameraIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4" aria-hidden="true">
-    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-    <circle cx="12" cy="13" r="4"/>
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+    <circle cx="12" cy="13" r="4" />
   </svg>
 );
 
 const EyeIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4" aria-hidden="true">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-    <circle cx="12" cy="12" r="3"/>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
   </svg>
 );
 
 const EyeOffIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4" aria-hidden="true">
-    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-    <line x1="1" y1="1" x2="23" y2="23"/>
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+    <line x1="1" y1="1" x2="23" y2="23" />
   </svg>
 );
 
 const WalletIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5" aria-hidden="true" style={{ color: '#92400e' }}>
-    <rect x="2" y="5" width="20" height="14" rx="2"/>
-    <path d="M16 12h2"/>
-    <path d="M2 10h20"/>
+    <rect x="2" y="5" width="20" height="14" rx="2" />
+    <path d="M16 12h2" />
+    <path d="M2 10h20" />
   </svg>
 );
 
@@ -60,39 +61,49 @@ export default function ProfileCard({ userId, currentUserId }) {
 
   const profile = data;
 
-  const [activeSection, setActiveSection]     = useState('view');
-  const [displayName, setDisplayName]         = useState('');
-  const [bio, setBio]                         = useState('');
+  // ── Profile / password / bank state ──────────────────────────────
+  const [activeSection, setActiveSection] = useState('view');
+  const [displayName, setDisplayName] = useState('');
+  const [bio, setBio] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword]         = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showCurrentPw, setShowCurrentPw]     = useState(false);
-  const [showNewPw, setShowNewPw]             = useState(false);
-  const [showConfirmPw, setShowConfirmPw]     = useState(false);
-  const [passwordMsg, setPasswordMsg]         = useState('');
-  const [bankName, setBankName]               = useState('');
-  const [accountNumber, setAccountNumber]     = useState('');
-  const [holderName, setHolderName]           = useState('');
-  const [bankMsg, setBankMsg]                 = useState('');
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [holderName, setHolderName] = useState('');
+  const [bankMsg, setBankMsg] = useState('');
   const [liveDisplayName, setLiveDisplayName] = useState(null);
-  const [liveBio, setLiveBio]                 = useState(null);
-  const [liveBank, setLiveBank]               = useState(null);
-  const [showBalance, setShowBalance]         = useState(true);
-  const [profileSaved, setProfileSaved]       = useState(false);
+  const [liveBio, setLiveBio] = useState(null);
+  const [liveBank, setLiveBank] = useState(null);
+  const [showBalance, setShowBalance] = useState(true);
+  const [profileSaved, setProfileSaved] = useState(false);
+
+  // ── Teammate's top-up state ───────────────────────────────────────
+  const [liveBalance, setLiveBalance] = useState(null);
+  const [topupAmount, setTopupAmount] = useState('');
+  const [topupMsg, setTopupMsg] = useState('');
+  const [topupLoading, setTopupLoading] = useState(false);
 
   if (loading) return <Skeleton variant="card" label="Loading profile" />;
-  if (error)   return <p role="alert" className="text-(--color-danger) text-sm">Failed to load profile: {error}</p>;
+  if (error) return <p role="alert" className="text-(--color-danger) text-sm">Failed to load profile: {error}</p>;
 
   const { user, stats, wallet, bank } = profile ?? {};
 
-  const shownName   = liveDisplayName ?? user?.username;
-  const shownBio    = liveBio         ?? user?.bio;
-  const shownBank   = liveBank        ?? bank;
-  const isOwner     = !currentUserId  || userId === currentUserId;
+  const shownName = liveDisplayName ?? user?.username;
+  const shownBio = liveBio ?? user?.bio;
+  const shownBank = liveBank ?? bank;
+  const isOwner = !currentUserId || userId === currentUserId;
+  const displayBalance = liveBalance ?? wallet?.balance ?? 0;
 
-  const maskedBalance = wallet?.balance
-    ? '$' + wallet.balance.toLocaleString().replace(/[0-9]/g, 'x')
+  const maskedBalance = displayBalance
+    ? '$' + displayBalance.toLocaleString().replace(/[0-9]/g, 'x')
     : '$x,xxx';
+
+  // ── Handlers ─────────────────────────────────────────────────────
 
   function handleEditStart() {
     setDisplayName(shownName ?? '');
@@ -109,71 +120,62 @@ export default function ProfileCard({ userId, currentUserId }) {
     if (displayName.length > NAME_MAX || bio.length > BIO_MAX) return;
 
     try {
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-        const res  = await fetch(`/api/v1/users/${userId}/profile`, {
-            method:  'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': csrf,
-            },
-            body: JSON.stringify({ displayName, bio }),
-        });
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+      const res = await fetch(`/api/v1/users/${userId}/profile`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        body: JSON.stringify({ displayName, bio }),
+      });
 
-        const data = await res.json();
+      const data = await res.json();
 
-        if (!res.ok || !data.success) {
-            setPasswordMsg(data.message ?? 'Failed to update profile.');
-            return;
-        }
+      if (!res.ok || !data.success) {
+        setPasswordMsg(data.message ?? 'Failed to update profile.');
+        return;
+      }
 
-        setLiveDisplayName(displayName);
-        setLiveBio(bio);
-        setProfileSaved(true);
+      setLiveDisplayName(displayName);
+      setLiveBio(bio);
+      setProfileSaved(true);
       setTimeout(() => {
         setProfileSaved(false);
-        window.location.reload(); // reload so navbar + dashboard reflect new username
-      }, 1500); // short delay
+        window.location.reload();
+      }, 1500);
 
     } catch (err) {
-        setPasswordMsg('Network error. Please try again.');
+      setPasswordMsg('Network error. Please try again.');
     }
-}
+  }
 
   async function handlePasswordSave() {
-    if (!currentPassword)                { setPasswordMsg('Enter your current password.'); return; }
-    if (newPassword.length < 8)          { setPasswordMsg('New password must be at least 8 characters.'); return; }
+    if (!currentPassword) { setPasswordMsg('Enter your current password.'); return; }
+    if (newPassword.length < 8) { setPasswordMsg('New password must be at least 8 characters.'); return; }
     if (newPassword !== confirmPassword) { setPasswordMsg('Passwords do not match.'); return; }
 
     try {
-        const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-        const res  = await fetch('/api/v1/auth/change-password', {
-            method:  'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': csrf,
-            },
-            body: JSON.stringify({
-                current_password: currentPassword,
-                new_password:     newPassword,
-            }),
-        });
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+      const res = await fetch('/api/v1/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+      });
 
-        const data = await res.json();
+      const data = await res.json();
 
-        if (!res.ok || !data.success) {
-            setPasswordMsg(data.message ?? 'Failed to update password.');
-            return;
-        }
+      if (!res.ok || !data.success) {
+        setPasswordMsg(data.message ?? 'Failed to update password.');
+        return;
+      }
 
-        setPasswordMsg('✅ Password updated successfully!');
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
+      setPasswordMsg('✅ Password updated successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
 
     } catch (err) {
-        setPasswordMsg('Network error. Please try again.');
+      setPasswordMsg('Network error. Please try again.');
     }
-}
+  }
 
   function handleBankStart() {
     setBankName(shownBank?.bankName ?? '');
@@ -182,19 +184,84 @@ export default function ProfileCard({ userId, currentUserId }) {
     setActiveSection('bank');
   }
 
-  function handleBankSave() {
+  // Teammate's version — persists to API
+  async function handleBankSave() {
     if (!bankName || !accountNumber || !holderName) { setBankMsg('All fields are required.'); return; }
-    setLiveBank({ bankName, accountNumber, holderName });
-    setBankMsg('✅ Bank details updated!');
-    setTimeout(() => { setBankMsg(''); setActiveSection('view'); }, 1000);
+
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+      const res = await fetch(`/api/v1/users/${userId}/bank`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        body: JSON.stringify({ bankName, accountNumber, holderName }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setBankMsg(data.message ?? 'Failed to save bank details.');
+        return;
+      }
+
+      setLiveBank({ bankName, accountNumber, holderName });
+      setBankMsg('✅ Bank details updated!');
+      setTimeout(() => { setBankMsg(''); setActiveSection('view'); }, 1000);
+
+    } catch (err) {
+      setBankMsg('Network error. Please try again.');
+    }
   }
-  const baseInput    = "bg-(--color-surface-2) border border-(--color-border) text-(--color-text-primary) text-sm rounded-md py-2 w-full";
-  const inputClass   = `${baseInput} px-3`;
+
+  // Teammate's top-up handler
+  async function handleTopup() {
+    const amount = parseFloat(topupAmount);
+    if (!amount || amount < 0.01 || amount > 10000) {
+      setTopupMsg('Please enter an amount between $0.01 and $10,000.');
+      return;
+    }
+
+    setTopupLoading(true);
+    setTopupMsg('');
+
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+      const res = await fetch('/api/v1/user/wallet/deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        body: JSON.stringify({ amount }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setTopupMsg(data.message ?? 'Top-up failed.');
+        setTopupLoading(false);
+        return;
+      }
+
+      setLiveBalance(data.newBalance);
+      setTopupMsg('✅ Funds added successfully!');
+      setTimeout(() => {
+        setTopupMsg('');
+        setTopupAmount('');
+        setTopupLoading(false);
+        setActiveSection('view');
+      }, 1500);
+
+    } catch (err) {
+      setTopupMsg('Network error. Please try again.');
+      setTopupLoading(false);
+    }
+  }
+
+  const baseInput = "bg-(--color-surface-2) border border-(--color-border) text-(--color-text-primary) text-sm rounded-md py-2 w-full";
+  const inputClass = `${baseInput} px-3`;
   const pwInputClass = `${baseInput} pl-3 pr-10`;
 
   return (
     <Card variant="default" padding="lg" className="flex flex-col gap-5">
 
+      {/* ── View section ──────────────────────────────────────────── */}
       {activeSection === 'view' && (
         <>
           <div className="flex items-center gap-4">
@@ -223,9 +290,9 @@ export default function ProfileCard({ userId, currentUserId }) {
 
           <div className="grid grid-cols-3 gap-3 border-t border-(--color-border) pt-4">
             {[
-              { label: 'Sales',  value: stats?.totalSales  },
+              { label: 'Sales', value: stats?.totalSales },
               { label: 'Volume', value: stats?.totalVolume },
-              { label: 'Owned',  value: stats?.itemsOwned  },
+              { label: 'Owned', value: stats?.itemsOwned },
             ].map(({ label, value }) => (
               <div key={label} className="text-center">
                 <p className="text-base font-bold text-(--color-text-primary)">{value ?? '—'}</p>
@@ -234,46 +301,46 @@ export default function ProfileCard({ userId, currentUserId }) {
             ))}
           </div>
 
+          {/* Wallet — owner only */}
           {isOwner && (
             <div className="flex flex-col gap-3 border-t border-(--color-border) pt-4">
-              
-                <div className="flex items-center gap-2">
-                  <WalletIcon />
-                  <h3 className="text-sm font-bold text-(--color-text-primary)">My Wallet</h3>
-                
-                  <button
-                    type="button"
-                    onClick={() => setShowBalance(v => !v)}
-                    aria-label={showBalance ? 'Hide balance' : 'Show balance'}
-                    className="ml-1 text-(--color-text-muted) hover:text-(--color-accent) transition-colors inline-flex items-center"
-                  >
-                    {showBalance ? <EyeIcon /> : <EyeOffIcon />}
-                  </button>
-                  
-                </div>
+              <div className="flex items-center gap-2">
+                <WalletIcon />
+                <h3 className="text-sm font-bold text-(--color-text-primary)">My Wallet</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowBalance(v => !v)}
+                  aria-label={showBalance ? 'Hide balance' : 'Show balance'}
+                  className="ml-1 text-(--color-text-muted) hover:text-(--color-accent) transition-colors inline-flex items-center"
+                >
+                  {showBalance ? <EyeIcon /> : <EyeOffIcon />}
+                </button>
+              </div>
               <p className="text-2xl font-bold text-(--color-accent)">
-                {showBalance ? `$${wallet?.balance?.toLocaleString()}` : maskedBalance}
+                {showBalance ? `$${displayBalance.toLocaleString()}` : maskedBalance}
                 <span className="text-sm font-normal text-(--color-text-muted) ml-1">{wallet?.currency}</span>
               </p>
-              <Button variant="secondary" size="sm" onClick={handleBankStart} className="w-fit">
-                🏦 Bank Account
-              </Button>
+              {/* Teammate's two-button layout */}
+              <div className="flex gap-2">
+                <Button variant="secondary" size="sm" onClick={handleBankStart}>
+                  🏦 Bank Account
+                </Button>
+                <Button variant="primary" size="sm" onClick={() => { setTopupMsg(''); setTopupAmount(''); setActiveSection('topup'); }}>
+                  + Top Up
+                </Button>
+              </div>
             </div>
           )}
         </>
       )}
 
+      {/* ── Edit Profile section ──────────────────────────────────── */}
       {activeSection === 'profile' && (
         <div className="flex flex-col gap-4">
-
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-(--color-text-primary)">Edit Profile</h3>
-            <button
-              type="button"
-              onClick={() => setActiveSection('view')}
-              aria-label="Close edit profile"
-              className="text-(--color-text-muted) hover:text-(--color-accent) transition-colors text-lg leading-none"
-            >
+            <button type="button" onClick={() => setActiveSection('view')} aria-label="Close edit profile"
+              className="text-(--color-text-muted) hover:text-(--color-accent) transition-colors text-lg leading-none">
               ✕
             </button>
           </div>
@@ -316,12 +383,10 @@ export default function ProfileCard({ userId, currentUserId }) {
           </div>
 
           <div className="flex flex-col gap-2">
-             <Button variant="primary" size="sm" onClick={handleProfileSave} disabled={displayName.length > NAME_MAX || bio.length > BIO_MAX} className="w-fit">
+            <Button variant="primary" size="sm" onClick={handleProfileSave} disabled={displayName.length > NAME_MAX || bio.length > BIO_MAX} className="w-fit">
               Save Profile
             </Button>
-            {profileSaved && (
-              <p className="text-xs text-(--color-success)">✅ Profile updated successfully!</p>
-            )}
+            {profileSaved && <p className="text-xs text-(--color-success)">✅ Profile updated successfully!</p>}
           </div>
 
           <div className="border-t border-(--color-border) pt-4 flex flex-col gap-3">
@@ -365,13 +430,19 @@ export default function ProfileCard({ userId, currentUserId }) {
               Update Password
             </Button>
           </div>
-
         </div>
       )}
 
+      {/* ── Bank Account section ──────────────────────────────────── */}
       {activeSection === 'bank' && (
         <div className="flex flex-col gap-4">
-          <h3 className="text-sm font-bold text-(--color-text-primary)">🏦 Bank Account Details</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-(--color-text-primary)">🏦 Bank Account Details</h3>
+            <button type="button" onClick={() => { setActiveSection('view'); setBankMsg(''); }} aria-label="Close bank section"
+              className="text-(--color-text-muted) hover:text-(--color-accent) transition-colors text-lg leading-none">
+              ✕
+            </button>
+          </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs text-(--color-text-muted)" htmlFor="bank-name">Bank Name</label>
             <input id="bank-name" type="text" value={bankName} onChange={e => setBankName(e.target.value)} placeholder="e.g. DBS Bank, OCBC" className={inputClass} />
@@ -390,6 +461,93 @@ export default function ProfileCard({ userId, currentUserId }) {
           <div className="flex gap-2">
             <Button variant="primary" size="sm" onClick={handleBankSave}>Save</Button>
             <Button variant="secondary" size="sm" onClick={() => { setActiveSection('view'); setBankMsg(''); }}>Cancel</Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Top Up section (teammate's addition) ─────────────────── */}
+      {activeSection === 'topup' && (
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-(--color-text-primary)">+ Top Up Wallet</h3>
+            <button type="button" onClick={() => setActiveSection('view')} aria-label="Close top-up"
+              className="text-(--color-text-muted) hover:text-(--color-accent) transition-colors text-lg leading-none">
+              ✕
+            </button>
+          </div>
+
+          <p className="text-sm text-(--color-text-muted)">
+            Current balance:{' '}
+            <span className="font-bold text-(--color-accent)">${displayBalance.toLocaleString()}</span>
+          </p>
+
+          {/* Bank info card if saved */}
+          {shownBank ? (
+            <div className="p-3 rounded-lg bg-(--color-surface-2) border border-(--color-border) flex flex-col gap-1">
+              <p className="text-xs text-(--color-text-muted) font-semibold">Funding from</p>
+              <p className="text-sm font-bold text-(--color-text-primary)">{shownBank.bankName}</p>
+              <p className="text-xs text-(--color-text-muted)">
+                •••• {shownBank.accountNumber?.slice(-4)} · {shownBank.holderName}
+              </p>
+            </div>
+          ) : (
+            <div className="p-3 rounded-lg bg-(--color-surface-2) border border-(--color-border)">
+              <p className="text-sm text-(--color-text-muted)">
+                No bank account linked.{' '}
+                <button type="button" onClick={() => setActiveSection('bank')}
+                  className="text-(--color-accent) hover:underline font-semibold">
+                  Add account
+                </button>
+              </p>
+            </div>
+          )}
+
+          {/* Amount input */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-(--color-text-muted)" htmlFor="topup-amount">Amount (USD)</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-(--color-text-muted)">$</span>
+              <input
+                id="topup-amount"
+                type="number"
+                min="0.01"
+                max="10000"
+                step="0.01"
+                value={topupAmount}
+                onChange={e => setTopupAmount(e.target.value)}
+                placeholder="0.00"
+                className={`${baseInput} pl-7 pr-3`}
+              />
+            </div>
+          </div>
+
+          {/* Quick-select presets */}
+          <div className="flex gap-2 flex-wrap">
+            {[50, 100, 250, 500].map(preset => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => setTopupAmount(String(preset))}
+                className="px-3 py-1.5 text-xs font-semibold rounded-md border border-(--color-border)
+                           text-(--color-text-muted) hover:border-(--color-accent) hover:text-(--color-accent)
+                           transition-colors"
+              >
+                ${preset}
+              </button>
+            ))}
+          </div>
+
+          {topupMsg && (
+            <p className={`text-xs ${topupMsg.startsWith('✅') ? 'text-(--color-success)' : 'text-(--color-danger)'}`}>{topupMsg}</p>
+          )}
+
+          <div className="flex gap-2">
+            <Button variant="primary" size="sm" onClick={handleTopup} disabled={topupLoading} className="w-fit">
+              {topupLoading ? 'Processing…' : 'Add Funds'}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setActiveSection('view')}>
+              Cancel
+            </Button>
           </div>
         </div>
       )}
