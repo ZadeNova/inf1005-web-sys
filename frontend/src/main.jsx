@@ -37,13 +37,11 @@ function mountIsland(id, Component) {
    CL ISLANDS
    ═══════════════════════════════════════════════════════════════ */
 import ThemeToggle          from './islands/CL/ThemeToggle.jsx';
-import PriceChart           from './islands/CL/PriceChart.jsx';
 import CreateNewsPost       from './islands/CL/CreateNewsPost.jsx';
 import AdminListingsManager from './islands/CL/AdminListingsManager.jsx';
 import AdminBlogManager     from './islands/CL/AdminBlogManager.jsx';
 import NavWallet            from './islands/CL/NavWallet.jsx';
 mountIsland('theme-toggle-root',           ThemeToggle);
-mountIsland('price-chart-root',            PriceChart);
 mountIsland('create-news-post-root',       CreateNewsPost);
 mountIsland('admin-listings-manager-root', AdminListingsManager);
 mountIsland('admin-blog-manager-root',     AdminBlogManager);
@@ -64,7 +62,6 @@ mountIsland('blog-feed-root',     BlogFeed);
    ═══════════════════════════════════════════════════════════════ */
 import ListingsGrid          from './islands/WH/ListingsGrid.jsx';
 import ProfileCard           from './islands/WH/ProfileCard.jsx';
-import PortfolioChart        from './islands/WH/PortfolioChart.jsx';
 import ActivityFeed          from './islands/WH/ActivityFeed.jsx';
 import RarityDonutChart      from './islands/WH/RarityDonutChart.jsx';
 import ActiveListingsManager from './islands/WH/ActiveListingsManager.jsx';
@@ -73,7 +70,6 @@ import WalletBalance         from './islands/WH/WalletBalance.jsx';
 import PortfolioTable        from './islands/WH/PortfolioTable.jsx';
 import TransactionHistory    from './islands/WH/TransactionHistory.jsx';
 import ListingDetail         from './islands/WH/ListingDetail.jsx';
-import ListingPriceChart     from './islands/WH/ListingPriceChart.jsx';
 mountIsland('listing-detail-root',         ListingDetail);
 mountIsland('listing-price-chart-root',    ListingPriceChart);
 mountIsland('listings-grid-root',          ListingsGrid);
