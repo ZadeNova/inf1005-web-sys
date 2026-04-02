@@ -50,19 +50,6 @@ ob_start();
                 </div>
             </noscript>
         </div>
-
-        <?php /* ── Login crosslink ─────────────────────────────────── */ ?>
-        <p class="text-sm text-(--color-text-muted)">
-            Already have an account?
-            <a href="/login"
-               class="text-(--color-accent) hover:text-(--color-accent-hover)
-                      font-medium transition-colors
-                      focus-visible:outline-2 focus-visible:outline-(--color-accent)
-                      focus-visible:outline-offset-2 rounded-sm">
-                Sign in
-            </a>
-        </p>
-
     </div>
 </div>
 
