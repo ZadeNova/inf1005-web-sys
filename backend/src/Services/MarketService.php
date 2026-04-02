@@ -252,29 +252,5 @@ class MarketService
         ];
     }
 
-    /**
-     * Task 3b — Per-asset price history from completed transactions.
-     * Used by ListingPriceChart.jsx on the listing detail page.
-     * Returns [{price, soldAt}] ordered ASC.
-     */
-    public function getAssetPriceHistory(int $assetId): array
-    {
-        $stmt = $this->db->prepare("
-            SELECT DATE(t.completed_at) AS sold_at, AVG(t.price) AS price
-            FROM transactions t
-            JOIN listings l ON l.id = t.listing_id
-            WHERE l.asset_id = :assetId
-            GROUP BY DATE(t.completed_at)
-            ORDER BY sold_at ASC
-        ");
-        $stmt->execute([':assetId' => $assetId]);
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        return array_map(fn($r) => [
-            'price'  => (float) $r['price'],
-            'soldAt' => $r['sold_at'],
-        ], $rows);
-    }
-
 
 }

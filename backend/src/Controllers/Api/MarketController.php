@@ -202,59 +202,6 @@ class MarketController
     }
 
     /**
-     * GET /api/v1/market/price-history?range=1W|1M|3M|6M|1Y
-     * Public — floor price per collection per day from transactions table.
-     * Returns Chart.js-ready { labels, datasets } for PriceChart.jsx
-     */
-    public function priceHistory(Request $request, Response $response): Response
-    {
-        $range    = $request->getQueryParams()['range'] ?? '1M';
-        $interval = match($range) {
-            '1W'    => '7 DAY',
-            '3M'    => '90 DAY',
-            '6M'    => '180 DAY',
-            '1Y'    => '365 DAY',
-            default => '30 DAY',
-        };
-
-        $stmt = $this->db->query("
-            SELECT
-                a.collection         AS col,
-                DATE(t.completed_at) AS label,
-                MIN(t.price)         AS floor
-            FROM transactions t
-            JOIN assets a ON a.id = t.asset_id
-            WHERE t.completed_at >= DATE_SUB(NOW(), INTERVAL {$interval})
-            GROUP BY a.collection, DATE(t.completed_at)
-            ORDER BY DATE(t.completed_at) ASC
-        ");
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        $byCollection = [];
-        $allDates     = [];
-        foreach ($rows as $row) {
-            $byCollection[$row['col']][$row['label']] = (float) $row['floor'];
-            $allDates[$row['label']] = true;
-        }
-
-        $labels   = array_keys($allDates);
-        $datasets = [];
-        foreach ($byCollection as $collection => $dateMap) {
-            $datasets[] = [
-                'label' => $collection,
-                'data'  => array_map(fn($d) => $dateMap[$d] ?? null, $labels),
-            ];
-        }
-
-        if (empty($labels)) {
-            return $this->json($response, ['labels' => [], 'datasets' => []]);
-        }
-
-        return $this->json($response, ['labels' => $labels, 'datasets' => $datasets]);
-    }
-
-
-    /**
      * GET /api/v1/market/listings/{id}
      * Public. Returns full listing detail for the listing detail page.
      */
@@ -268,24 +215,6 @@ class MarketController
         }
 
         return $this->json($response, $listing);
-    }
-
-    /**
-     * GET /api/v1/market/listings/{id}/price-history
-     * Public. Returns per-asset transaction history for PriceChart.
-     */
-    public function getAssetPriceHistory(Request $request, Response $response, array $args): Response
-    {
-        $listingId = isset($args['id']) ? (int) $args['id'] : 0;
-
-        // Resolve asset_id from listing_id so the frontend only needs listing context
-        $listing = $this->market->findListingById($listingId);
-        if (!$listing) {
-            return $this->json($response, ['error' => 'Listing not found.'], 404);
-        }
-
-        $history = $this->market->getAssetPriceHistory($listing['asset']['id']);
-        return $this->json($response, ['history' => $history]);
     }
 
     // Same helper as AuthController — every API controller has this

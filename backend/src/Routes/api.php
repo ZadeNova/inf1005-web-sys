@@ -28,7 +28,6 @@ return function (App $app) {
         $group->get('/market/listings',         [MarketController::class, 'index']);
         $group->get('/market/listings/mine',    [MarketController::class, 'mine'])
             ->add(AuthMiddleware::class);
-        $group->get('/market/price-history',    [MarketController::class, 'priceHistory']);
         $group->post('/market/buy',             [MarketController::class, 'buy'])
             ->add(AuthMiddleware::class);
         $group->post('/market/listings',        [MarketController::class, 'store'])
@@ -36,7 +35,6 @@ return function (App $app) {
         $group->delete('/market/listings/{id}', [MarketController::class, 'cancel'])
             ->add(AuthMiddleware::class);
         $group->get('/market/listings/{id}',               [MarketController::class, 'getListing']);
-        $group->get('/market/listings/{id}/price-history', [MarketController::class, 'getAssetPriceHistory']);
         $group->patch('/market/listings/{id}', [MarketController::class, 'updateListing'])
             ->add(AuthMiddleware::class);
 
