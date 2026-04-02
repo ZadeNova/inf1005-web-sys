@@ -234,7 +234,6 @@ $featured = $featured ?? [
             </div>
 
             <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-<ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 <?php foreach ($featured as $asset): ?>
                 <li class="bg-(--color-surface) border border-(--color-border)
                             rounded-lg p-4 flex flex-col gap-3
