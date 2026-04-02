@@ -15,13 +15,6 @@ class AdminController
 
     /**
      * GET /api/v1/admin/listings
-     *
-     * FIX: Added seller_id to SELECT so the frontend has it if needed.
-     * FIX: status is returned as lowercase from the DB ENUM — no transformation
-     *   applied here so the frontend receives the raw DB value ('active',
-     *   'sold', 'cancelled'). The previous version was fine but components
-     *   were comparing against uppercase strings — components now fixed.
-     * FIX: LIMIT increased to 200 so the admin can see all listings.
      */
     public function listings(Request $request, Response $response): Response
     {
@@ -50,7 +43,6 @@ class AdminController
 
     /**
      * POST /api/v1/admin/news
-     * Used by CreateNewsPost.jsx
      */
     public function createNews(Request $request, Response $response): Response
     {
@@ -82,10 +74,6 @@ class AdminController
 
     /**
      * PATCH /api/v1/admin/listings/{id}
-     *
-     * FIX: Status values are normalised to lowercase to match the DB ENUM.
-     * Accepts both 'cancelled' (from frontend) and 'CANCELLED' (legacy) —
-     * both are stored as lowercase in the DB.
      */
     public function editListing(Request $request, Response $response, array $args): Response
     {
@@ -102,7 +90,6 @@ class AdminController
         $fields  = [];
         $params  = [':id' => $id];
 
-        // Update price if provided
         if (isset($data['price'])) {
             $price = (float) $data['price'];
             if ($price <= 0 || $price > 999999.99) {
@@ -115,9 +102,8 @@ class AdminController
             $params[':price'] = $price;
         }
 
-        // Update status if provided — normalise to lowercase
         if (isset($data['status'])) {
-            $status = strtolower($data['status']);
+            $status  = strtolower($data['status']);
             $allowed = ['active', 'sold', 'cancelled'];
             if (!in_array($status, $allowed, true)) {
                 return $this->json($response, [
@@ -217,55 +203,192 @@ class AdminController
         return $this->json($response, ['success' => true]);
     }
 
-
-    // POST /api/v1/admin/assets
-    
+    /**
+     * POST /api/v1/admin/assets
+     *
+     * Accepts multipart/form-data. Validates input, handles image upload,
+     * then wraps two INSERTs in a transaction:
+     *   1. INSERT INTO assets
+     *   2. INSERT INTO listings  (asset goes live immediately, admin is seller)
+     *
+     * Fields: name, description, rarity, condition_state, collection, price, image (file)
+     *
+     * Returns 201: { success: true, asset: { id, name, listingId } }
+     * Returns 422: { success: false, message: '...' }
+     * Returns 500: { success: false, message: '...' }
+     */
     public function createAsset(Request $request, Response $response): Response
     {
+        // ── 1. Parse text fields from multipart body ──────────────────────
         $data = $request->getParsedBody() ?? [];
-    
-        $name        = trim($data['name']        ?? '');
-        $description = trim($data['description'] ?? '');
-        $rarity      = trim($data['rarity']      ?? '');
-        $collection  = trim($data['collection']  ?? '');
-        $image_url   = trim($data['image_url']   ?? '');
-        $base_price  = (float) ($data['base_price'] ?? 0);
-    
-        // FIX: matches init.sql ENUM and frontend RARITY constants exactly
-        $allowed_rarities = ['COMMON', 'UNCOMMON', 'RARE', 'ULTRA_RARE', 'SECRET_RARE'];
-    
-        if (!$name || !$description || !$rarity || !$collection || !$image_url || $base_price <= 0) {
-            return $this->json($response, ['success' => false, 'message' => 'All fields are required.'], 422);
+
+        $name           = trim($data['name']           ?? '');
+        $description    = trim($data['description']    ?? '');
+        $rarity         = trim($data['rarity']         ?? '');
+        $condition_state = trim($data['condition_state'] ?? 'Mint');
+        $collection     = trim($data['collection']     ?? '');
+        $price          = isset($data['price']) ? (float) $data['price'] : 0.0;
+
+        // ── 2. Validate text fields ───────────────────────────────────────
+        $allowedRarities = ['COMMON', 'UNCOMMON', 'RARE', 'ULTRA_RARE', 'SECRET_RARE'];
+        $allowedConditions = ['Mint', 'Near Mint', 'Lightly Played', 'Moderately Played', 'Heavily Played'];
+
+        if (!$name) {
+            return $this->json($response, ['success' => false, 'message' => 'Asset name is required.'], 422);
         }
-    
-        if (!in_array($rarity, $allowed_rarities, true)) {
+        if (!$description) {
+            return $this->json($response, ['success' => false, 'message' => 'Description is required.'], 422);
+        }
+        if (!in_array($rarity, $allowedRarities, true)) {
             return $this->json($response, [
                 'success' => false,
-                'message' => 'Invalid rarity. Must be one of: ' . implode(', ', $allowed_rarities),
+                'message' => 'Invalid rarity. Must be one of: ' . implode(', ', $allowedRarities),
             ], 422);
         }
-    
-        $stmt = $this->db->prepare("
-            INSERT INTO assets (name, description, rarity, collection, image_url, base_price)
-            VALUES (:name, :description, :rarity, :collection, :image_url, :base_price)
-        ");
-        $stmt->execute([
-            ':name'        => $name,
-            ':description' => $description,
-            ':rarity'      => $rarity,
-            ':collection'  => $collection,
-            ':image_url'   => $image_url,
-            ':base_price'  => $base_price,
-        ]);
-    
-        $id = (int) $this->db->lastInsertId();
-    
-        return $this->json($response, [
-            'success' => true,
-            'asset'   => ['id' => $id, 'name' => $name],
-        ], 201);
-    }
+        if (!in_array($condition_state, $allowedConditions, true)) {
+            return $this->json($response, [
+                'success' => false,
+                'message' => 'Invalid condition. Must be one of: ' . implode(', ', $allowedConditions),
+            ], 422);
+        }
+        if (!$collection) {
+            return $this->json($response, ['success' => false, 'message' => 'Collection is required.'], 422);
+        }
+        if ($price <= 0 || $price > 999999.99) {
+            return $this->json($response, ['success' => false, 'message' => 'Price must be between $0.01 and $999,999.99.'], 422);
+        }
 
+        // ── 3. Validate and handle image upload ───────────────────────────
+        $uploadedFiles = $request->getUploadedFiles();
+        $uploadedImage = $uploadedFiles['image'] ?? null;
+
+        // Also check the raw $_FILES superglobal as a fallback — Slim's
+        // getUploadedFiles() can miss files if the Content-Type boundary
+        // is not parsed cleanly on some server configs.
+        if (!$uploadedImage && !empty($_FILES['image']['tmp_name'])) {
+            // Fall through to raw $_FILES handling below
+            $uploadedImage = null;
+            $useRawFiles   = true;
+        } else {
+            $useRawFiles = false;
+        }
+
+        $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        $uploadDir        = '/var/www/public/images/assets/uploads/';
+        $movedFilePath    = null; // track for rollback cleanup
+
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        if ($useRawFiles) {
+            // Raw $_FILES path
+            if (empty($_FILES['image']['tmp_name']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+                return $this->json($response, ['success' => false, 'message' => 'Image upload failed or was not provided.'], 422);
+            }
+            $tmpPath  = $_FILES['image']['tmp_name'];
+            $mimeType = mime_content_type($tmpPath);
+
+            if (!in_array($mimeType, $allowedMimeTypes, true)) {
+                return $this->json($response, [
+                    'success' => false,
+                    'message' => 'Invalid image type. Only JPEG, PNG, and WebP are allowed.',
+                ], 422);
+            }
+
+            $filename      = uniqid('asset_', true) . '_' . basename($_FILES['image']['name']);
+            $filename      = preg_replace('/[^a-zA-Z0-9_.\-]/', '_', $filename);
+            $destPath      = $uploadDir . $filename;
+
+            if (!move_uploaded_file($tmpPath, $destPath)) {
+                return $this->json($response, ['success' => false, 'message' => 'Failed to save uploaded image.'], 500);
+            }
+
+            $movedFilePath = $destPath;
+            $imageUrl      = '/images/assets/uploads/' . $filename;
+
+        } else {
+            // PSR-7 UploadedFile path
+            if (!$uploadedImage || $uploadedImage->getError() !== UPLOAD_ERR_OK) {
+                return $this->json($response, ['success' => false, 'message' => 'Image upload failed or was not provided.'], 422);
+            }
+
+            $mimeType = $uploadedImage->getClientMediaType();
+            if (!in_array($mimeType, $allowedMimeTypes, true)) {
+                return $this->json($response, [
+                    'success' => false,
+                    'message' => 'Invalid image type. Only JPEG, PNG, and WebP are allowed.',
+                ], 422);
+            }
+
+            $filename = uniqid('asset_', true) . '_' . basename($uploadedImage->getClientFilename());
+            $filename = preg_replace('/[^a-zA-Z0-9_.\-]/', '_', $filename);
+            $destPath = $uploadDir . $filename;
+
+            $uploadedImage->moveTo($destPath);
+            $movedFilePath = $destPath;
+            $imageUrl      = '/images/assets/uploads/' . $filename;
+        }
+
+        // ── 4. Transactional DB writes ────────────────────────────────────
+        $sellerId = (int) $_SESSION['user_id'];
+
+        try {
+            $this->db->beginTransaction();
+
+            // INSERT assets (no base_price column — price lives on listings)
+            $assetStmt = $this->db->prepare("
+                INSERT INTO assets (name, description, image_url, rarity, collection, condition_state)
+                VALUES (:name, :description, :image_url, :rarity, :collection, :condition_state)
+            ");
+            $assetStmt->execute([
+                ':name'            => $name,
+                ':description'     => $description,
+                ':image_url'       => $imageUrl,
+                ':rarity'          => $rarity,
+                ':collection'      => $collection,
+                ':condition_state' => $condition_state,
+            ]);
+            $assetId = (int) $this->db->lastInsertId();
+
+            // INSERT listing — asset goes live immediately, admin is seller
+            $listingStmt = $this->db->prepare("
+                INSERT INTO listings (seller_id, asset_id, price, status)
+                VALUES (:seller_id, :asset_id, :price, 'active')
+            ");
+            $listingStmt->execute([
+                ':seller_id' => $sellerId,
+                ':asset_id'  => $assetId,
+                ':price'     => $price,
+            ]);
+            $listingId = (int) $this->db->lastInsertId();
+
+            $this->db->commit();
+
+            return $this->json($response, [
+                'success' => true,
+                'asset'   => [
+                    'id'        => $assetId,
+                    'name'      => $name,
+                    'listingId' => $listingId,
+                ],
+            ], 201);
+
+        } catch (\PDOException $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            // Clean up the uploaded file so we don't leave orphaned images
+            if ($movedFilePath && file_exists($movedFilePath)) {
+                unlink($movedFilePath);
+            }
+            error_log('AdminController::createAsset DB error: ' . $e->getMessage());
+            return $this->json($response, [
+                'success' => false,
+                'message' => 'Failed to create asset. Please try again.',
+            ], 500);
+        }
+    }
 
     private function json(Response $response, array $data, int $status = 200): Response
     {

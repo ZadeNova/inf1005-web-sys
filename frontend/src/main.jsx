@@ -41,11 +41,15 @@ import CreateNewsPost       from './islands/CL/CreateNewsPost.jsx';
 import AdminListingsManager from './islands/CL/AdminListingsManager.jsx';
 import AdminBlogManager     from './islands/CL/AdminBlogManager.jsx';
 import NavWallet            from './islands/CL/NavWallet.jsx';
+import CreateAssetForm      from './islands/CL/CreateAssetForm.jsx';
+
 mountIsland('theme-toggle-root',           ThemeToggle);
 mountIsland('create-news-post-root',       CreateNewsPost);
 mountIsland('admin-listings-manager-root', AdminListingsManager);
 mountIsland('admin-blog-manager-root',     AdminBlogManager);
 mountIsland('nav-wallet-root',             NavWallet);
+mountIsland('create-asset-form-root',      CreateAssetForm);
+
 
 /* ═══════════════════════════════════════════════════════════════
    Minal ISLANDS — Login · Register · Blog
