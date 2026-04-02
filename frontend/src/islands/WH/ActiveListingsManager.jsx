@@ -83,7 +83,7 @@ function EditPriceModal({ listing, onClose, onSuccess }) {
 						>
 							Edit listing price
 						</h2>
-						<p className="text-xs text-(--color-text-muted) mt-0.5 truncate max-w-[180px]">
+						<p className="text-xs text-(--color-text-muted) mt-0.5 truncate max-w-45">
 							{listing.asset?.name}
 						</p>
 					</div>

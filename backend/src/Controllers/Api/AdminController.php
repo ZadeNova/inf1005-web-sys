@@ -219,27 +219,32 @@ class AdminController
 
 
     // POST /api/v1/admin/assets
+    
     public function createAsset(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody() ?? [];
-
-        $name       = trim($data['name']        ?? '');
-        $description= trim($data['description'] ?? '');
-        $rarity     = trim($data['rarity']      ?? '');
-        $collection = trim($data['collection']  ?? '');
-        $image_url  = trim($data['image_url']   ?? '');
-        $base_price = (float) ($data['base_price'] ?? 0);
-
-        $allowed_rarities = ['COMMON', 'UNCOMMON', 'RARE', 'EPIC', 'LEGENDARY'];
-
+    
+        $name        = trim($data['name']        ?? '');
+        $description = trim($data['description'] ?? '');
+        $rarity      = trim($data['rarity']      ?? '');
+        $collection  = trim($data['collection']  ?? '');
+        $image_url   = trim($data['image_url']   ?? '');
+        $base_price  = (float) ($data['base_price'] ?? 0);
+    
+        // FIX: matches init.sql ENUM and frontend RARITY constants exactly
+        $allowed_rarities = ['COMMON', 'UNCOMMON', 'RARE', 'ULTRA_RARE', 'SECRET_RARE'];
+    
         if (!$name || !$description || !$rarity || !$collection || !$image_url || $base_price <= 0) {
             return $this->json($response, ['success' => false, 'message' => 'All fields are required.'], 422);
         }
-
+    
         if (!in_array($rarity, $allowed_rarities, true)) {
-            return $this->json($response, ['success' => false, 'message' => 'Invalid rarity.'], 422);
+            return $this->json($response, [
+                'success' => false,
+                'message' => 'Invalid rarity. Must be one of: ' . implode(', ', $allowed_rarities),
+            ], 422);
         }
-
+    
         $stmt = $this->db->prepare("
             INSERT INTO assets (name, description, rarity, collection, image_url, base_price)
             VALUES (:name, :description, :rarity, :collection, :image_url, :base_price)
@@ -252,14 +257,16 @@ class AdminController
             ':image_url'   => $image_url,
             ':base_price'  => $base_price,
         ]);
-
+    
         $id = (int) $this->db->lastInsertId();
-
+    
         return $this->json($response, [
             'success' => true,
-            'asset'   => ['id' => $id, 'name' => $name]
+            'asset'   => ['id' => $id, 'name' => $name],
         ], 201);
     }
+
+
     private function json(Response $response, array $data, int $status = 200): Response
     {
         $response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));

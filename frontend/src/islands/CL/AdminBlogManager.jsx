@@ -1,19 +1,12 @@
 /**
  * AdminBlogManager.jsx — Lead Island
- *
- * FIX (deploy): csrfToken now read from props first, meta tag as fallback.
- *   On GCP the meta tag can be missing until PHP finishes rendering, so
- *   passing it explicitly through data-props is the reliable approach.
- * FIX (deploy): useEffect syncs API data into localPosts so optimistic
- *   edits/deletes work correctly without a full page reload.
- * FIX (deploy): API returns { posts: [...] } with publishedAt (not created_at)
- *   from BlogController's shaped response — field name matched here.
  */
 
 import { useState, useEffect } from "react";
 import Button   from "../../shared/atoms/Button.jsx";
 import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import { useApi } from "../../shared/hooks/useApi.js";
+import React from "react";
 
 const CATEGORIES = [
   "Market Update",
@@ -22,54 +15,33 @@ const CATEGORIES = [
   "Maintenance",
 ];
 
-function EditForm({ post, onSave, onCancel, getCsrf }) {
+function EditForm({ post, onSave, onCancel, saving, saveError }) {
   const [title,    setTitle]    = useState(post.title    ?? "");
   const [body,     setBody]     = useState(post.body     ?? "");
   const [category, setCategory] = useState(post.category ?? CATEGORIES[0]);
-  const [saving,   setSaving]   = useState(false);
-  const [error,    setError]    = useState(null);
 
   const inputClass =
     "w-full px-3 py-2 text-sm rounded-md bg-(--color-input-bg) " +
     "border border-(--color-input-border) text-(--color-text-primary) " +
     "focus:outline-none focus:border-(--color-input-focus) transition-colors";
 
-  async function handleSave() {
-    if (!title.trim() || !body.trim()) {
-      setError("Title and body are required.");
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/v1/admin/blog/posts/${post.id}`, {
-        method:  "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-Token": getCsrf(),
-        },
-        body: JSON.stringify({ title, body, category }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message ?? `Server error ${res.status}`);
-      }
-      onSave(post.id, { title, body, category });
-    } catch (err) {
-      setError(err.message);
-      setSaving(false);
-    }
+  function handleSubmit() {
+    if (!title.trim() || !body.trim()) return;
+    onSave(post.id, { title, body, category });
   }
 
   return (
     <tr className="bg-(--color-accent-subtle)">
       <td colSpan={4} className="px-4 py-4">
         <div className="flex flex-col gap-3 max-w-2xl">
-          {error && (
+
+          {/* Error from parent's API call */}
+          {saveError && (
             <p role="alert" className="text-xs text-(--color-danger)">
-              {error}
+              {saveError}
             </p>
           )}
+
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-(--color-text-secondary)">
               Title
@@ -83,6 +55,7 @@ function EditForm({ post, onSave, onCancel, getCsrf }) {
               aria-label="Post title"
             />
           </div>
+
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-(--color-text-secondary)">
               Body
@@ -96,6 +69,7 @@ function EditForm({ post, onSave, onCancel, getCsrf }) {
               aria-label="Post body"
             />
           </div>
+
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-(--color-text-secondary)">
               Category
@@ -107,25 +81,26 @@ function EditForm({ post, onSave, onCancel, getCsrf }) {
               aria-label="Post category"
             >
               {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
+
           <div className="flex gap-2">
             <Button
               variant="primary"
               size="sm"
               loading={saving}
-              onClick={handleSave}
+              disabled={!title.trim() || !body.trim()}
+              onClick={handleSubmit}
             >
               Save changes
             </Button>
-            <Button variant="secondary" size="sm" onClick={onCancel}>
+            <Button variant="secondary" size="sm" onClick={onCancel} disabled={saving}>
               Cancel
             </Button>
           </div>
+
         </div>
       </td>
     </tr>
@@ -135,30 +110,61 @@ function EditForm({ post, onSave, onCancel, getCsrf }) {
 export default function AdminBlogManager({ csrfToken = '' }) {
   const { data, loading, error } = useApi("/api/v1/blog/posts", { auto: true });
 
-  const [localPosts,   setLocalPosts]   = useState([]);
-  const [editingId,    setEditingId]    = useState(null);
-  const [deletingId,   setDeletingId]   = useState(null);
-  const [actionError,  setActionError]  = useState(null);
+  const [localPosts,  setLocalPosts]  = useState([]);
+  const [editingId,   setEditingId]   = useState(null);
+  const [deletingId,  setDeletingId]  = useState(null);
+  const [savingId,    setSavingId]    = useState(null);  
+  const [actionError, setActionError] = useState(null);
+  const [saveError,   setSaveError]   = useState(null);  
 
-  // Sync API data into local state so optimistic updates work
   useEffect(() => {
     if (data?.posts) {
       setLocalPosts(data.posts);
     }
   }, [data]);
 
-  // Resolve CSRF: prop first (more reliable on GCP), meta tag fallback
   function getCsrf() {
     return csrfToken
       || document.querySelector('meta[name="csrf-token"]')?.content
       || '';
   }
 
-  function handleSaveEdit(id, updates) {
-    setLocalPosts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
-    );
-    setEditingId(null);
+  /**
+   * FIX: handleSaveEdit now calls the PATCH API.
+   * Only updates local state AFTER the server confirms success.
+   * On failure, leaves the edit form open and shows the error.
+   */
+  async function handleSaveEdit(id, updates) {
+    setSavingId(id);
+    setSaveError(null);
+    setActionError(null);
+
+    try {
+      const res = await fetch(`/api/v1/admin/blog/posts/${id}`, {
+        method:  "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": getCsrf(),
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message ?? `Server error ${res.status}`);
+      }
+
+      // Only update local state after server confirms
+      setLocalPosts((prev) =>
+        prev.map((p) => (String(p.id) === String(id) ? { ...p, ...updates } : p))
+      );
+      setEditingId(null);
+
+    } catch (err) {
+      setSaveError(err.message ?? "Failed to save changes. Please try again.");
+    } finally {
+      setSavingId(null);
+    }
   }
 
   async function handleDelete(id) {
@@ -174,7 +180,7 @@ export default function AdminBlogManager({ csrfToken = '' }) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message ?? `Server error ${res.status}`);
       }
-      setLocalPosts((prev) => prev.filter((p) => p.id !== id));
+      setLocalPosts((prev) => prev.filter((p) => String(p.id) !== String(id)));
     } catch (err) {
       setActionError(err.message);
     } finally {
@@ -210,6 +216,7 @@ export default function AdminBlogManager({ csrfToken = '' }) {
           {actionError}
         </p>
       )}
+
       <div className="overflow-x-auto rounded-md border border-(--color-border)">
         <table
           className="w-full text-sm text-(--color-text-primary)"
@@ -224,13 +231,11 @@ export default function AdminBlogManager({ csrfToken = '' }) {
               <th scope="col" className="px-4 py-3 text-center">Actions</th>
             </tr>
           </thead>
+
           <tbody className="divide-y divide-(--color-border)">
             {localPosts.map((post) => (
-              <>
-                <tr
-                  key={post.id}
-                  className="bg-(--color-surface) hover:bg-(--color-surface-2) transition-colors"
-                >
+              <React.Fragment key={post.id}>
+                <tr className="bg-(--color-surface) hover:bg-(--color-surface-2) transition-colors">
                   <td className="px-4 py-3 font-medium max-w-xs truncate">
                     {post.title}
                   </td>
@@ -245,11 +250,13 @@ export default function AdminBlogManager({ csrfToken = '' }) {
                       <Button
                         variant="secondary"
                         size="sm"
-                        onClick={() =>
-                          setEditingId(editingId === post.id ? null : post.id)
-                        }
+                        onClick={() => {
+                          setSaveError(null);
+                          setEditingId(editingId === post.id ? null : post.id);
+                        }}
                         aria-label={`${editingId === post.id ? "Close" : "Edit"} post: ${post.title}`}
                         aria-expanded={editingId === post.id}
+                        disabled={deletingId === post.id}
                       >
                         {editingId === post.id ? "Close" : "Edit"}
                       </Button>
@@ -259,23 +266,27 @@ export default function AdminBlogManager({ csrfToken = '' }) {
                         loading={deletingId === post.id}
                         onClick={() => handleDelete(post.id)}
                         aria-label={`Delete post: ${post.title}`}
+                        disabled={editingId === post.id}
                       >
                         Delete
                       </Button>
                     </div>
                   </td>
                 </tr>
+
                 {editingId === post.id && (
                   <EditForm
                     key={`edit-${post.id}`}
                     post={post}
                     onSave={handleSaveEdit}
-                    onCancel={() => setEditingId(null)}
-                    getCsrf={getCsrf}
+                    onCancel={() => { setEditingId(null); setSaveError(null); }}
+                    saving={savingId === post.id}
+                    saveError={saveError}
                   />
                 )}
-              </>
+              </React.Fragment>
             ))}
+
             {localPosts.length === 0 && (
               <tr>
                 <td
