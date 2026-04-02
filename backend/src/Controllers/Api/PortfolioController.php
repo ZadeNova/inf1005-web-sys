@@ -222,63 +222,72 @@ class PortfolioController
      * Today's point is always derived from the LIVE wallet balance (not ledger snapshot)
      * so it stays in sync with the stat card even if the user transacts mid-session.
      */
-    public function portfolioHistory(Request $request, Response $response): Response
+        public function portfolioHistory(Request $request, Response $response): Response
     {
         $user   = $this->auth->getCurrentUser();
         $userId = (int) $user['id'];
         $range  = $request->getQueryParams()['range'] ?? '1M';
 
-        $allowedIntervals = ['1W' => '7 DAY', '1M' => '30 DAY', '3M' => '90 DAY'];
-        $interval = $allowedIntervals[$range] ?? '30 DAY';
+        $allowedIntervals = ['1W' => 7, '1M' => 30, '3M' => 90];
+        $days = $allowedIntervals[$range] ?? 30;
 
-        // Asset value is the same number used by the stat card
-        $assetValue = $this->calcAssetValue($userId);
+        $assetValue  = $this->calcAssetValue($userId);
+        $liveBalance = $this->wallet->getBalance($userId);
 
-        // End-of-day wallet balance per day from the ledger
-        $ledgerStmt = $this->db->prepare("
-            SELECT
-                DATE(created_at)   AS label,
-                MAX(balance_after) AS wallet_balance
+        // Fetch all ledger entries in window (oldest first)
+        $stmt = $this->db->prepare("
+            SELECT DATE(created_at) AS day, MAX(balance_after) AS wallet_balance
             FROM wallet_ledger
             WHERE user_id   = :uid
-              AND created_at >= DATE_SUB(NOW(), INTERVAL {$interval})
+            AND created_at >= DATE_SUB(NOW(), INTERVAL :days DAY)
             GROUP BY DATE(created_at)
             ORDER BY DATE(created_at) ASC
         ");
-        $ledgerStmt->execute([':uid' => $userId]);
-        $rows = $ledgerStmt->fetchAll(\PDO::FETCH_ASSOC);
+        $stmt->execute([':uid' => $userId, ':days' => $days]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR); // [date => balance]
 
+        // Get the last known balance BEFORE the window (for carry-forward start value)
+        $stmtPrior = $this->db->prepare("
+            SELECT balance_after FROM wallet_ledger
+            WHERE user_id = :uid
+            AND created_at < DATE_SUB(NOW(), INTERVAL :days DAY)
+            ORDER BY created_at DESC
+            LIMIT 1
+        ");
+        $stmtPrior->execute([':uid' => $userId, ':days' => $days]);
+        $priorBalance = (float) ($stmtPrior->fetchColumn() ?: 0);
+
+        // Generate every day in the window, carrying forward last known balance
         $labels = [];
         $values = [];
+        $lastBalance = $priorBalance;
 
-        foreach ($rows as $row) {
-            $labels[] = $row['label'];
-            $values[] = round((float) $row['wallet_balance'] + $assetValue, 2);
+        for ($i = $days; $i >= 1; $i--) {
+            $date = date('Y-m-d', strtotime("-{$i} days"));
+            if (isset($rows[$date])) {
+                $lastBalance = (float) $rows[$date];
+            }
+            $labels[] = $date;
+            $values[] = round($lastBalance + $assetValue, 2);
         }
 
-        // Always pin today's point to the live wallet balance so the chart's
-        // rightmost value matches the Portfolio Value stat card exactly.
-        $todayLabel  = date('Y-m-d');
-        $liveBalance = $this->wallet->getBalance($userId);
-        $todayValue  = round($liveBalance + $assetValue, 2);
-
-        if (empty($labels)) {
-            // New user with no ledger history — just show one point for today
-            $labels[] = $todayLabel;
-            $values[] = $todayValue;
-        } elseif (end($labels) === $todayLabel) {
-            // Today already in series — replace with live value for accuracy
+        // Pin today with live balance
+        $today = date('Y-m-d');
+        $todayValue = round($liveBalance + $assetValue, 2);
+        if (end($labels) === $today) {
             $values[count($values) - 1] = $todayValue;
         } else {
-            // Today not yet in series — append it
-            $labels[] = $todayLabel;
+            $labels[] = $today;
             $values[] = $todayValue;
         }
 
-        return $this->json($response, [
-            'labels' => $labels,
-            'values' => $values,
-        ]);
+        // If no history at all, just show today
+        if ($priorBalance === 0.0 && empty($rows)) {
+            $labels = [$today];
+            $values = [$todayValue];
+        }
+
+        return $this->json($response, ['labels' => $labels, 'values' => $values]);
     }
 
     /**

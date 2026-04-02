@@ -1,24 +1,15 @@
 /**
- * ListingsGrid.jsx — Dev 2 Island (PATCHED v3)
+ * ListingsGrid.jsx — Dev 2 Island (Merged & Patched v5)
  * Owner: WH (Dev 2)
  *
  * FIXES vs previous version:
- *   FIX-1: Pagination "Next" button correctly disabled.
- *          The backend does server-side pagination (LIMIT 20 OFFSET).
- *          The frontend also does client-side pagination (PER_PAGE = 4).
- *          This double-pagination meant clicking Next sent page=2 to the
- *          server which returned 0 results (only 4 items exist total).
- *
- *          Solution: decouple server page from client page.
- *          - Server always fetches page=1 (all results up to 20).
- *          - Client paginates the returned results locally.
- *          - Next button is disabled when we're on the last client page
- *            AND the server returned fewer than its page size (no more data).
- *          - If server returns a full page (20 items), Next can load more
- *            from the server.
- *
- *   FIX-2: aria-expanded moved from <input> to wrapper <div role="combobox">.
- *   All previous fixes (shape normalisation, maxPrice, etc.) preserved.
+ * FIX-1: Pagination "Next" button correctly disabled. (Server vs Client Pages).
+ * FIX-2: Pagination trap resolved using `absolutePage` and `serverPage > 1` checks.
+ * FIX-3: Removed early returns for loading/error to prevent layout shifting.
+ * FIX-4: Changed skeleton count to match PER_PAGE (4) instead of 8 to stop height jumps.
+ * FIX-5: Moved Pagination outside of the loading block entirely so buttons never vanish.
+ * MERGE: Kept teammate's accessibility (a11y) improvements on the search bar.
+ * MERGE: Cleaned up duplicate wallet variables and fixed missing JSX closing tags.
  */
 
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -48,10 +39,7 @@ function highlight(text, query) {
 	);
 }
 
-/* ── API shape normaliser ─────────────────────────────────────────────────
-   Backend JOIN returns: asset_name, condition_state, seller_username
-   AssetCard expects:    name,       condition,        seller.username
-   ─────────────────────────────────────────────────────────────────────── */
+/* ── API shape normaliser ───────────────────────────────────────────────── */
 function normaliseListingFromApi(raw) {
 	if (raw.name) return raw;
 	return {
@@ -100,6 +88,7 @@ export default function ListingsGrid({ userId }) {
 		refetch: refetchListings,
 	} = useApi(listingsUrl);
 
+	// MERGE FIX: Removed duplicate useApi call and walletBalance assignments
 	const { data: walletData, refetch: refetchWallet } = useApi(
 		!userId ? null : "/api/v1/user/wallet",
 		{ auto: !!userId },
@@ -161,8 +150,15 @@ export default function ListingsGrid({ userId }) {
 	/* ── Pagination logic ──────────────────────────────────────────── */
 	const totalClientPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
 	const serverHasMore = allAssets.length >= SERVER_PAGE_SIZE;
+
 	const canGoNext = clientPage < totalClientPages || serverHasMore;
-	const canGoPrev = clientPage > 1;
+	const canGoPrev = clientPage > 1 || serverPage > 1;
+
+	const absolutePage =
+		(serverPage - 1) * (SERVER_PAGE_SIZE / PER_PAGE) + clientPage;
+	const absoluteTotalPages = serverHasMore
+		? null
+		: (serverPage - 1) * (SERVER_PAGE_SIZE / PER_PAGE) + totalClientPages;
 
 	const pageAssets = sorted.slice(
 		(clientPage - 1) * PER_PAGE,
@@ -181,6 +177,9 @@ export default function ListingsGrid({ userId }) {
 	function handlePrev() {
 		if (clientPage > 1) {
 			setClientPage((p) => p - 1);
+		} else if (serverPage > 1) {
+			setServerPage((p) => p - 1);
+			setClientPage(SERVER_PAGE_SIZE / PER_PAGE);
 		}
 	}
 
@@ -242,39 +241,10 @@ export default function ListingsGrid({ userId }) {
 		sort !== "newest" ||
 		(isFinite(maxPrice) && maxPrice < absoluteMax);
 
-	/* ── Loading ─────────────────────────────────────────────────────── */
-	if (loading) {
-		return (
-			<div
-				className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
-				role="status"
-				aria-label="Loading listings"
-			>
-				{Array.from({ length: 8 }, (_, i) => (
-					<Skeleton key={i} variant="card" label="Loading asset listing" />
-				))}
-			</div>
-		);
-	}
-
-	if (error) {
-		return (
-			<div className="flex flex-col items-center gap-4 py-16">
-				<p role="alert" className="text-(--color-danger) text-sm">
-					Failed to load listings: {error}
-				</p>
-				<Button variant="secondary" onClick={() => window.location.reload()}>
-					Retry
-				</Button>
-			</div>
-		);
-	}
-
 	/* ── Render ──────────────────────────────────────────────────────── */
 	return (
 		<>
 			<div className="flex flex-col gap-6">
-
 				{/* ── Search ─────────────────────────────────────────── */}
 				<div className="flex flex-col gap-3">
 					<form
@@ -283,7 +253,7 @@ export default function ListingsGrid({ userId }) {
 						className="relative"
 					>
 						<div className="flex gap-2">
-							{/* FIX-2: aria-expanded moved to wrapper div with role="combobox" */}
+							{/* Teammate's accessible combobox wrapper */}
 							<div
 								className="relative flex-1"
 								role="combobox"
@@ -420,9 +390,10 @@ export default function ListingsGrid({ userId }) {
 									aria-label="Grid view"
 									aria-pressed={view === "grid"}
 									className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors
-										${view === "grid"
-											? "bg-(--color-accent) text-white"
-											: "text-(--color-text-muted) hover:text-(--color-text-primary)"
+										${
+											view === "grid"
+												? "bg-(--color-accent) text-white"
+												: "text-(--color-text-muted) hover:text-(--color-text-primary)"
 										}`}
 								>
 									Grid
@@ -433,9 +404,10 @@ export default function ListingsGrid({ userId }) {
 									aria-label="List view"
 									aria-pressed={view === "list"}
 									className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors
-										${view === "list"
-											? "bg-(--color-accent) text-white"
-											: "text-(--color-text-muted) hover:text-(--color-text-primary)"
+										${
+											view === "list"
+												? "bg-(--color-accent) text-white"
+												: "text-(--color-text-muted) hover:text-(--color-text-primary)"
 										}`}
 								>
 									List
@@ -468,118 +440,154 @@ export default function ListingsGrid({ userId }) {
 								aria-label={`Maximum price: $${isFinite(maxPrice) ? maxPrice : absoluteMax}`}
 							/>
 							<span className="text-sm font-semibold text-(--color-text-primary) w-28">
-								Up to ${(isFinite(maxPrice) ? maxPrice : absoluteMax).toLocaleString()}
+								Up to $
+								{(isFinite(maxPrice) ? maxPrice : absoluteMax).toLocaleString()}
 							</span>
 						</div>
 					)}
 				</div>
 
-				{/* ── Empty state ─────────────────────────────────────── */}
-				{pageAssets.length === 0 && !loading && (
-					<p className="text-center text-(--color-text-muted) py-16 text-sm">
-						No listings found matching your filters.
-					</p>
-				)}
-
-				{/* ── Grid view ───────────────────────────────────────── */}
-				{view === "grid" && pageAssets.length > 0 && (
-					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-						{pageAssets.map((asset) => (
-							<AssetCard
-								key={asset.id}
-								asset={asset}
-								onAddToCart={handleBuy}
-								showSeller
-							/>
-						))}
-					</div>
-				)}
-
-				{/* ── List view ───────────────────────────────────────── */}
-				{view === "list" && pageAssets.length > 0 && (
-					<div className="flex flex-col gap-3">
-						{pageAssets.map((asset) => (
-							<a
-								key={asset.id}
-								href={`/listings/${asset.id}`}
-								className="flex items-center gap-4 p-4 rounded-lg
-									bg-(--color-surface) border border-(--color-border)
-									hover:border-(--color-accent) transition-colors cursor-pointer group text-left"
+				{/* ── Dynamic Content Area (Anchored to prevent layout shifts) ── */}
+				<div className="min-h-[400px] flex flex-col">
+					{loading ? (
+						<div
+							className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
+							role="status"
+							aria-label="Loading listings"
+						>
+							{Array.from({ length: PER_PAGE }, (_, i) => (
+								<Skeleton
+									key={i}
+									variant="card"
+									label="Loading asset listing"
+								/>
+							))}
+						</div>
+					) : error ? (
+						<div className="flex flex-col items-center gap-4 py-16">
+							<p role="alert" className="text-(--color-danger) text-sm">
+								Failed to load listings: {error}
+							</p>
+							<Button
+								variant="secondary"
+								onClick={() => window.location.reload()}
 							>
-								{/* Image */}
-								{asset.imageUrl || asset.image_url ? (
-									<img
-										src={asset.imageUrl}
-										alt={asset.name}
-										className="w-16 h-16 rounded-md object-cover border border-(--color-border) shrink-0"
-										loading="lazy"
-									/>
-								) : (
-									<div
-										className="w-16 h-16 rounded-md bg-(--color-surface-2) border border-(--color-border)
-											shrink-0 flex items-center justify-center"
-										aria-hidden="true"
-									>
-										<span className="text-xs text-(--color-text-muted)">IMG</span>
-									</div>
-								)}
+								Retry
+							</Button>
+						</div>
+					) : (
+						<>
+							{/* ── Empty state ─────────────────────────────────────── */}
+							{pageAssets.length === 0 && (
+								<p className="text-center text-(--color-text-muted) py-16 text-sm">
+									No listings found matching your filters.
+								</p>
+							)}
 
-								{/* Text info */}
-								<div className="flex-1 min-w-0">
-									<p className="text-sm font-semibold text-(--color-text-primary) truncate">
-										{highlight(asset.name, search)}
-									</p>
-									<p className="text-xs text-(--color-text-muted) mt-0.5">
-										{asset.collection} · {asset.rarity}
-									</p>
-									<div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
-										<p className="text-xs text-(--color-text-muted)">
-											{asset.condition}
-										</p>
-										{asset.seller?.username && (
-											<>
-												<span
-													className="text-xs text-(--color-text-muted) hidden sm:inline"
+							{/* ── Grid view ───────────────────────────────────────── */}
+							{view === "grid" && pageAssets.length > 0 && (
+								<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+									{pageAssets.map((asset) => (
+										<AssetCard
+											key={asset.id}
+											asset={asset}
+											onAddToCart={handleBuy}
+											showSeller
+										/>
+									))}
+								</div>
+							)}
+
+							{/* ── List view ───────────────────────────────────────── */}
+							{view === "list" && pageAssets.length > 0 && (
+								<div className="flex flex-col gap-3">
+									{pageAssets.map((asset) => (
+										<a
+											key={asset.id}
+											href={`/listings/${asset.id}`}
+											className="flex items-center gap-4 p-4 rounded-lg
+                                                       bg-(--color-surface) border border-(--color-border)
+                                                       hover:border-(--color-accent) transition-colors cursor-pointer group text-left"
+										>
+											{/* ── Image ── */}
+											{asset.imageUrl || asset.image_url ? (
+												<img
+													src={asset.imageUrl || asset.image_url}
+													alt={asset.name}
+													className="w-16 h-16 rounded-md object-cover border border-(--color-border) shrink-0"
+													loading="lazy"
+												/>
+											) : (
+												<div
+													className="w-16 h-16 rounded-md bg-(--color-surface-2) border border-(--color-border)
+                                                  shrink-0 flex items-center justify-center"
 													aria-hidden="true"
 												>
-													·
-												</span>
-												<p className="text-xs text-(--color-text-muted)">
-													Seller:{" "}
-													<span className="font-medium text-(--color-text-primary)">
-														{asset.seller.username}
+													<span className="text-xs text-(--color-text-muted)">
+														IMG
 													</span>
+												</div>
+											)}
+
+											{/* ── Text Info (with Seller) ── */}
+											<div className="flex-1 min-w-0">
+												<p className="text-sm font-semibold text-(--color-text-primary) truncate">
+													{highlight(asset.name, search)}
 												</p>
-											</>
-										)}
-									</div>
-								</div>
+												<p className="text-xs text-(--color-text-muted) mt-0.5">
+													{asset.collection} · {asset.rarity}
+												</p>
+												<div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
+													<p className="text-xs text-(--color-text-muted)">
+														{asset.condition}
+													</p>
+													{asset.seller?.username && (
+														<>
+															<span
+																className="text-xs text-(--color-text-muted) hidden sm:inline"
+																aria-hidden="true"
+															>
+																·
+															</span>
+															<p className="text-xs text-(--color-text-muted)">
+																Seller:{" "}
+																<span className="font-medium text-(--color-text-primary)">
+																	{asset.seller.username}
+																</span>
+															</p>
+														</>
+													)}
+												</div>
+											</div>
 
-								{/* Action */}
-								<div className="flex items-center gap-3 shrink-0">
-									<p className="text-sm font-bold text-(--color-text-primary)">
-										${asset.price.toLocaleString()}
-									</p>
-									<Button
-										variant="primary"
-										size="sm"
-										onClick={(e) => {
-											e.preventDefault();
-											handleBuy(asset.id);
-										}}
-										aria-label={`Buy ${asset.name}`}
-										className="rounded-full relative z-10"
-									>
-										Buy
-									</Button>
+											{/* ── Action ── */}
+											<div className="flex items-center gap-3 shrink-0">
+												<p className="text-sm font-bold text-(--color-text-primary)">
+													${asset.price.toLocaleString()}
+												</p>
+												<Button
+													variant="primary"
+													size="sm"
+													onClick={(e) => {
+														e.preventDefault();
+														handleBuy(asset.id);
+													}}
+													aria-label={`Buy ${asset.name}`}
+													className="rounded-full relative z-10"
+												>
+													Buy
+												</Button>
+											</div>
+										</a>
+									))}
 								</div>
-							</a>
-						))}
-					</div>
-				)}
+							)}
+						</>
+					)}
+				</div>
 
-				{/* ── Pagination ──────────────────────────────────────── */}
-				{(canGoPrev || canGoNext) && (
+				{/* ── Pagination (Moved OUTSIDE loading block) ─────────────────── */}
+				{(canGoPrev || canGoNext || serverPage > 1) && (
 					<div
 						className="flex justify-center items-center gap-2 pt-4"
 						role="navigation"
@@ -588,20 +596,20 @@ export default function ListingsGrid({ userId }) {
 						<Button
 							variant="secondary"
 							size="sm"
-							disabled={!canGoPrev}
+							disabled={!canGoPrev || loading}
 							onClick={handlePrev}
 							aria-label="Previous page"
 						>
 							← Prev
 						</Button>
 						<span className="text-sm text-(--color-text-muted) px-2">
-							Page {clientPage}
-							{totalClientPages > 1 ? ` of ${totalClientPages}` : ""}
+							Page {absolutePage}
+							{absoluteTotalPages ? ` of ${absoluteTotalPages}` : ""}
 						</span>
 						<Button
 							variant="secondary"
 							size="sm"
-							disabled={!canGoNext}
+							disabled={!canGoNext || loading}
 							onClick={handleNext}
 							aria-label="Next page"
 						>

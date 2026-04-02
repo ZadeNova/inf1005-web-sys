@@ -4,7 +4,6 @@
  * Route:   GET /dashboard  (AuthMiddleware required)
  *
  * Islands mounted here (all must be registered in main.jsx):
- * #portfolio-chart-root         → PortfolioChart
  * #rarity-donut-chart-root      → RarityDonutChart
  * #active-listings-manager-root → ActiveListingsManager
  * #portfolio-table-root         → PortfolioTable
@@ -81,7 +80,6 @@ ob_start();
                     <?= htmlspecialchars($portfolioChange) ?>
                 </dd>
                 <?php endif; ?>
-                <?php /* Note: chart may show slightly different value due to timing */ ?>
                 <dd class="text-[10px] text-(--color-text-muted)">Wallet + asset market value</dd>
             </div>
 
@@ -111,20 +109,19 @@ ob_start();
             </div>
         </dl>
 
-        <?php /* ── Chart row ─────────────────────────────────────── */ ?>
+        <?php /* ── Ledger & Rarity Chart row ────────────────────────── */ ?>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
+            <?php /* Wallet ledger island (shows transaction history) */ ?>
             <div class="lg:col-span-2">
-                <div id="portfolio-chart-root"
+                <div id="wallet-balance-root"
                      data-props='<?= json_encode(['userId' => $userId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
                     <div class="rounded-lg border border-(--color-border) bg-(--color-surface)
-                                p-4 h-72 animate-pulse flex items-center justify-center"
-                         aria-hidden="true">
-                        <span class="text-xs text-(--color-text-muted)">Loading chart…</span>
-                    </div>
+                                p-4 animate-pulse h-72" aria-hidden="true"></div>
                 </div>
             </div>
 
+            <?php /* Rarity Donut Chart */ ?>
             <div>
                 <div id="rarity-donut-chart-root"
                      data-props='<?= json_encode(['userId' => $userId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
@@ -132,13 +129,7 @@ ob_start();
                                 p-4 h-72 animate-pulse" aria-hidden="true"></div>
                 </div>
             </div>
-        </div>
-
-        <?php /* ── Wallet ledger island (shows transaction history) ── */ ?>
-        <div id="wallet-balance-root"
-             data-props='<?= json_encode(['userId' => $userId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
-            <div class="rounded-lg border border-(--color-border) bg-(--color-surface)
-                        p-4 animate-pulse h-24" aria-hidden="true"></div>
+            
         </div>
     </section>
 

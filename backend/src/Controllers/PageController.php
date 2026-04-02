@@ -116,18 +116,18 @@ class PageController
 
     // ── Featured listings (3 most recent active) ──────────────────────
     // In PageController::home(), change the featured listings query:
-$stmt = $this->db->query("
-    SELECT l.id, l.price,
-           a.name, a.rarity, a.condition_state, a.collection,
-           a.image_url,
-           u.username AS seller_username
-    FROM listings l
-    JOIN assets a ON a.id = l.asset_id
-    JOIN users  u ON u.id = l.seller_id
-    WHERE l.status = 'active'
-    ORDER BY l.created_at DESC
-    LIMIT 3
-");
+    $stmt = $this->db->query("
+        SELECT l.id, l.price,
+            a.name, a.rarity, a.condition_state, a.collection,
+            a.image_url,
+            u.username AS seller_username
+        FROM listings l
+        JOIN assets a ON a.id = l.asset_id
+        JOIN users  u ON u.id = l.seller_id
+        WHERE l.status = 'active'
+        ORDER BY l.created_at DESC
+        LIMIT 3
+    ");
     $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
     // Rarity metadata map — mirrors frontend RARITY constants

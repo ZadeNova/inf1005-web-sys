@@ -10,189 +10,244 @@
  *
  * FIX: Falls back gracefully when only a single data point exists (new users).
  * A single-point line chart now renders correctly instead of crashing.
+ *
+ * FIX: Migrated to TimeScale with chartjs-adapter-date-fns to properly render
+ * the temporal distances between transactions and fix chart distortion.
  */
 
-import { useEffect, useRef, useState } from 'react';
-import Card     from '../../shared/atoms/Card.jsx';
-import Skeleton from '../../shared/atoms/Skeleton.jsx';
-import { useApi }   from '../../shared/hooks/useApi.js';
+import { useEffect, useRef, useState } from "react";
+import Card from "../../shared/atoms/Card.jsx";
+import Skeleton from "../../shared/atoms/Skeleton.jsx";
+import { useApi } from "../../shared/hooks/useApi.js";
 
 import {
-  Chart,
-  LineElement,
-  PointElement,
-  LineController,
-  CategoryScale,
-  LinearScale,
-  Tooltip,
-  Filler,
-} from 'chart.js';
+	Chart,
+	LineElement,
+	PointElement,
+	LineController,
+	TimeScale,
+	LinearScale,
+	Tooltip,
+	Filler,
+} from "chart.js";
+import "chartjs-adapter-date-fns";
 
-Chart.register(LineElement, PointElement, LineController, CategoryScale, LinearScale, Tooltip, Filler);
+Chart.register(
+	LineElement,
+	PointElement,
+	LineController,
+	TimeScale,
+	LinearScale,
+	Tooltip,
+	Filler,
+);
 
 function cssVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+	return getComputedStyle(document.documentElement)
+		.getPropertyValue(name)
+		.trim();
 }
 
-const TIME_RANGES = ['1W', '1M', '3M'];
-
+const TIME_RANGES = ["1W", "1M", "3M"];
 
 export default function PortfolioChart() {
-  const canvasRef         = useRef(null);
-  const chartRef          = useRef(null);
-  const [range, setRange] = useState('1M');
+	const canvasRef = useRef(null);
+	const chartRef = useRef(null);
+	const [range, setRange] = useState("1M");
 
-  const { data, loading, error } = useApi(`/api/v1/dashboard/portfolio-history?range=${range}`);
+	const { data, loading, error } = useApi(
+		`/api/v1/dashboard/portfolio-history?range=${range}`,
+	);
 
-  const chartData = data;
+	const chartData = data;
 
-  // Current value = last data point in the series
-  const currentValue = chartData?.values?.length
-    ? chartData.values[chartData.values.length - 1]
-    : null;
+	// Current value = last data point in the series
+	const currentValue = chartData?.values?.length
+		? chartData.values[chartData.values.length - 1]
+		: null;
 
-  useEffect(() => {
-    if (!chartData || !canvasRef.current) return;
-    if (!chartData.values?.length) return;
+	useEffect(() => {
+		if (!chartData || !canvasRef.current) return;
+		if (!chartData.values?.length) return;
 
-    if (chartRef.current) {
-      chartRef.current.destroy();
-      chartRef.current = null;
-    }
+		if (chartRef.current) {
+			chartRef.current.destroy();
+			chartRef.current = null;
+		}
 
-    const accent    = cssVar('--color-accent');
-    const textMuted = cssVar('--color-text-muted');
-    const border    = cssVar('--color-border');
+		const accent = cssVar("--color-accent");
+		const textMuted = cssVar("--color-text-muted");
+		const border = cssVar("--color-border");
 
-    // For a single data point, show a point but no connecting line
-    const isSinglePoint = chartData.values.length === 1;
+		// For a single data point, show a point but no connecting line
+		const isSinglePoint = chartData.values.length === 1;
 
-    chartRef.current = new Chart(canvasRef.current, {
-      type: 'line',
-      data: {
-        labels:   chartData.labels,
-        datasets: [{
-          label:                'Total Portfolio Value (USD)',
-          data:                 chartData.values,
-          borderColor:          accent,
-          backgroundColor:      `${accent}22`,
-          borderWidth:          isSinglePoint ? 0 : 2,
-          pointRadius:          isSinglePoint ? 6 : 4,
-          pointHoverRadius:     8,
-          pointBackgroundColor: accent,
-          tension:              0.4,
-          fill:                 true,
-        }],
-      },
-      options: {
-        responsive:          true,
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: cssVar('--color-surface-2'),
-            borderColor:     border,
-            borderWidth:     1,
-            titleColor:      cssVar('--color-text-primary'),
-            bodyColor:       textMuted,
-            padding:         10,
-            callbacks: {
-              label: ctx => ` $${Number(ctx.parsed.y).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-              // Explain if only one point
-              afterBody: isSinglePoint
-                ? () => ['← Current value']
-                : undefined,
-            },
-          },
-        },
-        scales: {
-          x: {
-            ticks: { color: textMuted, font: { size: 11 } },
-            grid:  { color: border },
-          },
-          y: {
-            ticks: {
-              color: textMuted,
-              font:  { size: 11 },
-              callback: v => `$${Number(v).toLocaleString()}`,
-            },
-            grid: { color: border },
-          },
-        },
-      },
-    });
+		// Calculate dynamic min/max bounds based on the selected range
+		const maxDate = new Date();
+		const minDate = new Date();
 
-    return () => { if (chartRef.current) chartRef.current.destroy(); };
-  }, [chartData, range]);
+		if (range === "1W") {
+			minDate.setDate(maxDate.getDate() - 7);
+		} else if (range === "1M") {
+			minDate.setMonth(maxDate.getMonth() - 1);
+		} else if (range === "3M") {
+			minDate.setMonth(maxDate.getMonth() - 3);
+		}
 
-  if (loading) return <Skeleton variant="block" height={280} label="Loading portfolio chart" />;
+		chartRef.current = new Chart(canvasRef.current, {
+			type: "line",
+			data: {
+				labels: chartData.labels,
+				datasets: [
+					{
+						label: "Total Portfolio Value (USD)",
+						data: chartData.values,
+						borderColor: accent,
+						backgroundColor: `${accent}22`,
+						borderWidth: isSinglePoint ? 0 : 2,
+						pointRadius: isSinglePoint ? 6 : 4,
+						pointHoverRadius: 8,
+						pointBackgroundColor: accent,
+						tension: 0.4,
+						fill: true,
+					},
+				],
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				interaction: { mode: "index", intersect: false },
+				plugins: {
+					legend: { display: false },
+					tooltip: {
+						backgroundColor: cssVar("--color-surface-2"),
+						borderColor: border,
+						borderWidth: 1,
+						titleColor: cssVar("--color-text-primary"),
+						bodyColor: textMuted,
+						padding: 10,
+						callbacks: {
+							label: (ctx) =>
+								` $${Number(ctx.parsed.y).toLocaleString("en-US", {
+									minimumFractionDigits: 2,
+								})}`,
+							// Explain if only one point
+							afterBody: isSinglePoint ? () => ["← Current value"] : undefined,
+						},
+					},
+				},
+				scales: {
+					x: {
+						type: "time",
+						min: minDate.toISOString(),
+						max: maxDate.toISOString(),
+						time: {
+							tooltipFormat: "MMM d, yyyy",
+							minUnit: "day",
+							displayFormats: {
+								day: "MMM d",
+								week: "MMM d",
+								month: "MMM yyyy",
+							},
+						},
+						ticks: {
+							color: textMuted,
+							font: { size: 11 },
+							maxTicksLimit: 8,
+						},
+						grid: { color: border },
+					},
+					y: {
+						ticks: {
+							color: textMuted,
+							font: { size: 11 },
+							callback: (v) => `$${Number(v).toLocaleString()}`,
+						},
+						grid: { color: border },
+					},
+				},
+			},
+		});
 
-  if (error) {
-    return (
-      <p role="alert" className="text-sm text-(--color-danger)">
-        Failed to load chart: {error}
-      </p>
-    );
-  }
+		return () => {
+			if (chartRef.current) chartRef.current.destroy();
+		};
+	}, [chartData, range]);
 
-  return (
-    <Card variant="default" padding="md" className="flex flex-col gap-3">
+	if (loading)
+		return (
+			<Skeleton variant="block" height={280} label="Loading portfolio chart" />
+		);
 
-      {/* Header: title + current value + time range selector */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h3 className="text-sm font-bold text-(--color-text-primary)">
-            Total Portfolio Value Over Time
-          </h3>
-          {currentValue !== null && (
-            <p className="text-xs text-(--color-accent) font-semibold mt-0.5">
-              Current:{' '}
-              <span>
-                ${Number(currentValue).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </span>
-              <span className="text-[10px] text-(--color-text-muted) font-normal ml-1">
-                (wallet + assets)
-              </span>
-            </p>
-          )}
-        </div>
+	if (error) {
+		return (
+			<p role="alert" className="text-sm text-(--color-danger)">
+				Failed to load chart: {error}
+			</p>
+		);
+	}
 
-        {/* Time range selector */}
-        <div className="flex gap-1" role="group" aria-label="Chart time range">
-          {TIME_RANGES.map(r => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setRange(r)}
-              aria-pressed={range === r}
-              className={`px-2.5 py-1 text-[10px] font-semibold rounded-sm transition-colors duration-150
-                ${range === r
-                  ? 'bg-(--color-accent) text-white'
-                  : 'text-(--color-text-muted) hover:text-(--color-text-primary) hover:bg-(--color-surface-2)'
-                }`}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-      </div>
+	return (
+		<Card variant="default" padding="md" className="flex flex-col gap-3">
+			{/* Header: title + current value + time range selector */}
+			<div className="flex items-center justify-between flex-wrap gap-2">
+				<div>
+					<h3 className="text-sm font-bold text-(--color-text-primary)">
+						Total Portfolio Value Over Time
+					</h3>
+					{currentValue !== null && (
+						<p className="text-xs text-(--color-accent) font-semibold mt-0.5">
+							Current:{" "}
+							<span>
+								$
+								{Number(currentValue).toLocaleString("en-US", {
+									minimumFractionDigits: 2,
+								})}
+							</span>
+							<span className="text-[10px] text-(--color-text-muted) font-normal ml-1">
+								(wallet + assets)
+							</span>
+						</p>
+					)}
+				</div>
 
-      {/* Canvas */}
-      <div style={{ height: 280 }}>
-        <canvas
-          ref={canvasRef}
-          aria-label="Total portfolio value over time line chart"
-          role="img"
-        />
-      </div>
+				{/* Time range selector */}
+				<div className="flex gap-1" role="group" aria-label="Chart time range">
+					{TIME_RANGES.map((r) => (
+						<button
+							key={r}
+							type="button"
+							onClick={() => setRange(r)}
+							aria-pressed={range === r}
+							className={`px-2.5 py-1 text-[10px] font-semibold rounded-sm transition-colors duration-150
+                ${
+									range === r
+										? "bg-(--color-accent) text-white"
+										: "text-(--color-text-muted) hover:text-(--color-text-primary) hover:bg-(--color-surface-2)"
+								}`}
+						>
+							{r}
+						</button>
+					))}
+				</div>
+			</div>
 
-      {/* Explainer for single-point charts (new users) */}
-      {chartData?.values?.length === 1 && (
-        <p className="text-xs text-(--color-text-muted) text-center">
-          Not enough history to show a trend yet. Check back after your next transaction.
-        </p>
-      )}
-    </Card>
-  );
+			{/* Canvas */}
+			<div style={{ height: 280 }}>
+				<canvas
+					ref={canvasRef}
+					aria-label="Total portfolio value over time line chart"
+					role="img"
+				/>
+			</div>
+
+			{/* Explainer for single-point charts (new users) */}
+			{chartData?.values?.length === 1 && (
+				<p className="text-xs text-(--color-text-muted) text-center">
+					Not enough history to show a trend yet. Check back after your next
+					transaction.
+				</p>
+			)}
+		</Card>
+	);
 }
