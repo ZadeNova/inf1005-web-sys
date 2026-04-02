@@ -202,28 +202,6 @@ $featured = $featured ?? [
     </section>
 
     <?php /* ══════════════════════════════════════════════════════════
-       3. PRICE CHART — React island
-    ══════════════════════════════════════════════════════════════ */ ?>
-    <section aria-labelledby="chart-heading"
-             class="border-b border-(--color-border)">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-
-            <div class="mb-6">
-                <p class="text-[11px] font-semibold uppercase tracking-widest
-                          text-(--color-accent) mb-1">
-                    Live Data
-                </p>
-                <h2 id="chart-heading"
-                    class="text-xl font-bold text-(--color-text-primary)">
-                    Market Overview
-                </h2>
-            </div>
-
-            <div id="price-chart-root" data-props="{}"></div>
-        </div>
-    </section>
-
-    <?php /* ══════════════════════════════════════════════════════════
        4. FEATURED LISTINGS — pure PHP/HTML
     ══════════════════════════════════════════════════════════════ */ ?>
     <section aria-labelledby="featured-heading"

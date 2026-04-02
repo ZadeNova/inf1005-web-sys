@@ -18,7 +18,6 @@
 import { useState, useMemo } from "react";
 import Card from "../../shared/atoms/Card.jsx";
 import Button from "../../shared/atoms/Button.jsx";
-import Badge from "../../shared/atoms/Badge.jsx";
 import Skeleton from "../../shared/atoms/Skeleton.jsx";
 import { RarityBadge, ConditionBadge } from "../../shared/atoms/Badge.jsx";
 import { useApi } from "../../shared/hooks/useApi.js";
@@ -138,21 +137,6 @@ export default function ProfileCollections() {
 	const [view, setView] = useState("grid");
 	const [page, setPage] = useState(1);
 
-	// Looking For
-	const [editingInterests, setEditingInterests] = useState(false);
-	const [interests, setInterests] = useState([
-		RARITY.SECRET_RARE,
-		RARITY.ULTRA_RARE,
-		RARITY.RARE,
-	]);
-	const [mintPreferred, setMintPreferred] = useState(true);
-
-	// Favourite Asset
-	const [editingFavourite, setEditingFavourite] = useState(false);
-	const [favouriteIndex, setFavouriteIndex] = useState(0);
-	const [favSearch, setFavSearch] = useState("");
-	const [favRarity, setFavRarity] = useState("");
-
 	// Owned Assets filters
 	const [ownedSort, setOwnedSort] = useState("low");
 	const [ownedRarity, setOwnedRarity] = useState("");
@@ -163,23 +147,6 @@ export default function ProfileCollections() {
 	const [txCondition, setTxCondition] = useState("");
 	const [txType, setTxType] = useState(""); // '' | 'buy' | 'sell'
 	const [historyVisible, setHistoryVisible] = useState(true);
-
-	/* ── Derived data ────────────────────────────────────────────────── */
-	const favouriteAsset = ownedAssets[favouriteIndex] ?? ownedAssets[0];
-
-	const filteredFavAssets = useMemo(
-		() =>
-			ownedAssets.filter((a) => {
-				if (
-					favSearch &&
-					!a.name.toLowerCase().includes(favSearch.toLowerCase())
-				)
-					return false;
-				if (favRarity && a.rarity !== favRarity) return false;
-				return true;
-			}),
-		[favSearch, favRarity, ownedAssets],
-	);
 
 	const filteredOwned = useMemo(() => {
 		const f = ownedAssets.filter(
@@ -214,246 +181,9 @@ export default function ProfileCollections() {
 		setPage(1);
 	}
 
-	function toggleInterest(rarity) {
-		setInterests((prev) =>
-			prev.includes(rarity)
-				? prev.filter((r) => r !== rarity)
-				: [...prev, rarity],
-		);
-	}
-
 	/* ── Render ──────────────────────────────────────────────────────── */
 	return (
 		<div className="flex flex-col gap-6">
-			{/* ══ Looking For card ═══════════════════════════════════════ */}
-			<Card variant="default" padding="md" className="flex flex-col gap-3">
-				<div className="flex items-center justify-between">
-					<h3 className="text-sm font-bold text-(--color-text-primary)">
-						Looking For
-					</h3>
-					<button
-						type="button"
-						onClick={() => setEditingInterests((e) => !e)}
-						aria-label={
-							editingInterests ? "Close interests editor" : "Edit interests"
-						}
-						aria-expanded={editingInterests}
-						className="text-(--color-text-muted) hover:text-(--color-accent) transition-colors"
-					>
-						<PenIcon />
-					</button>
-				</div>
-
-				{editingInterests ? (
-					<div className="flex flex-col gap-3">
-						<p className="text-xs text-(--color-text-muted)">
-							Select rarities you are looking for:
-						</p>
-						<div
-							className="flex flex-wrap gap-2"
-							role="group"
-							aria-label="Rarity interests"
-						>
-							{ALL_RARITIES.map((r) => (
-								<button
-									key={r}
-									type="button"
-									onClick={() => toggleInterest(r)}
-									aria-pressed={interests.includes(r)}
-									className={`text-xs px-3 py-1 rounded-full border font-semibold transition-colors
-                          ${
-														interests.includes(r)
-															? "bg-(--color-accent) border-(--color-accent) text-white"
-															: "bg-transparent border-(--color-border) text-(--color-text-muted) hover:border-(--color-accent)"
-													}`}
-								>
-									{r}
-								</button>
-							))}
-						</div>
-						<label className="flex items-center gap-2 text-sm text-(--color-text-primary) cursor-pointer">
-							<input
-								type="checkbox"
-								checked={mintPreferred}
-								onChange={(e) => setMintPreferred(e.target.checked)}
-								className="accent-(--color-accent)"
-							/>
-							Mint condition preferred
-						</label>
-						<Button
-							variant="primary"
-							size="sm"
-							onClick={() => setEditingInterests(false)}
-						>
-							Done
-						</Button>
-					</div>
-				) : (
-					<div className="flex flex-wrap gap-2">
-						{interests.map((interest) => (
-							<Badge
-								key={interest}
-								label={interest}
-								colour="accent"
-								size="sm"
-							/>
-						))}
-						{mintPreferred && (
-							<span className="text-xs text-(--color-text-muted) self-center">
-								+ Mint condition preferred
-							</span>
-						)}
-					</div>
-				)}
-			</Card>
-
-			{/* ══ Favourite Asset card ════════════════════════════════════ */}
-			<Card variant="default" padding="md" className="flex flex-col gap-3">
-				<div className="flex items-center justify-between">
-					<h3 className="text-sm font-bold text-(--color-text-primary)">
-						⭐ Favourite Asset
-					</h3>
-					<button
-						type="button"
-						onClick={() => setEditingFavourite((e) => !e)}
-						aria-label={
-							editingFavourite
-								? "Close favourite picker"
-								: "Edit favourite asset"
-						}
-						aria-expanded={editingFavourite}
-						className="text-(--color-text-muted) hover:text-(--color-accent) transition-colors"
-					>
-						<PenIcon />
-					</button>
-				</div>
-
-				{editingFavourite ? (
-					<div className="flex flex-col gap-3">
-						<div className="flex flex-wrap gap-2">
-							<input
-								type="search"
-								value={favSearch}
-								onChange={(e) => setFavSearch(e.target.value)}
-								placeholder="Search assets..."
-								className={`${inputClass} flex-1 min-w-0`}
-								aria-label="Search favourite asset"
-							/>
-							<select
-								value={favRarity}
-								onChange={(e) => setFavRarity(e.target.value)}
-								className={selectClass}
-								aria-label="Filter by rarity"
-							>
-								<option value="">All Rarities</option>
-								{ALL_RARITIES.map((r) => (
-									<option key={r} value={r}>
-										{r}
-									</option>
-								))}
-							</select>
-						</div>
-						<div
-							className="flex flex-col gap-2 max-h-60 overflow-y-auto"
-							role="listbox"
-							aria-label="Select favourite asset"
-						>
-							{filteredFavAssets.length === 0 ? (
-								<p className="text-sm text-(--color-text-muted) text-center py-4">
-									No assets found
-								</p>
-							) : (
-								filteredFavAssets.map((asset) => (
-									<button
-										key={asset.id}
-										type="button"
-										role="option"
-										aria-selected={
-											ownedAssets.indexOf(asset) === favouriteIndex
-										}
-										onClick={() => {
-											setFavouriteIndex(ownedAssets.indexOf(asset));
-											setEditingFavourite(false);
-											setFavSearch("");
-											setFavRarity("");
-										}}
-										className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-colors
-                            ${
-															ownedAssets.indexOf(asset) === favouriteIndex
-																? "border-(--color-accent) bg-(--color-accent-subtle)"
-																: "border-(--color-border) hover:border-(--color-accent)"
-														}`}
-									>
-										{/* ── Favourite selector thumbnail ── */}
-										{asset.image_url ? (
-											<img
-												src={asset.image_url}
-												alt={asset.name}
-												className="w-10 h-10 rounded object-cover border border-(--color-border) shrink-0"
-												loading="lazy"
-											/>
-										) : (
-											<div
-												className="w-10 h-10 rounded bg-(--color-surface-2) border border-(--color-border)
-                                      flex items-center justify-center shrink-0"
-												aria-hidden="true"
-											>
-												<span className="text-xs text-(--color-text-muted)">
-													IMG
-												</span>
-											</div>
-										)}
-										<div>
-											<p className="text-sm font-semibold text-(--color-text-primary)">
-												{asset.name}
-											</p>
-											<p className="text-xs text-(--color-text-muted)">
-												{asset.rarity} · {asset.collection}
-											</p>
-										</div>
-									</button>
-								))
-							)}
-						</div>
-					</div>
-				) : favouriteAsset ? (
-					<div className="flex items-center gap-4">
-						{/* ── Favourite asset display thumbnail ── */}
-						{favouriteAsset.image_url ? (
-							<img
-								src={favouriteAsset.image_url}
-								alt={favouriteAsset.name}
-								className="w-16 h-16 rounded-md object-cover border border-(--color-border) shrink-0"
-								loading="lazy"
-							/>
-						) : (
-							<div
-								className="w-16 h-16 rounded-md bg-(--color-surface-2) border border-(--color-border)
-                              shrink-0 flex items-center justify-center"
-								aria-hidden="true"
-							>
-								<span className="text-xs text-(--color-text-muted)">IMG</span>
-							</div>
-						)}
-						<div className="flex flex-col gap-1">
-							<p className="text-sm font-bold text-(--color-text-primary)">
-								{favouriteAsset.name}
-							</p>
-							<div className="flex flex-wrap gap-1">
-								<RarityBadge tier={favouriteAsset.rarity} size="sm" />
-								<ConditionBadge
-									condition={favouriteAsset.condition}
-									size="sm"
-								/>
-							</div>
-							<p className="text-xs text-(--color-text-muted)">
-								{favouriteAsset.collection}
-							</p>
-						</div>
-					</div>
-				) : null}
-			</Card>
-
 			{/* ══ Tabbed collection section ═══════════════════════════════ */}
 			<section aria-label="My collection">
 				<div

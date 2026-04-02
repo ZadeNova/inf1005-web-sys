@@ -74,6 +74,7 @@ import WalletBalance         from './islands/WH/WalletBalance.jsx';
 import PortfolioTable        from './islands/WH/PortfolioTable.jsx';
 import TransactionHistory    from './islands/WH/TransactionHistory.jsx';
 import ListingDetail         from './islands/WH/ListingDetail.jsx';
+import PortfolioChart        from './islands/WH/PortfolioChart.jsx';
 mountIsland('listing-detail-root',         ListingDetail);
 mountIsland('listings-grid-root',          ListingsGrid);
 mountIsland('profile-card-root',           ProfileCard);

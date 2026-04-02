@@ -29,17 +29,6 @@ ob_start();
      data-props='<?= json_encode(["listingId" => (int)$listingId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
     </div>
 
-    <?php /* Price history chart island — full width below detail */ ?>
-    <section aria-labelledby="price-chart-heading">
-        <h2 id="price-chart-heading"
-            class="text-base font-bold text-(--color-text-primary) mb-4">
-            Price History
-        </h2>
-        <div id="listing-price-chart-root"
-            data-props='<?= json_encode(["listingId" => (int)$listingId], JSON_HEX_APOS | JSON_HEX_QUOT) ?>'>
-        </div>
-    </section>
-
 </main>
 
 <?php

@@ -16,11 +16,7 @@ import { useApi }              from '../../shared/hooks/useApi.js';
 const NAME_MAX = 30;
 const BIO_MAX  = 150;
 
-const ALL_BADGES = [
-  { id: 'milestone-2yr',   label: '🎖️ 2 Year Member',  colour: 'accent',  default: true  },
-  { id: 'seasoned-trader', label: '💼 Seasoned Trader', colour: 'success', default: true  },
-  { id: 'veteran',         label: '⚔️ Veteran',         colour: 'warning', default: false },
-];
+
 
 const PenIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4" aria-hidden="true">
@@ -81,12 +77,8 @@ export default function ProfileCard({ userId, currentUserId }) {
   const [liveDisplayName, setLiveDisplayName] = useState(null);
   const [liveBio, setLiveBio]                 = useState(null);
   const [liveBank, setLiveBank]               = useState(null);
-  const [editingBadges, setEditingBadges]     = useState(false);
   const [showBalance, setShowBalance]         = useState(true);
   const [profileSaved, setProfileSaved]       = useState(false);
-  const [activeBadges, setActiveBadges]       = useState(
-    ALL_BADGES.filter(b => b.default).map(b => b.id)
-  );
 
   if (loading) return <Skeleton variant="card" label="Loading profile" />;
   if (error)   return <p role="alert" className="text-(--color-danger) text-sm">Failed to load profile: {error}</p>;
@@ -97,7 +89,6 @@ export default function ProfileCard({ userId, currentUserId }) {
   const shownBio    = liveBio         ?? user?.bio;
   const shownBank   = liveBank        ?? bank;
   const isOwner     = !currentUserId  || userId === currentUserId;
-  const shownBadges = ALL_BADGES.filter(b => activeBadges.includes(b.id));
 
   const maskedBalance = wallet?.balance
     ? '$' + wallet.balance.toLocaleString().replace(/[0-9]/g, 'x')
@@ -138,7 +129,7 @@ export default function ProfileCard({ userId, currentUserId }) {
         setLiveDisplayName(displayName);
         setLiveBio(bio);
         setProfileSaved(true);
-      ssetTimeout(() => {
+      setTimeout(() => {
         setProfileSaved(false);
         window.location.reload(); // reload so navbar + dashboard reflect new username
       }, 1500); // short delay
@@ -197,13 +188,6 @@ export default function ProfileCard({ userId, currentUserId }) {
     setBankMsg('✅ Bank details updated!');
     setTimeout(() => { setBankMsg(''); setActiveSection('view'); }, 1000);
   }
-
-  function toggleBadge(id) {
-    setActiveBadges(prev =>
-      prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]
-    );
-  }
-
   const baseInput    = "bg-(--color-surface-2) border border-(--color-border) text-(--color-text-primary) text-sm rounded-md py-2 w-full";
   const inputClass   = `${baseInput} px-3`;
   const pwInputClass = `${baseInput} pl-3 pr-10`;
@@ -232,28 +216,6 @@ export default function ProfileCard({ userId, currentUserId }) {
               <p className="text-xs text-(--color-text-muted)">
                 Joined {new Date(stats?.joinedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
               </p>
-              <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                {shownBadges.map(b => (
-                  <Badge key={b.id} label={b.label} colour={b.colour} size="sm" />
-                ))}
-                {isOwner && (
-                  <button type="button" onClick={() => setEditingBadges(e => !e)} aria-label="Edit badges" className="text-(--color-text-muted) hover:text-(--color-accent) transition-colors">
-                    <PenIcon />
-                  </button>
-                )}
-              </div>
-              {editingBadges && (
-                <div className="mt-3 flex flex-col gap-2 p-3 rounded-lg bg-(--color-surface-2) border border-(--color-border)">
-                  <p className="text-xs text-(--color-text-muted) font-semibold">Select badges to display:</p>
-                  {ALL_BADGES.map(b => (
-                    <label key={b.id} className="flex items-center gap-2 cursor-pointer text-sm text-(--color-text-primary)">
-                      <input type="checkbox" checked={activeBadges.includes(b.id)} onChange={() => toggleBadge(b.id)} className="accent-(--color-accent)" />
-                      {b.label}
-                    </label>
-                  ))}
-                  <Button variant="primary" size="sm" onClick={() => setEditingBadges(false)}>Done</Button>
-                </div>
-              )}
             </div>
           </div>
 
