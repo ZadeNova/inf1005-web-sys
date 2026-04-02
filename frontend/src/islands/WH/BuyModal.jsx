@@ -18,38 +18,12 @@
  * so the user has confirmation even after the modal is gone.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import Card from '../../shared/atoms/Card.jsx';
 import Button from '../../shared/atoms/Button.jsx';
 import { RarityBadge, ConditionBadge } from '../../shared/atoms/Badge.jsx';
-import { usePost } from '../../shared/hooks/useApi.js';
+import { usePost } from '../../shared/hooks/useApi.js';``
 import { useToast } from '../../shared/context/ToastContext.jsx';
-
-const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
-
-function useFocusTrap(dialogRef, onClose) {
-  useEffect(() => {
-    const el = dialogRef.current;
-    if (!el) return;
-    const prev = document.activeElement;
-    el.querySelector(FOCUSABLE)?.focus();
-    function onKey(e) {
-      if (e.key === 'Escape') { e.stopPropagation(); onClose(); return; }
-      if (e.key !== 'Tab') return;
-      const nodes = [...el.querySelectorAll(FOCUSABLE)];
-      if (!nodes.length) { e.preventDefault(); return; }
-      if (e.shiftKey) {
-        if (document.activeElement === nodes[0]) { e.preventDefault(); nodes[nodes.length - 1].focus(); }
-      } else {
-        if (document.activeElement === nodes[nodes.length - 1]) { e.preventDefault(); nodes[0].focus(); }
-      }
-    }
-    document.addEventListener('keydown', onKey);
-    return () => { document.removeEventListener('keydown', onKey); prev?.focus(); };
-  // onClose is intentionally omitted — it is stable for the modal's lifetime
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dialogRef]);
-}
 
 /* ── Icons ─────────────────────────────────────────────────────────────── */
 const CheckIcon = () => (
@@ -74,8 +48,6 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
   const [phase, setPhase] = useState('idle');   // idle | loading | success | error
   const [message, setMessage] = useState('');
   const toast = useToast();
-  const dialogRef = useRef(null);
-  useFocusTrap(dialogRef, onClose);
 
   const { execute: postBuy } = usePost('/api/v1/market/buy');
 
@@ -110,7 +82,6 @@ export default function BuyModal({ listing, walletBalance, onClose, onSuccess })
   return (
     /* ── Backdrop ──────────────────────────────────────────────────── */
     <div role="dialog"
-      ref={dialogRef}
       aria-modal="true"
       aria-labelledby="buy-modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center

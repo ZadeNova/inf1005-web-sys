@@ -73,87 +73,81 @@ export default function RegisterForm() {
 
   return (
     <Card variant="default" padding="lg" className="w-full max-w-md">
-      <form onSubmit={e => { e.preventDefault(); handleSubmit(); }} noValidate>
-        <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-5">
 
-          <h2 className="text-xl font-bold text-(--color-text-primary)">
-            Create your account
-          </h2>
+        <h2 className="text-xl font-bold text-(--color-text-primary)">
+          Create your account
+        </h2>
 
-          {errors.form && (
-            <p role="alert" className="text-sm text-(--color-danger)
-               bg-(--color-danger-subtle) border border-(--color-danger)
-               rounded-md px-3 py-2">
-              {errors.form}
-            </p>
-          )}
-
-          <Input
-            id="username"
-            label="Username"
-            placeholder="0xYourName"
-            value={form.username}
-            onChange={update('username')}
-            error={errors.username}
-            autoComplete="username"
-            required
-          />
-
-          <Input
-            id="email"
-            label="Email"
-            type="email"
-            placeholder="you@example.com"
-            value={form.email}
-            onChange={update('email')}
-            error={errors.email}
-            autoComplete="email"
-            required
-          />
-
-          <Input
-            id="password"
-            label="Password"
-            type="password"
-            placeholder="Min. 8 chars, uppercase, lowercase, number"
-            value={form.password}
-            onChange={update('password')}
-            error={errors.password}
-            autoComplete="new-password"
-            required
-          />
-
-          <Input
-            id="confirmPassword"
-            label="Confirm Password"
-            type="password"
-            placeholder="Repeat password"
-            value={form.confirmPassword}
-            onChange={update('confirmPassword')}
-            error={errors.confirmPassword}
-            autoComplete="new-password"
-            required
-          />
-
-          <Button
-            variant="primary"
-            size="lg"
-            type="submit"
-            loading={loading}
-            className="w-full"
-          >
-            Create Account
-          </Button>
-
-          <p className="text-sm text-center text-(--color-text-muted)">
-            Already have an account?{' '}
-            <a href="/login" className="text-(--color-accent) hover:text-(--color-accent-hover) font-medium underline underline-offset-2">
-              Sign in
-            </a>
+        {errors.form && (
+          <p role="alert" className="text-sm text-(--color-danger)
+             bg-(--color-danger-subtle) border border-(--color-danger)
+             rounded-md px-3 py-2">
+            {errors.form}
           </p>
+        )}
 
-        </div>
-      </form>
+        <Input
+          id="username"
+          label="Username"
+          placeholder="0xYourName"
+          value={form.username}
+          onChange={update('username')}
+          error={errors.username}
+          required
+        />
+
+        <Input
+          id="email"
+          label="Email"
+          type="email"
+          placeholder="you@example.com"
+          value={form.email}
+          onChange={update('email')}
+          error={errors.email}
+          required
+        />
+
+        <Input
+          id="password"
+          label="Password"
+          type="password"
+          placeholder="Min. 8 chars, uppercase, lowercase, number" 
+          value={form.password}
+          onChange={update('password')}
+          error={errors.password}
+          required
+        />
+
+        <Input
+          id="confirmPassword"
+          label="Confirm Password"
+          type="password"
+          placeholder="Repeat password"
+          value={form.confirmPassword}
+          onChange={update('confirmPassword')}
+          error={errors.confirmPassword}
+          required
+        />
+
+        <Button
+          variant="primary"
+          size="lg"
+          loading={loading}
+          onClick={handleSubmit}
+          className="w-full"
+        >
+          Create Account
+        </Button>
+
+        <p className="text-sm text-center text-(--color-text-muted)">
+          Already have an account?{' '}
+          <a href="/login" className="text-(--color-accent) hover:text-(--color-accent-hover) font-medium underline underline-offset-2">
+            Sign in
+          </a>
+        </p>
+
+      </div>
     </Card>
   );
 }

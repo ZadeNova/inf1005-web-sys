@@ -50,60 +50,56 @@ export default function LoginForm() {
 
   return (
     <Card variant="default" padding="lg" className="w-full max-w-md">
-      <form onSubmit={e => { e.preventDefault(); handleSubmit(); }} noValidate>
-        <div className="flex flex-col gap-5">
-          <h2 className="text-xl font-bold text-(--color-text-primary)">
-            Sign in to Vapour FT
-          </h2>
+      <div className="flex flex-col gap-5">
+        <h2 className="text-xl font-bold text-(--color-text-primary)">
+          Sign in to Vapour FT
+        </h2>
 
-          {errors.form && (
-            <p role="alert" className="text-sm text-(--color-danger) bg-(--color-danger-subtle) border border-(--color-danger) rounded-md px-3 py-2">
-              {errors.form}
-            </p>
-          )}
-
-          <Input
-            id="email"
-            label="Email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            error={errors.email}
-            autoComplete="email"
-            required
-          />
-
-          <Input
-            id="password"
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            error={errors.password}
-            autoComplete="current-password"
-            required
-          />
-
-          <Button
-            variant="primary"
-            size="lg"
-            type="submit"
-            loading={loading}
-            className="w-full"
-          >
-            Sign In
-          </Button>
-
-          <p className="text-sm text-center text-(--color-text-muted)">
-            Don't have an account?{' '}
-            <a href="/register" className="text-(--color-accent) hover:text-(--color-accent-hover) font-medium underline underline-offset-2">
-              Register
-            </a>
+        {errors.form && (
+          <p role="alert" className="text-sm text-(--color-danger) bg-(--color-danger-subtle) border border-(--color-danger) rounded-md px-3 py-2">
+            {errors.form}
           </p>
-        </div>
-      </form>
+        )}
+
+        <Input
+          id="email"
+          label="Email"
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          error={errors.email}
+          required
+        />
+
+        <Input
+          id="password"
+          label="Password"
+          type="password"
+          placeholder="••••••••"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          error={errors.password}
+          required
+        />
+
+        <Button
+          variant="primary"
+          size="lg"
+          loading={loading}
+          onClick={handleSubmit}
+          className="w-full"
+        >
+          Sign In
+        </Button>
+
+        <p className="text-sm text-center text-(--color-text-muted)">
+          Don't have an account?{' '}
+          <a href="/register" className="text-(--color-accent) hover:text-(--color-accent-hover) font-medium underline underline-offset-2">
+            Register
+          </a>
+        </p>
+      </div>
     </Card>
   );
 }

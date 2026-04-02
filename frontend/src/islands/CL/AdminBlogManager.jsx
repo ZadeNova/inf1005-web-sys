@@ -43,42 +43,42 @@ function EditForm({ post, onSave, onCancel, saving, saveError }) {
           )}
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="edit-post-title" className="text-xs font-medium text-(--color-text-secondary)">
+            <label className="text-xs font-medium text-(--color-text-secondary)">
               Title
             </label>
             <input
-              id="edit-post-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Post title"
               className={inputClass}
+              aria-label="Post title"
             />
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="edit-post-body" className="text-xs font-medium text-(--color-text-secondary)">
+            <label className="text-xs font-medium text-(--color-text-secondary)">
               Body
             </label>
             <textarea
-              id="edit-post-body"
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Post body"
               className={`${inputClass} resize-y`}
               rows={5}
+              aria-label="Post body"
             />
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="edit-post-category" className="text-xs font-medium text-(--color-text-secondary)">
+            <label className="text-xs font-medium text-(--color-text-secondary)">
               Category
             </label>
             <select
-              id="edit-post-category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className={inputClass}
+              aria-label="Post category"
             >
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>{c}</option>
