@@ -1,191 +1,171 @@
-# Vapour FT — Digital Asset Marketplace
+# Vapour FT
 
-A Steam-style digital asset marketplace built with PHP Slim, React, and MySQL.
+A peer-to-peer digital asset marketplace for rare collectibles. Built with PHP Slim, React, and MySQL for INF1005 at the Singapore Institute of Technology.
 
----
-
-## Requirements
-
-Before you start, make sure you have the following installed:
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- [Git](https://git-scm.com/)
-
-> ⚠️ **Make sure Docker Desktop is open and running** before proceeding.
 
 ---
 
-## First-Time Setup
+## The Tech Stack
 
-Follow these steps **once** when you first clone the repo.
+| Layer | Tech |
+|---|---|
+| Backend | PHP 8.2, Slim 4.15.1, PHP-DI 7.1.1 |
+| Frontend | React 19, Vite 8, Tailwind CSS v4 |
+| Database | MySQL 8.0 |
+| Auth | delight-im/auth v9 + custom session middleware |
+| Infrastructure | Docker, Apache, GCP Compute Engine (e2-small) |
+| CI/CD | GitHub Actions + SSH deploy on push to `main` |
 
-### 1. Clone the repository
+---
 
-```bash
-git clone https://github.com/yourusername/web-sys.git
-cd web-sys
-```
+## Architecture
 
-### 2. Create your `.env` file
+The app is a **Multi-Page Application with Islands Architecture**. PHP Slim handles all routing and renders HTML page shells. React components mount as isolated widgets inside specific pages and fetch their own data from the JSON API independently.
 
-**Mac / Linux:**
+There is no React Router. Adding a page means adding a Slim route, a PHP view, and a controller method. This kept the frontend and backend cleanly separated across a 5-person team.
 
-```bash
-cp .env.example .env
-```
-
-**Windows (Command Prompt):**
-
-```cmd
-copy .env.example .env
-```
-
-> ⚠️ **Do not skip this step.** Docker will fail to start without a `.env` file.  
-> The `.env` file is intentionally not committed to Git — every teammate must create their own copy.
-
-### 3. Start the app
-
-```bash
-docker compose up --build
-```
-
-The first build will take **1-2 minutes** as Docker downloads images and installs dependencies. Subsequent startups will be much faster (~10-15 seconds).
-
-Once everything is ready, Docker will print the available services:
+The backend follows a **Service-Repository-Controller** pattern. Controllers parse requests and return responses. Services own business logic. Repositories own all SQL.
 
 ```
-========================================
-        VAPOUR FT -- DEV SERVERS
-========================================
-
-  Frontend (Vite)  ->  http://localhost:3000
-  Backend (Nginx)  ->  http://localhost:8000
-  phpMyAdmin (DB)  ->  http://localhost:8080
-  MySQL (raw)      ->  localhost:3306
-
-========================================
+backend/src/
+├── Controllers/    -- thin, delegates to services
+├── Services/       -- business logic (auth, market, wallet)
+├── Repositories/   -- all PDO queries
+├── Middleware/      -- auth, CSRF, admin, security headers
+└── Views/          -- PHP templates with island mount points
 ```
 
 ---
 
-## Dev Servers
+## Key Features
 
-| Service         | URL                   | Description                        |
-| --------------- | --------------------- | ---------------------------------- |
-| Frontend (Vite) | http://localhost:3000 | React dev server with hot reload   |
-| Backend (Nginx) | http://localhost:8000 | PHP Slim API + rendered pages      |
-| phpMyAdmin      | http://localhost:8080 | Visual database browser            |
-| MySQL           | localhost:3306        | Raw DB access (TablePlus, DBeaver) |
+**Atomic transactions with row locking**
+
+Every purchase runs inside a single database transaction with `SELECT ... FOR UPDATE`. Both wallet rows are locked in ascending user ID order before any balance is read or written. This prevents race conditions and deadlocks. If the listing is already sold by the time the lock is acquired, the transaction rolls back.
+
+**Double-entry wallet ledger**
+
+Every debit has a matching credit in `wallet_ledger`, both sharing a transaction reference. The table is append-only. Each row stores `balance_before` and `balance_after` so the full balance history is reconstructable without summing.
+
+**CSRF protection**
+
+All state-changing API calls require an `X-CSRF-Token` header validated with `hash_equals()` against the session token. The token is embedded in every page via a `<meta>` tag and read automatically by the shared `useApi.js` hook.
+
+**Security headers**
+
+`SecurityHeadersMiddleware` adds `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and `Content-Security-Policy` to every response.
+
+**W3C compliant**
+
+All 8 public routes pass the W3C Nu Validator with zero errors, verified against the live URL.
 
 ---
 
-## Viewing the Database
+## CI/CD
 
-Open **http://localhost:8080** in your browser to access phpMyAdmin.
+Every push to `main` triggers an automated deployment to GCP with no manual steps.
 
-Login credentials:
+```yaml
+# .github/workflows/deploy.yml
+on:
+  push:
+    branches: [main]
 
-- **Username:** `vapourft_user`
-- **Password:** `vapourft_pass`
-- **Database:** `vapourft`
-
----
-
-## Daily Workflow
-
-### Starting the app
-
-```bash
-docker compose up
+steps:
+  - uses: appleboy/ssh-action@v1.0.3
+    with:
+      host: ${{ secrets.VM_HOST }}
+      username: ${{ secrets.VM_USER }}
+      key: ${{ secrets.SSH_PRIVATE_KEY }}
+      script: cd ~/inf1005-web-sys && bash deploy.sh
 ```
 
-> Only use `--build` if you added new dependencies (composer or npm packages) or changed a Dockerfile.
-
-### Stopping the app
+The deploy script on the server:
 
 ```bash
-docker compose down
-```
-
-### Pulling the latest changes from Git
-
-```bash
+# deploy.sh
 git pull
+docker compose -f docker-compose.prod.yml build --no-cache
+docker compose -f docker-compose.prod.yml up -d
+docker image prune -f
+
+sleep 5
+
+# Gate -- if the app is not responding, the pipeline fails
+curl -f http://localhost || { echo "Health check failed"; exit 1; }
+```
+
+Push to `main` -> GitHub Actions -> SSH into GCP -> Docker rebuild -> health check gate. The live URL has been running throughout development.
+
+**Limitations**
+
+- `sleep 5` is a fixed wait, not a proper readiness check. If the container takes longer than 5 seconds to start (slow MySQL init, large image), the health check runs too early and the pipeline reports a false failure.
+- No rollback. If the health check fails, the broken container is left running. A proper setup would tag images by commit SHA and re-run the previous tag on failure.
+- The pipeline deploys directly to production. There is no staging environment. A bad push goes live immediately.
+- `--no-cache` on every build means full layer rebuilds every deploy. Fine for a small image but slow. Layer caching with a registry like Artifact Registry would cut build time significantly.
+
+## Database
+
+9 InnoDB tables. All financial columns are `DECIMAL(10,2)`.
+
+```
+users -- wallets
+      -- wallet_ledger
+      -- bank_accounts
+      -- inventory -- listings -- transactions
+      -- blog_posts
+
+assets -- inventory
+```
+
+---
+
+## Limitations
+
+- Wallet balance uses 10-second polling. SSE ( server sent events ) would be cleaner but Apache's synchronous model makes persistent connections difficult without Swoole.
+- All island code ships in a single Vite bundle. Every page downloads components it doesn't use. Route-based code splitting would fix this.
+- The home page runs live `SUM`/`COUNT` aggregations on every request. Fine at this scale, but a Redis cache would be needed under real load.
+- `AdminController` queries the database directly instead of going through a service layer, inconsistent with the rest of the codebase.
+
+---
+
+## Local Setup
+
+Requires Docker Desktop and Git.
+
+```bash
+git clone https://github.com/your-org/vapour-ft.git
+cd vapour-ft
+
+cp .env.example .env
+# fill in MYSQL_ROOT_PASSWORD, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD
+
 docker compose up --build
 ```
 
-> Use `--build` after a `git pull` to ensure any new dependencies are installed.
+| Service | URL |
+|---|---|
+| App (Apache) | http://localhost:8000 |
+| Frontend (Vite HMR) | http://localhost:3000 |
+| phpMyAdmin | http://localhost:8080 |
 
----
+The database seeds automatically on first start via `database/init.sql`.
 
-## Viewing Logs
+**Test accounts** (password: `Password1`)
 
-To tail all service logs in real time:
-
-```bash
-docker compose logs -f
 ```
-
-To view logs for a specific service:
-
-```bash
-docker compose logs -f php
-docker compose logs -f frontend
-docker compose logs -f nginx
-docker compose logs -f mysql
+admin@vapourft.com   -- admin role
+user@vapourft.com    -- regular user
 ```
 
 ---
 
-## Common Issues
+## Team
 
-### Docker says a port is already in use
-
-Another app on your machine is using port `3000`, `8000`, `8080`, or `3306`. Stop that app, then retry.
-
-### `docker compose up` fails with "missing variable"
-
-You skipped step 2. Create your `.env` file from `.env.example` and try again.
-
-### Frontend shows "Cannot find module"
-
-Run `docker compose down` then `docker compose up --build` to force a clean reinstall of `node_modules`.
-
-### Database is empty after pulling changes
-
-If new migrations or seed data were added to `database/init.sql`, you need to reset the database volume:
-
-```bash
-docker compose down -v
-docker compose up --build
-```
-
-> ⚠️ `down -v` **wipes your local database**. Only run this when you intentionally want a fresh DB.
-
----
-
-## Project Structure
-
-```
-web-sys/
-├── backend/          # PHP Slim application (routes, controllers, services)
-├── frontend/         # React + Vite (island components)
-├── public/           # Entry point (index.php + compiled assets)
-├── database/         # init.sql schema and seed data
-├── docker/           # Nginx config, PHP Dockerfile
-├── docker-compose.yml
-├── .env.example      # Copy this to .env
-└── README.md
-```
-
----
-
-## Tech Stack
-
-| Layer      | Technology                   |
-| ---------- | ---------------------------- |
-| Frontend   | React 19, Vite, Tailwind CSS |
-| Backend    | PHP 8.2, Slim 4, PHP-DI      |
-| Database   | MySQL 8.0                    |
-| Web Server | Nginx (Alpine)               |
-| Dev Tools  | Docker, phpMyAdmin           |
+| Name | Role |
+|---|---|
+| Erfan (Zade) | Project lead, backend, DevOps, transaction engine |
+| Jeremy | Auth, CSRF, security middleware |
+| Chee Long | Frontend lead, design system, admin islands |
+| Minal | Login, register, blog islands |
+| Wei Hao | Dashboard, profile, listings, portfolio islands |
