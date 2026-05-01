@@ -160,12 +160,3 @@ user@vapourft.com    -- regular user
 
 ---
 
-## Team
-
-| Name | Role |
-|---|---|
-| Erfan (Zade) | Project lead, backend, DevOps, transaction engine |
-| Jeremy | Auth, CSRF, security middleware |
-| Chee Long | Frontend lead, design system, admin islands |
-| Minal | Login, register, blog islands |
-| Wei Hao | Dashboard, profile, listings, portfolio islands |
